@@ -1,24 +1,28 @@
 import os
+import uuid
+import pathlib
 from enum import Enum
-from uuid import uuid5
+from pip._internal import main as pip
 
 class JobStatus(Enum):
-    RUNNING
-    NOT_STARTED
-    PAUSED
-    STOPPED
-    COMPLETE
-    HALTED
+    RUNNING = 0
+    NOT_STARTED = 1
+    PAUSED = 2
+    STOPPED = 3
+    COMPLETE = 4
+    HALTED = 5
 
-class Simulation():
+class SimulationJob():
     def __init__(self, sim, version):
         self.status = JobStatus.NOT_STARTED
         self.sim = sim
         self.version = version
-        self.model = model
-        self.id = uuid5()
+        self.id = uuid.uuid4()
+        self.dir = os.path.join(f"jobs/{self.id}/")
 
-        os.mkdir(os.path.join(f"jobs/{self.id}/"))
+        # Download and install the specified solver into the job's directory.
+        pathlib.Path(self.dir).mkdir(parents=True, exist_ok=True)
+        pip(["install", f"--target={self.dir}", f"{self.sim}=={self.version}"])
 
     def start(self, model):
         self.status = JobStatus.RUNNING
