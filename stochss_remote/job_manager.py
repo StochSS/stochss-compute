@@ -1,8 +1,11 @@
+import sys
+sys.path.append(".")
+
 import os
 import uuid
 import pathlib
 
-from stochss_remote.dep_cache import DepCache
+from .dep_cache import DepCache
 from enum import Enum
 
 class JobStatus(Enum):
