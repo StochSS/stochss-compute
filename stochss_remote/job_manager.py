@@ -1,4 +1,6 @@
+import os
 from enum import Enum
+from uuid import uuid5
 
 class JobStatus(Enum):
     RUNNING
@@ -8,16 +10,22 @@ class JobStatus(Enum):
     COMPLETE
     HALTED
 
-class SimulationJob():
-    def __init__(self, sim, version, model):
+class Simulation():
+    def __init__(self, sim, version):
         self.status = JobStatus.NOT_STARTED
         self.sim = sim
         self.version = version
-        self.model
+        self.model = model
+        self.id = uuid5()
 
-    def start(self):
+        os.mkdir(os.path.join(f"jobs/{self.id}/"))
+
+    def start(self, model):
         self.status = JobStatus.RUNNING
         pass
 
     def signal(self, status):
         self.status = status
+
+    def destroy(self):
+        os.rmdir(os.path.join(f"jobs/{self.id}"))
