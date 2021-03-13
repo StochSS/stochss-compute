@@ -1,8 +1,9 @@
 import os
 import uuid
 import pathlib
+
+from stochss_remote.dep_cache import DepCache
 from enum import Enum
-from pip._internal import main as pip
 
 class JobStatus(Enum):
     RUNNING = 0
@@ -22,7 +23,7 @@ class SimulationJob():
 
         # Download and install the specified solver into the job's directory.
         pathlib.Path(self.dir).mkdir(parents=True, exist_ok=True)
-        pip(["install", f"--target={self.dir}", f"{self.sim}=={self.version}"])
+        DepCache.install(self.dir, self.sim, self.version)
 
     def start(self, model):
         self.status = JobStatus.RUNNING
