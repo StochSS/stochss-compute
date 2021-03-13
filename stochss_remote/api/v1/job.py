@@ -8,7 +8,6 @@ def create():
 
 @job.route("/{id}")
 def info(id):
-    
 
 @job.route("/{id}/start")
 def start(id):
