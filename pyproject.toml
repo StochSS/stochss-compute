@@ -3,7 +3,7 @@ name = "stochss-remote"
 version = "0.1.0"
 description = "A remote server server for the StochSS family of stochastic simulators."
 authors = ["Ethan Green <egreen4@unca.edu>"]
-license = "MIT"
+license = "GPLv3"
 
 [tool.poetry.dependencies]
 python = "^3.9"
