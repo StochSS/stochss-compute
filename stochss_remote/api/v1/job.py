@@ -1,5 +1,6 @@
 import multiprocessing
 
+from threading import Thread
 from flask import Flask, Blueprint, request, jsonify, make_response
 from stochss_remote.job_manager import SimulationJob, jobs, install
 
@@ -12,8 +13,11 @@ def create():
 
     job = SimulationJob(sim, version)
 
-    process = multiprocessing.Process(target = install, args = (job.id,))
-    process.start()
+    thread = Thread(target = install, args = (job.id,))
+    thread.start()
+
+    # process = multiprocessing.Process(target = install, args = (job.id,))
+    # process.start()
 
     return make_response(jsonify({ "job": f"/job/{job.id}" }), 202)
 
