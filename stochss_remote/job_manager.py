@@ -5,7 +5,7 @@ import pathlib
 from stochss_remote.sim_cache import SimCache
 from enum import Enum
 
-jobs = []
+jobs = {}
 
 class JobStatus(Enum):
     NOT_INIT = 0
@@ -22,26 +22,26 @@ class SimulationJob():
         self.status = JobStatus.NOT_INIT
         self.sim = sim
         self.version = version
-        self.id = uuid.uuid4()
+        self.id = str(uuid.uuid4())
         self.dir = os.path.join(f"jobs/{self.id}/")
 
-        jobs.append(self)
+        jobs[self.id] = self
 
-    def install(self):
-        self.status = JobStatus.INSTALLING
+def install(id):
+    jobs[id].status = JobStatus.INSTALLING
 
-        # Download and install the specified solver into the job's directory.
-        pathlib.Path(self.dir).mkdir(parents=True, exist_ok=True)
-        SimCache.install(self.dir, self.sim, self.version)
+    # Download and install the specified solver into the job's directory.
+    pathlib.Path(jobs[id].dir).mkdir(parents=True, exist_ok=True)
+    SimCache.install(jobs[id].dir, jobs[id].sim, jobs[id].version)
 
-        self.status = JobStatus.READY
+    jobs[id].status = JobStatus.READY
 
-    def start(self, model):
-        self.status = JobStatus.RUNNING
-        pass
+def start(self, model):
+    self.status = JobStatus.RUNNING
+    pass
 
-    def signal(self, status):
-        self.status = status
+def signal(self, status):
+    self.status = status
 
-    def destroy(self):
-        os.rmdir(os.path.join(f"jobs/{self.id}"))
+def destroy(self):
+    os.rmdir(os.path.join(f"jobs/{self.id}"))

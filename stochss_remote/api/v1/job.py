@@ -1,7 +1,7 @@
 import multiprocessing
 
-from flask import Flask, Blueprint, request, jsonify
-from stochss_remote.job_manager import SimulationJob
+from flask import Flask, Blueprint, request, jsonify, make_response
+from stochss_remote.job_manager import SimulationJob, jobs, install
 
 blueprint = Blueprint("job", __name__, url_prefix="/job")
 
@@ -12,11 +12,17 @@ def create():
 
     job = SimulationJob(sim, version)
 
-    process = multiprocessing.Process(target = job.install)
+    process = multiprocessing.Process(target = install, args = (job.id,))
     process.start()
 
-    return jsonify(job.id)
+    return make_response(jsonify({ "job": f"/job/{job.id}" }), 202)
 
-@blueprint.route("/{id}")
+@blueprint.route("/<string:id>", methods = [ "GET" ])
 def status(id):
-    pass
+    if jobs[id] == None:
+        return make_response(jsonify({ "message": f"A job with id: {id} does not exist." }), 404)
+
+    return make_response(jsonify({
+        "id": id,
+        "status": str(jobs[id].status)
+    }))
