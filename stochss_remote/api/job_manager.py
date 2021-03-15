@@ -2,7 +2,7 @@ import os
 import uuid
 import pathlib
 
-from stochss_remote.sim_cache import SimCache
+from stochss_remote.api.sim_cache import SimCache
 from enum import Enum
 
 jobs = {}
@@ -28,6 +28,9 @@ class SimulationJob():
         jobs[self.id] = self
 
 def install(id):
+    if jobs[id].status == JobStatus.INSTALLING:
+        return
+
     jobs[id].status = JobStatus.INSTALLING
 
     # Download and install the specified solver into the job's directory.
