@@ -3,7 +3,7 @@ import shutil
 from pip._internal import main as pip
 from distutils.dir_util import copy_tree
 
-class DepCache():
+class SimCache():
     def install(target, name, version):
         cache_path = pathlib.Path(f"cache/sims/{name}-{version}/")
 

@@ -1,17 +1,22 @@
-from flask import Flask, Blueprint
+import multiprocessing
 
-job = Blueprint("job", __name__, url_prefix="/job")
+from flask import Flask, Blueprint, request, jsonify
+from stochss_remote.job_manager import SimulationJob
 
-@job.route("/create")
+blueprint = Blueprint("job", __name__, url_prefix="/job")
+
+@blueprint.route("/create")
 def create():
-    
+    sim = request.args.get("sim", default = "gillespy2", type = str)
+    version = request.args.get("version", default = "", type = str)
 
-@job.route("/{id}")
-def info(id):
+    job = SimulationJob(sim, version)
 
-@job.route("/{id}/start")
-def start(id):
+    process = multiprocessing.Process(target = job.install)
+    process.start()
 
-class JobCreate(object):
-    def __init__(self, id):
-        self.id = id
+    return jsonify(job.id)
+
+@blueprint.route("/{id}")
+def status(id):
+    pass
