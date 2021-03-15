@@ -5,7 +5,7 @@ import os
 import uuid
 import pathlib
 
-from .dep_cache import DepCache
+from stochss_remote.dep_cache import DepCache
 from enum import Enum
 
 class JobStatus(Enum):

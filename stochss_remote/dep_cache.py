@@ -1,13 +1,16 @@
 import pathlib
 import shutil
 from pip._internal import main as pip
+from distutils.dir_util import copy_tree
 
 class DepCache():
     def install(target, name, version):
-        # If we already have a cached version of the dep on disk, copy it over instead.
-        cache_path = pathlib.Path(f"cache/deps/{name}/{version}/")
-        if (not pathlib.Path(cache_path.exists()):
+        cache_path = pathlib.Path(f"cache/sims/{name}-{version}/")
+
+        # If we don't have the sim cached, install it via pip into the sim directory.
+        if (not pathlib.Path(cache_path).exists()):
             pip(["install", f"--target={cache_path}", f"{name}=={version}"])
 
-        shutil.copy(target, cache_path)
+        # Install the sim into the job directory.
+        copy_tree(str(cache_path), str(target))
     
