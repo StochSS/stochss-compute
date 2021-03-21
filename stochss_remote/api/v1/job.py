@@ -36,6 +36,8 @@ def start(id):
     job = job_manager.get(id)
     model = request.data
 
+    print(model)
+
     if job == None:
         return make_response(jsonify({ "message": f"A job with id: {id} does not exist." }), 404)
 
