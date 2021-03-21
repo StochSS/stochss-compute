@@ -6,11 +6,14 @@ authors = ["Ethan Green <egreen4@unca.edu>"]
 license = "GPLv3"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 Flask = "^1.1.2"
 requests = "^2.25.1"
-poetry = "^1.1.5"
 gillespy2 = "^1.5.7"
+ipykernel = "^5.5.0"
+matplotlib = "^3.3.4"
+ipython = "^7.21.0"
+dill = "^0.3.3"
 
 [tool.poetry.dev-dependencies]
 
