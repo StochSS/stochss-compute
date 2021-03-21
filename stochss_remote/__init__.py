@@ -1,1 +1,1 @@
-from stochss_remote.model import run
+from stochss_remote.model import ComputeServer
