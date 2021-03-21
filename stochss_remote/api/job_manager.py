@@ -17,34 +17,15 @@ class JobStatus(Enum):
     COMPLETE = 6
     HALTED = 7
 
-class SimulationJob():
-    def __init__(self, sim, version):
-        self.status = JobStatus.NOT_INIT
-        self.sim = sim
-        self.version = version
-        self.id = str(uuid.uuid4())
-        self.dir = os.path.join(f"jobs/{self.id}/")
 
-        jobs[self.id] = self
+class JobManager():
+    jobs = { }
 
-def install(id):
-    if jobs[id].status == JobStatus.INSTALLING:
-        return
+    def add(self, sim):
+        jobs[sim.id] = sim
 
-    jobs[id].status = JobStatus.INSTALLING
+    def start(self, id):
+        jobs[id].status = JobStatus.RUNNING
 
-    # Download and install the specified solver into the job's directory.
-    pathlib.Path(jobs[id].dir).mkdir(parents=True, exist_ok=True)
-    SimCache.install(jobs[id].dir, jobs[id].sim, jobs[id].version)
-
-    jobs[id].status = JobStatus.READY
-
-def start(self, model):
-    self.status = JobStatus.RUNNING
-    pass
-
-def signal(self, status):
-    self.status = status
-
-def destroy(self):
-    os.rmdir(os.path.join(f"jobs/{self.id}"))
+    def get(self, id):
+        return jobs[id]
