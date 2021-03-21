@@ -4,11 +4,15 @@ from stochss_remote.api import request_helpers
 def connect_to(host, port):
     return RemoteModel(host, port)
 
-class ComputeServer():
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-        self.address = f"{host}:{port}"
+class RemoteSimulation():
+    def on(host, port):
+        sim = RemoteSimulation()
+
+        sim.host = host
+        sim.port = port
+        sim.address = f"{host}:{port}"
+
+        return sim
 
     def with_model(self, model):
         self.model = model

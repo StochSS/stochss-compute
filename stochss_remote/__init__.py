@@ -1,1 +1,1 @@
-from stochss_remote.model import ComputeServer
+from stochss_remote.model import RemoteSimulation
