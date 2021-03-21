@@ -6,7 +6,7 @@ authors = ["Ethan Green <egreen4@unca.edu>"]
 license = "GPLv3"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 Flask = "^1.1.2"
 requests = "^2.25.1"
 gillespy2 = "^1.5.7"
