@@ -1,4 +1,6 @@
-import uuid
+import uuid, os
+import dill
+
 from stochss_remote.api.job_manager import JobStatus
 
 class Simulation():
@@ -10,17 +12,10 @@ class Simulation():
         self.dir = os.path.join(f"jobs/{self.id}/")
 
     def start(self, model_json):
-        self.__start_gillespy2(model)
+        return self.__start_gillespy2(model_json)
 
     def __start_gillespy2(self, model_json):
-        import json
-        import gillespy2
-
-        from types import SimpleNamespace
-
-        # Convert the jsonified model into a namespaced object.
-        model_obj = json.load(model_json, object_hook = lambda d: SimpleNamespace(**d))
-        model = gillespy.Model.__init__(self, name = "Temp")
-
-        model.__dict__ = model_obj.__dict__
+        # Convert the pickled model into an executable object.
+        model = dill.loads(model_json)
+        return model.run()
         
