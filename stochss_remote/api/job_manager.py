@@ -1,6 +1,4 @@
 import os, uuid, pathlib
-
-from stochss_remote.api.sim_cache import SimCache
 from enum import Enum
 
 class JobStatus(Enum):
