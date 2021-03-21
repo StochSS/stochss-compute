@@ -17,8 +17,9 @@ class JobManager():
     def add(self, sim):
         self.jobs[sim.id] = sim
 
-    def start(self, id):
+    def start(self, id, **params):
         self.jobs[id].status = JobStatus.RUNNING
+        self.jobs[id].model.run(params)
 
     def get(self, id):
         return self.jobs[id]
