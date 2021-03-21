@@ -1,6 +1,4 @@
-import jsonpickle, requests, base64
-import jsonpickle.ext.numpy as jsonpickle_numpy
-import dill
+import requests, base64, dill
 
 def run(model, ip, port):
     address = f"{ip}:{port}"
@@ -12,5 +10,5 @@ def run(model, ip, port):
     id = status.json()["id"]
 
     result = requests.post(f"{address}/job/{id}/start", data = dill.dumps(model))
-    
+   
     return dill.loads(result.content)

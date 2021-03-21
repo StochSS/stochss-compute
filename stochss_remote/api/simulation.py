@@ -1,5 +1,4 @@
-import uuid, os
-import dill
+import uuid, os, dill
 
 from stochss_remote.api.job_manager import JobStatus
 
