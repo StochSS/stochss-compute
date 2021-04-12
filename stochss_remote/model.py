@@ -1,16 +1,15 @@
-import json, base64, requests, dill
+import requests, json
+
 from stochss_remote.api import request_helpers
+from gillespy2.core import Model, Results
 
 def connect_to(host, port):
-    return RemoteModel(host, port)
+    return RemoteSimulation(host, port)
 
 class RemoteSimulation():
-    def on(host, port):
+    def on(server):
         sim = RemoteSimulation()
-
-        sim.host = host
-        sim.port = port
-        sim.address = f"{host}:{port}"
+        sim.server = server
 
         return sim
 
@@ -20,15 +19,31 @@ class RemoteSimulation():
         return self
 
     def run(self, **params):
-        param_encoded = request_helpers.into_pickle(params)
-        model_encoded = request_helpers.into_pickle(self.model)
+        params = json.dumps(params)
 
-        create_req = requests.post(f"{self.address}/job/create", json = { "sim": "gillespy2", "version": "1.5.7" })
+        translation_table = self.model.get_translation_table()
+
+        create_req = requests.post(f"{self.server.address}/job/create", json = { "sim": "gillespy2", "version": "1.5.7" })
         status_addr = create_req.json()["job"]
 
-        status = requests.get(f"{self.address}{status_addr}")
+        status = requests.get(f"{self.server.address}{status_addr}")
         id = status.json()["id"]
 
-        result = requests.post(f"{self.address}/job/{id}/start", json = { "params": param_encoded, "model": model_encoded })
-    
-        return request_helpers.from_pickle(result.content)
+        request_json = {
+            "params": params,
+            "model": self.model.to_anon().to_json()
+        }
+
+        result = requests.post(f"{self.server.address}/job/{id}/start", json = request_json)
+        result = Results.from_json(result.content.decode())
+        result.translation_table = translation_table
+
+        print(result)
+
+        return result.to_named()
+
+class ComputeServer():
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.address = f"http://{host}:{port}"

@@ -1,5 +1,7 @@
 import uuid, os, dill
+from gillespy2 import Model
 
+import stochss_remote.api.request_helpers
 from stochss_remote.api.job_manager import JobStatus
 
 class Simulation():
@@ -15,6 +17,9 @@ class Simulation():
 
     def __start_gillespy2(self, model_json):
         # Convert the pickled model into an executable object.
-        model = dill.loads(model_json)
+        model_dict = request_helpers.from_pickle(model_json)
+        model = gillespy2.Model(name = "Test")
+
+        model.__dict__ = model_dict
         return model.run()
         

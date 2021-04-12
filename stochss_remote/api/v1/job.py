@@ -1,11 +1,14 @@
-import multiprocessing, dill
+import json
 
 from threading import Thread
-from flask import Flask, Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response
+from gillespy2.core.jsonify import TranslationTable
+from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver
 
 from stochss_remote.api import request_helpers
 from stochss_remote.api.job_manager import JobManager
 from stochss_remote.api.simulation import Simulation
+from gillespy2.core import Model
 
 blueprint = Blueprint("job", __name__, url_prefix="/job")
 job_manager = JobManager()
@@ -40,12 +43,10 @@ def start(id):
         return make_response(jsonify({ "message": f"A job with id: {id} does not exist." }), 404)
 
     request_json = request.get_json()
-    params_encoded = request_json["params"]
-    model_encoded = request_json["model"]
 
-    params = request_helpers.from_pickle(params_encoded)
-    model = request_helpers.from_pickle(model_encoded)
+    params = json.loads(request_json["params"])
+    model = Model.from_json(request_json["model"])
 
-    result = model.run(**params)
-    return make_response(request_helpers.into_pickle(result), 202)
+    result = model.run()
+    return make_response(result.to_json(), 202)
 
