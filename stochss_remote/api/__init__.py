@@ -6,4 +6,4 @@ def server_start():
     app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
     app.register_blueprint(blueprint)
 
-    app.run()
+    app.run(debug=True)
