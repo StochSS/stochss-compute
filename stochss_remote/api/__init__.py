@@ -1,9 +1,13 @@
-from flask import Flask
-from stochss_remote.api.v1.job import blueprint
+from .factory import Factory
 
-def server_start():
-    app = Flask(__name__)
-    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-    app.register_blueprint(blueprint)
+base = Factory()
 
-    app.run(debug=True)
+base.set_flask()
+base.set_celery()
+
+flask = base.flask
+celery = base.celery
+
+from .v1 import blueprint as v1_api
+
+base.register(v1_api)
