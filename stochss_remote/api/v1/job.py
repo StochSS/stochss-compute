@@ -1,52 +1,47 @@
-import json
+from flask_restx import reqparse
+from flask_restx import Namespace, Resource
+from celery.states import SUCCESS
 
-from threading import Thread
-from flask import Blueprint, request, jsonify, make_response
-from gillespy2.core.jsonify import TranslationTable
-from gillespy2.solvers.cpp.ssa_c_solver import SSACSolver
+from ..simulation import Simulation
 
-from stochss_remote.api import request_helpers
-from stochss_remote.api.job_manager import JobManager
-from stochss_remote.api.simulation import Simulation
-from gillespy2.core import Model
+api = Namespace("Job API", "Endpoint to control the creation, execution, and deletion of running jobs.", path="/job")
 
-blueprint = Blueprint("job", __name__, url_prefix="/job")
-job_manager = JobManager()
+@api.route("/create")
+class Create(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument("sim", type=str, required=True, help="The name of the simulation to be associated with this job.")
+    parser.add_argument("hash", type=str, required=True, help="The hash of the model to be run.")
 
-@blueprint.route("/create", methods = [ "POST" ])
-def create():
-    sim = request.args.get("sim", default = "gillespy2", type = str)
-    version = request.args.get("version", default = "", type = str)
+    def post(self):
+        args = self.parser.parse_args()
+        id = Simulation(args["type"], args["hash"], args["model"], args["param"]).run()
 
-    sim = Simulation(sim, version)
-    job_manager.add(sim)
+@api.route("/start")
+class Start(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument("type", type=str, required=True, help="The type of simulation to be associated with this job.")
+    parser.add_argument("hash", type=str, required=True, help="The hash of the model to be run.")
+    parser.add_argument("model", type=str, required=True, help="The model to be run.")
+    parser.add_argument("params", type=str, required=False, help="Model run parameters.")
+    
+    def post(self):
+        args = self.parser.parse_args()
+        id = Simulation(args["type"], args["hash"], args["model"], args["params"]).run()
 
-    return make_response(jsonify({ "job": f"/job/{sim.id}" }), 202)
+        return { "status": f"/v1/job/status/{id}" }
 
-@blueprint.route("/<string:id>", methods = [ "GET" ])
-def status(id):
-    job = job_manager.get(id)
+@api.route("/status/<string:id>")
+class Status(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument("id", type=str, required=True, help="The ID of the job.")
 
-    if job == None:
-        return make_response(jsonify({ "message": f"A job with id: {id} does not exist." }), 404)
+    def get(self, id):
+        status = Simulation.status(id)
 
-    return make_response(jsonify({
-        "id": id,
-        "status": str(job.status)
-    }))
+        if status == SUCCESS:
+            return {
+                "status": status,
+                "results": Simulation.result(id)
+            }
 
-@blueprint.route("/<string:id>/start", methods = [ "POST" ])
-def start(id):
-    job = job_manager.get(id)
-
-    if job == None:
-        return make_response(jsonify({ "message": f"A job with id: {id} does not exist." }), 404)
-
-    request_json = request.get_json()
-
-    params = json.loads(request_json["params"])
-    model = Model.from_json(request_json["model"])
-
-    result = model.run()
-    return make_response(result.to_json(), 202)
-
+        return { "status": Simulation.status(id) }
