@@ -9,16 +9,18 @@ license = "GPLv3"
 python = "^3.7"
 Flask = "^1.1.2"
 requests = "^2.25.1"
-gillespy2 = "^1.5.7"
 ipykernel = "^5.5.0"
 matplotlib = "^3.3.4"
 ipython = "^7.21.0"
-dill = "^0.3.3"
+gillespy2 = { git = "https://github.com/StochSS/GillesPy2", rev = "model_to_json" }
+# gillespy2 = {path = "../GillesPy2", develop = true}
+flask-restx = "^0.3.0"
+celery = {version = "^5.0.5", extras = ["redis"]}
 
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
-stochss-remote = "stochss_remote.api:server_start"
+stochss-remote = "app:server_start"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
