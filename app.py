@@ -1,8 +1,7 @@
-from flask import Flask
-from stochss_remote.api.v1.job import blueprint
+from stochss_remote.api import base
 
-app = Flask(__name__)
-app.register_blueprint(blueprint)
+def server_start():
+    base.flask.run(host="0.0.0.0", port=1234)
 
-# from stochss_remote.job_manager import SimulationJob
-# job = SimulationJob("gillespy2", "1.5.7")
+if __name__ == "__main__":
+    server_start()
