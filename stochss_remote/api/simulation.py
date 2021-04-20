@@ -17,6 +17,9 @@ class Simulation:
         self.results_file = Path(self.dir, "results.json")
 
     def run(self):
+        if celery.AsyncResult(self.hash).successful():
+            return self.hash
+
         if self.type == "gillespy2":
             self._run_gillespy2.apply_async((self.model, self.params), task_id=self.hash)
 
