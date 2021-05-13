@@ -37,7 +37,7 @@ services:
       context: "."
       args:
         - "FLASK_ENV=${FLASK_ENV:-production}"
-    command: poetry run celery -A stochss_remote.api worker -E
+    command: poetry run celery -A stochss_compute.api worker -E
     depends_on:
       - "redis"
     env_file:

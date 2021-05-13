@@ -14,4 +14,4 @@ ENV FLASK_ENV="${FLASK_ENV}" \
 
 EXPOSE 1234
 
-CMD [ "poetry", "run", "stochss-remote"]
+CMD [ "poetry", "run", "stochss-compute"]

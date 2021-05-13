@@ -15,7 +15,7 @@ Ensure that the following dependencies are installed with your package manager o
 - `python-poetry`
 - `redis`
 
-Clone the repository and navigate into the new `stochss-remote` directory. Once inside, execute the following command to install the Python dependencies:
+Clone the repository and navigate into the new `stochss-compute` directory. Once inside, execute the following command to install the Python dependencies:
 
 ```
 poetry install
@@ -30,7 +30,7 @@ poetry shell
 Once complete, both `celery` and `redis` need to be running.
 
 ```
-celery -A stochss_remote.api worker -l INFO
+celery -A stochss_compute.api worker -l INFO
 ```
 
 `redis` can be run in several ways. If you prefer a `systemd` daemon:
@@ -45,21 +45,21 @@ Otherwise:
 redis-server
 ```
 
-Finally, start the stochss-remote server.
+Finally, start the stochss-compute server.
 
 ```
-poetry run stochss-remote
+poetry run stochss-compute
 ```
 
 ## Usage
 
-Simulations are run on stochss-remote via Jupyter notebooks.
+Simulations are run on stochss-compute via Jupyter notebooks.
 
 ```python
 import numpy, gillespy2
 
-# Import stochss-remote.
-from stochss-remote import RemoteSimulation, ComputeServer
+# Import stochss-compute.
+from stochss-compute import RemoteSimulation, ComputeServer
 
 # Define your GillesPy2 model.
 class ToggleSwitch(gillespy2.Model):
@@ -94,7 +94,7 @@ class ToggleSwitch(gillespy2.Model):
 # Instantiate a new instance of the model.
 model = ToggleSwitch()
 
-# Run the model on a stochss-remote server instance running on localhost.
+# Run the model on a stochss-compute server instance running on localhost.
 results = RemoteSimulation.on(ComputeServer("127.0.0.1", port=1234).with_model(model).run()
 
 # Plot the results.

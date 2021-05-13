@@ -18,7 +18,7 @@ class Factory(object):
         return self.flask
 
     def set_celery(self, **kwargs):
-        self.celery = Celery("stochss-remote_celery", **kwargs)
+        self.celery = Celery("stochss-compute_celery", **kwargs)
         self.celery.config_from_object(celery_config)
         self.logger = get_task_logger(__name__)
 

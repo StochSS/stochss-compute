@@ -1,4 +1,4 @@
-from stochss_remote.api import base
+from stochss_compute.api import base
 
 def server_start():
     base.flask.run(host="0.0.0.0", port=1234)

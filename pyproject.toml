@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "stochss-remote"
+name = "stochss-compute"
 version = "0.1.0"
-description = "A remote server server for the StochSS family of stochastic simulators."
+description = "A remote compute server for the StochSS family of stochastic simulators."
 authors = ["Ethan Green <egreen4@unca.edu>"]
 license = "GPLv3"
 
@@ -20,7 +20,7 @@ celery = {version = "^5.0.5", extras = ["redis"]}
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
-stochss-remote = "app:server_start"
+stochss-compute = "app:server_start"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
