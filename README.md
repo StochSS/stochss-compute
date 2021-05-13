@@ -2,7 +2,7 @@
 
 #### Docker
 
-The easiest way to get stochss-remote running is with docker. Clone the repository and run the following in the root directory:
+The easiest way to get stochss-compute running is with docker. Clone the repository and run the following in the root directory:
 
 ```
 docker-compose up --build
