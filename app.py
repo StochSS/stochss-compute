@@ -1,5 +1,7 @@
-from flask import Flask
-from stochss_remote.api import v1
+from stochss_compute.api import base
 
-app = Flask(__name__)
-app.register_blueprint(v1.job.blueprint)
+def server_start():
+    base.flask.run(host="0.0.0.0", port=1234)
+
+if __name__ == "__main__":
+    server_start()

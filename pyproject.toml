@@ -1,15 +1,26 @@
 [tool.poetry]
-name = "stochss-remote"
+name = "stochss-compute"
 version = "0.1.0"
-description = "A remote server server for the StochSS family of stochastic simulators."
+description = "A remote compute server for the StochSS family of stochastic simulators."
 authors = ["Ethan Green <egreen4@unca.edu>"]
-license = "MIT"
+license = "GPLv3"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 Flask = "^1.1.2"
+requests = "^2.25.1"
+ipykernel = "^5.5.0"
+matplotlib = "^3.3.4"
+ipython = "^7.21.0"
+gillespy2 = { git = "https://github.com/StochSS/GillesPy2", rev = "model_to_json" }
+# gillespy2 = {path = "../GillesPy2", develop = true}
+flask-restx = "^0.3.0"
+celery = {version = "^5.0.5", extras = ["redis"]}
 
 [tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+stochss-compute = "app:server_start"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
