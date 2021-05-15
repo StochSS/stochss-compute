@@ -1,6 +1,6 @@
 from celery import Celery
 import celery
-from .delegate import Delegate, JobStatus, Status
+from .delegate import Delegate, JobStatus, JobState
 
 class JobNotFoundException(Exception):
     def __init__(self, id):
@@ -44,7 +44,7 @@ class CeleryDelegate(Delegate):
         self.celery.control.revoke(id, terminate=True)
 
         # The job status should not be stopped, but check to be sure.
-        return self.job_status(id).status_id is Status.STOPPED
+        return self.job_status(id).status_id is JobState.STOPPED
 
     def job_status(self, id: str) -> JobStatus:
         if not self.job_exists(id):
@@ -53,19 +53,19 @@ class CeleryDelegate(Delegate):
         # Use a celery -> JobStatus mapping to fit the delegate specification.
         celery_status = self.celery.AsyncResult(id).status
         status_mapping = {
-            "PENDING": (Status.WAITING, "The job exists but hasn't been started yet."),
-            "STARTED": (Status.RUNNING, "The job is currently running."),
-            "RETRY": (Status.RUNNING, "The job is currently running."),
-            "FAILURE": (Status.FAILED, "The job has failed."),
-            "SUCCESS": (Status.DONE, "The job is complete.")
+            "PENDING": (JobState.WAITING, "The job exists but hasn't been started yet."),
+            "STARTED": (JobState.RUNNING, "The job is currently running."),
+            "RETRY": (JobState.RUNNING, "The job is currently running."),
+            "FAILURE": (JobState.FAILED, "The job has failed."),
+            "SUCCESS": (JobState.DONE, "The job is complete.")
         }
 
         status = JobStatus()
         status.status_id = status_mapping[celery_status][0]
         status.status_text = status_mapping[celery_status][1]
 
-        status.is_done = status.status_id is Status.DONE
-        status.has_failed = status.status_id is Status.FAILED
+        status.is_done = status.status_id is JobState.DONE
+        status.has_failed = status.status_id is JobState.FAILED
 
         return status
 
