@@ -1,5 +1,6 @@
+from typing import Callable
+from multiprocessing import Process
 from celery import Celery
-import celery
 from .delegate import Delegate, JobStatus, JobState
 
 class JobNotFoundException(Exception):
@@ -7,9 +8,9 @@ class JobNotFoundException(Exception):
         super().__init__(f"A job with ID: {id} does not exist.")
 
 class CeleryDelegateConfig:
-    def __init__(self, name: str, config: object):
+    def __init__(self, name: str, celery_config: object):
         self.name = name
-        self.celery_config = config
+        self.celery_config = celery_config
 
 class CeleryDelegate(Delegate):
     type = "celery"
@@ -17,6 +18,10 @@ class CeleryDelegate(Delegate):
     def __init__(self, delegate_config: CeleryDelegateConfig):
         self.celery = Celery(delegate_config.name)
         self.celery.config_from_object(delegate_config.celery_config)
+
+        # Test our connection.
+        if not self.test_connection():
+            raise Exception("Failed to connect to task broker.")
 
     def connect(self) -> bool:
         # Celery doesn't have a concept of 'connect then start', so we're going to shim this for now.
@@ -29,13 +34,13 @@ class CeleryDelegate(Delegate):
         # Celery doesn't have a job create -> runon job workflow, so we're just going to check to see if the job exists.
         return not self.job_exists(id)
 
-    def start_job(self, id: str, work: function, *args, **kwargs) -> bool:
-        if not self.job_exists(id):
+    def start_job(self, id: str, work: Callable, *args) -> bool:
+        if self.job_exists(id):
             raise JobNotFoundException(id)
 
         # The incoming function should NOT be decorated, so we need to do it manually to support celery.apply_async()
         work = self.celery.task(work)
-        work.apply_async((args, kwargs), task_id=id)
+        work.apply_async(*args, task_id=id)
 
     def stop_job(self, id: str) -> bool:
         if not self.job_exists(id):
@@ -79,4 +84,4 @@ class CeleryDelegate(Delegate):
 
     def job_exists(self, id: str) -> bool:
         # If the job does not exist then the status will always be 'PENDING'.
-        return self.celery.AsyncResult(id).status is not "PENDING"
+        return self.celery.AsyncResult(id).status != "PENDING"
