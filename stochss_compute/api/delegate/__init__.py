@@ -1,1 +1,1 @@
-from .delegate import Delegate
+from .delegate import Delegate, JobStatus, JobState
