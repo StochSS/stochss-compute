@@ -36,15 +36,6 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def try_connect(self) -> bool:
-        """
-        Try to connect to the compute instance, bubbling up any exceptions that may occur.
-
-        :returns: True if successful, False if not.
-        """
-        pass
-
-    @abstractmethod
     def test_connection(self) -> bool:
         """
         Test the delegate's connection to a compute instance.
