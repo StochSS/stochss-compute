@@ -1,3 +1,4 @@
+from stochss_compute.api.delegate.delegate import JobState
 from flask_restx import reqparse
 from flask_restx import Namespace, Resource
 from celery.states import SUCCESS
@@ -38,10 +39,11 @@ class Status(Resource):
     def get(self, id):
         status = Simulation.status(id)
 
-        if status == SUCCESS:
+        if status.status_id == JobState.SUCCESS:
             return {
-                "status": status,
+                "status_id": status.status_id,
+                "status_text": status.status_text,
                 "results": Simulation.result(id)
             }
 
-        return { "status": Simulation.status(id) }
+        return { "status": Simulation.status(id).status_id }

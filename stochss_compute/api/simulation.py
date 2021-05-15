@@ -18,7 +18,7 @@ class Simulation:
 
     def run(self):
         # If the job already exists, do nothing.
-        if delegate.job_status(self.hash).is_done:
+        if delegate.job_exists(self.hash) and delegate.job_status(self.hash).is_done:
             return self.hash
 
         # Create a new job with the specified ID.
