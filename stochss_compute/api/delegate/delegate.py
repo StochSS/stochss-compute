@@ -1,5 +1,6 @@
 from enum import Enum
 from abc import ABC, abstractmethod
+from typing import Callable
 
 class JobState(Enum):
     WAITING = 0
@@ -53,7 +54,7 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def start_job(self, id: str, work: function, *args, **kwargs) -> bool:
+    def start_job(self, id: str, work: Callable, *args, **kwargs) -> bool:
         """
         Start a job with the specified ID.
 
