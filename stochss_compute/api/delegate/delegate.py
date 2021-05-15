@@ -16,11 +16,14 @@ class JobStatus:
     is_done: bool = False
     has_failed: bool = False
 
+class DelegateConfig(ABC):
+    pass
+
 class Delegate(ABC):
     type: str = ""
 
     @abstractmethod
-    def __init__(self, **kwargs):
+    def __init__(self, delegate_config: DelegateConfig):
         """
         Instantiate a new delegate instance.
         """
