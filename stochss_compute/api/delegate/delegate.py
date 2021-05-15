@@ -1,9 +1,7 @@
 from enum import Enum
 from abc import ABC, abstractmethod
 
-from pkg_resources import WorkingSet
-
-class Status(Enum):
+class JobState(Enum):
     WAITING = 0
     RUNNING = 1
     STOPPED = 2
@@ -11,7 +9,7 @@ class Status(Enum):
     DONE = 4
 
 class JobStatus:
-    status_id: Status = 0
+    status_id: JobState = 0
     status_text: str = ""
     is_done: bool = False
     has_failed: bool = False
