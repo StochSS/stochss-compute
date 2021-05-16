@@ -1,5 +1,4 @@
 from typing import Callable
-from multiprocessing import Process
 from celery import Celery
 from .delegate import Delegate, JobStatus, JobState
 
