@@ -17,7 +17,12 @@ class JobStatus:
     has_failed: bool = False
 
 class DelegateConfig(ABC):
-    pass
+    def __init__(self, **kwargs):
+        """
+        Easy way to apply some number of named arguments onto self.
+        """
+
+        self.__dict__ = self.__dict__ | kwargs
 
 class Delegate(ABC):
     type: str = ""
