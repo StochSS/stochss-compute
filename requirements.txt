@@ -1,0 +1,6 @@
+Flask>=2.0.1
+dask>=2021.5.1
+distributed>=2021.5.1
+redis>=3.5.3
+
+gillespy2 @ git+https://github.com/StochSS/GillesPy2@model_to_json

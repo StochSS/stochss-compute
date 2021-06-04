@@ -32,7 +32,7 @@ class RemoteSimulation():
         status_url  = f"{self.server.address}{result.json()['status']}"
         status = requests.get(status_url).json()
 
-        while status["status"] != "SUCCESS":
+        while status["status_id"] != "SUCCESS":
             time.sleep(5)
             status = requests.get(status_url).json()
 

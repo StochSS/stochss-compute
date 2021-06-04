@@ -1,13 +1,21 @@
-from .factory import Factory
+from os import name
 
-base = Factory()
+from stochss_compute.api.v1 import v1_api_blueprint
+from stochss_compute.api.delegate.dask_delegate import DaskDelegate
+from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 
-base.set_flask()
-base.set_celery()
+# Initialize and configure the compute delegate.
+delegate_config = DaskDelegateConfig()
+delegate = DaskDelegate(delegate_config)
 
-flask = base.flask
-celery = base.celery
+# Validate the connection.
+if False in (delegate.connect(), delegate.test_connection()):
+    raise Exception("Delegate connection failed.")
 
-from .v1 import blueprint as v1_api
+# Initialize and configure Flask.
+flask = Flask(__name__)
+flask.config.update(
+    JSONIFY_PRETTYPRINT_REGULAR=True
+)
 
-base.register(v1_api)
+flask.register_blueprint(v1_api_blueprint)

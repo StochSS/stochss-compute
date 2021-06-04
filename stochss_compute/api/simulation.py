@@ -1,8 +1,8 @@
 from pathlib import Path
-from enum import Enum
+from stochss_compute.api.delegate.delegate import JobStatus
 from gillespy2.core.model import Model
 
-from . import celery
+from . import delegate
 
 class Simulation:
     def __init__(self, type: str, hash: str, model: str, params: str):
@@ -17,33 +17,37 @@ class Simulation:
         self.results_file = Path(self.dir, "results.json")
 
     def run(self):
-        if celery.AsyncResult(self.hash).successful():
+        # If the job already exists, do nothing.
+        if delegate.job_exists(self.hash) and delegate.job_status(self.hash).is_done:
             return self.hash
 
+        # Create a new job with the specified ID.
+        if not delegate.create_job(self.hash):
+            raise Exception(f"Failed to create job with ID: {id} on delegate type: {delegate.type}.")
+
+        # Test the delegate's connection.
+        if not delegate.test_connection():
+            raise Exception(f"Failed to connect to compute instance with delegate type: {delegate.type}.")
+
         if self.type == "gillespy2":
-            self._run_gillespy2.apply_async((self.model, self.params), task_id=self.hash)
+            delegate.start_job(self.hash, self._run_gillespy2, (self.model, self.params))
 
         return self.hash
 
-    @celery.task()
     def _run_gillespy2(model: str, params: str):
         model = Model.from_json(model)
         results = model.run()
         
         return results.to_json()
 
-    def status(id: str):
-        return celery.AsyncResult(id).status
+    def status(id: str) -> JobStatus:
+        if not delegate.job_exists(id):
+            return None
+
+        return delegate.job_status(id)
 
     def result(id: str):
-        return celery.AsyncResult(id).get()
+        if not delegate.job_exists(id):
+            return None
 
-class SimulationStatus(Enum):
-    NOT_INIT = 0
-    INSTALLING = 1
-    READY = 2
-    RUNNING = 3
-    PAUSED = 4
-    STOPPED = 5
-    COMPLETE = 6
-    HALTED = 7
+        return delegate.job_results(id)
