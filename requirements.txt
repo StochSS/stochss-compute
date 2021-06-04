@@ -2,5 +2,6 @@ Flask>=2.0.1
 dask>=2021.5.1
 distributed>=2021.5.1
 redis>=3.5.3
+pydantic>=1.8.2
 
 gillespy2 @ git+https://github.com/StochSS/GillesPy2@model_to_json
