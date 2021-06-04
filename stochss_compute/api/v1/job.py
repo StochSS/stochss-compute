@@ -1,9 +1,8 @@
-from stochss_compute.api.delegate.delegate import JobState
 from flask_restx import reqparse
 from flask_restx import Namespace, Resource
-from celery.states import SUCCESS
 
-from ..simulation import Simulation
+from stochss_compute.api.simulation import Simulation
+from stochss_compute.api.delegate.delegate import JobState
 
 api = Namespace("Job API", "Endpoint to control the creation, execution, and deletion of running jobs.", path="/job")
 

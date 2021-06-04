@@ -71,6 +71,7 @@ class DaskDelegate(Delegate):
     def test_connection(self) -> bool:
         # Shim this out until I figure out a good way to test a Dask and Redis connection.
         self.redis.ping()
+
         return True
 
     def create_job(self, id: str) -> bool:
