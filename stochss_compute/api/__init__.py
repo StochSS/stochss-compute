@@ -1,19 +1,21 @@
 from os import name
-from stochss_compute.api.delegate.celery_delegate import CeleryDelegate, CeleryDelegateConfig
-from stochss_compute.api.delegate.delegate import Delegate, DelegateConfig
-from .factory import Factory
-from . import celery_config
 
-base = Factory()
+from stochss_compute.api.v1 import v1_api_blueprint
+from stochss_compute.api.delegate.dask_delegate import DaskDelegate
+from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 
-base.set_flask()
-# base.set_celery()
+# Initialize and configure the compute delegate.
+delegate_config = DaskDelegateConfig()
+delegate = DaskDelegate(delegate_config)
 
-flask = base.flask
-# celery = base.celery
+# Validate the connection.
+if False in (delegate.connect(), delegate.test_connection()):
+    raise Exception("Delegate connection failed.")
 
-delegate: Delegate = CeleryDelegate(CeleryDelegateConfig(name="stochss-compute_celery", celery_config=celery_config))
+# Initialize and configure Flask.
+flask = Flask(__name__)
+flask.config.update(
+    JSONIFY_PRETTYPRINT_REGULAR=True
+)
 
-from .v1 import blueprint as v1_api
-
-base.register(v1_api)
+flask.register_blueprint(v1_api_blueprint)
