@@ -1,5 +1,4 @@
 from flask import Blueprint
-from flask_restx import Api
 
 from .job import api as job_api
 
