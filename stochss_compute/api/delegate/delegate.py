@@ -8,6 +8,7 @@ class JobState(Enum):
     STOPPED = 2
     FAILED = 3
     DONE = 4
+    DOES_NOT_EXIST = 5
 
 class JobStatus:
     status_id: JobState = 0
