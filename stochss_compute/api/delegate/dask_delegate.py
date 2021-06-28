@@ -13,7 +13,7 @@ from stochss_compute.api.delegate.delegate import JobStatus
 from stochss_compute.api.delegate.delegate import DelegateConfig
 
 class DaskDelegateConfig(DelegateConfig):
-    redis_port = 6783
+    redis_port = 6379
     redis_address = "localhost"
     redis_db = 0
 

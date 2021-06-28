@@ -1,8 +1,8 @@
-from enum import Enum
+from enum import IntEnum
 from abc import ABC, abstractmethod
 from typing import Callable
 
-class JobState(Enum):
+class JobState(IntEnum):
     WAITING = 0
     RUNNING = 1
     STOPPED = 2
