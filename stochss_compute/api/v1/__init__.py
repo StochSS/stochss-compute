@@ -1,8 +1,7 @@
 from flask import Blueprint
+from stochss_compute.api.v1.job import v1_job
 
-from .job import api as job_api
+v1_api = Blueprint("stochss-compute API V1", __name__, url_prefix="/api/v1")
+v1_api.register_blueprint(v1_job)
 
-v1_api_blueprint = Blueprint("api", __name__, url_prefix="/v1")
-api = Api(v1_api_blueprint, title="V1 API Endpoints", version="0.1")
-
-api.add_namespace(job_api)
+print("init")
