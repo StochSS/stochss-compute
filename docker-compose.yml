@@ -32,20 +32,5 @@ services:
     volumes:
       - "${DOCKER_WEB_VOLUME:-./public:/app/public}"
 
-  worker:
-    build:
-      context: "."
-      args:
-        - "FLASK_ENV=${FLASK_ENV:-production}"
-    command: poetry run celery -A stochss_compute.api worker -E
-    depends_on:
-      - "redis"
-    env_file:
-      - ".env"
-    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
-    stop_grace_period: "${DOCKER_STOP_GRACE_PERIOD:-3s}"
-    volumes:
-      - "${DOCKER_WEB_VOLUME:-./public:/app/public}"
-
 volumes:
   redis: {}
