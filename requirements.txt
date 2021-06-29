@@ -4,5 +4,6 @@ distributed>=2021.5.1
 redis>=3.5.3
 pydantic>=1.8.2
 dill
+requests
 
 gillespy2 @ git+https://github.com/StochSS/GillesPy2@develop
