@@ -14,7 +14,7 @@ from stochss_compute.api.delegate.delegate import DelegateConfig
 
 class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
-    redis_address = "localhost"
+    redis_address = "redis"
     redis_db = 0
 
     dask_cluster_port = 4467
