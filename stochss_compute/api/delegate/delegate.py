@@ -104,3 +104,12 @@ class Delegate(ABC):
         """
         pass
 
+    @abstractmethod
+    def job_complete(self, id: str) -> bool:
+        """
+        Check if a job with the specified ID is complete.
+
+        :returns: True if the job is complete, False if it is not.
+        """
+        pass
+
