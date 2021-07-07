@@ -5,8 +5,7 @@ LABEL maintainer="Ethan Green <egreen4@unca.edu>"
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 
-RUN pip install --no-cache-dir poetry
-RUN poetry install
+RUN pip install -r requirements.txt
 
 ARG FLASK_ENV="production"
 ENV FLASK_ENV="${FLASK_ENV}" \
@@ -14,4 +13,4 @@ ENV FLASK_ENV="${FLASK_ENV}" \
 
 EXPOSE 1234
 
-CMD [ "poetry", "run", "stochss-compute"]
+CMD [ "python", "app.py" ]
