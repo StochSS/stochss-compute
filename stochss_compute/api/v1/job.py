@@ -1,9 +1,13 @@
 from gillespy2 import Model
 from pydantic import BaseModel
 
+from flask import g
 from flask import request
 from flask import Blueprint
+from flask import current_app
 from flask import make_response
+
+from werkzeug.local import LocalProxy
 
 from stochss_compute.api.delegate.dask_delegate import DaskDelegate
 from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
@@ -32,34 +36,35 @@ class JobStopResponse(BaseModel):
 class ErrorResponse(BaseModel):
     msg: str
 
-# Initialize and configure the compute delegate.
-_delegate = None
-
 v1_job = Blueprint("V1 Job API Endpoint", __name__, url_prefix="/job")
 
-# Instantiate the API.
-@v1_job.before_app_first_request
-def initialize():
-    global _delegate
+def get_delegate():
+    if "delegate" in g:
+        return g.delegate
 
-    delegate_config = DaskDelegateConfig()
-    _delegate = DaskDelegate(delegate_config)
+    delegate_config = current_app.config["DELEGATE_CONFIG"]
+    delegate_type = current_app.config["DELEGATE_TYPE"]
 
-    # Validate the connection.
-    if False in (_delegate.connect(), _delegate.test_connection()):
+    delegate = delegate_type(delegate_config)
+
+    if False in (delegate.connect(), delegate.test_connection()):
         raise Exception("Delegate connection failed.")
+
+    return delegate
+
+delegate = LocalProxy(get_delegate)
 
 @v1_job.route("/start", methods=["POST"])
 def start_job():
     request_obj = StartJobRequest.parse_raw(request.json)
 
-    if _delegate.job_exists(request_obj.job_id):
+    if delegate.job_exists(request_obj.job_id):
         return ErrorResponse(
             msg=f"A job with id '{request_obj.job_id}' already exists."
         ).json(), 400
 
     model = Model.from_json(request_obj.model)
-    _delegate.start_job(request_obj.job_id, model.run)
+    delegate.start_job(request_obj.job_id, model.run)
 
     return StartJobResponse(
         job_id=request_obj.job_id,
@@ -69,12 +74,12 @@ def start_job():
 
 @v1_job.route("/<string:job_id>/status")
 def job_status(job_id: str):
-    if not _delegate.job_exists(job_id):
+    if not delegate.job_exists(job_id):
         return make_response(ErrorResponse(
             msg=f"A job with id '{job_id}' does not exist."
         ).dict(), 404)
 
-    job_status = _delegate.job_status(job_id)
+    job_status = delegate.job_status(job_id)
 
     return make_response(JobStatusResponse(
         job_id=job_id,
@@ -86,27 +91,27 @@ def job_status(job_id: str):
 
 @v1_job.route("/<string:job_id>/results")
 def job_results(job_id: str):
-    if not _delegate.job_exists(job_id):
+    if not delegate.job_exists(job_id):
         return ErrorResponse(
             msg=f"A job with id '{job_id}' does not exist."
         ), 404
 
-    if not _delegate.job_status(job_id).is_done:
+    if not delegate.job_status(job_id).is_done:
         return ErrorResponse(
             msg=f"The job with id {job_id} is not yet complete."
         ).dict(), 400
 
-    job_results = _delegate.job_results(job_id)
+    job_results = delegate.job_results(job_id)
     return job_results.to_json(), 200
 
 @v1_job.route("/<string:job_id>/stop")
 def job_stop(job_id: str):
-    if not _delegate.job_exists(job_id):
+    if not delegate.job_exists(job_id):
         return ErrorResponse(
             msg=f"A job with id {job_id} does not exist."
         ), 404
 
-    if not _delegate.stop_job(job_id):
+    if not delegate.stop_job(job_id):
         return JobStopResponse(
             job_id=job_id,
             msg=f"Failed to stop job with id '{job_id}'.",
