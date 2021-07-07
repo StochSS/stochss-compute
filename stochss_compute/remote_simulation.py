@@ -81,7 +81,8 @@ class RemoteSimulation():
         status_raw = requests.get(status_url)
 
         if status_raw.status_code is not 200:
-            raise ErrorResponse.parse_raw(status_raw.text)
+            error = ErrorResponse.parse_raw(status_raw.text)
+            raise Exception(error)
 
         return JobStatusResponse.parse_raw(status_raw.text)
 
