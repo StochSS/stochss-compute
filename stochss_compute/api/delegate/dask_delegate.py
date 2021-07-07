@@ -56,12 +56,10 @@ class DaskDelegate(Delegate):
         # These routines are meant to be run on the Dask scheduler for an internal view on running tasks.
         self.scheduler_job_exists = lambda dask_scheduler, id: id in dask_scheduler.tasks
         self.scheduler_job_status = lambda dask_scheduler, id: dask_scheduler.tasks[id].state
-        self.scheduler_get_worker_with_job = lambda dask_scheduler, id: dask_scheduler.workers
 
     def __cache_results(self, future: Future):
         # This function will be fired on the Dask worker after the job is complete.
         # It will save the results in the Redis cache.
-
         result = future.result()
 
         self.redis.set(f"{future.key}", dill.dumps(result))
@@ -90,7 +88,10 @@ class DaskDelegate(Delegate):
         # Create a job and set a callback to cache the results once complete.
         job_future: Future = self.client.submit(work, key=id)
         job_future.add_done_callback(self.__cache_results)
-    
+ 
+        # Fire-and-forget the Future. This ensures that the job continues even
+        # if we don't keep the object around.
+        # Note: Once the job is complete it's removed from worker memory.
         fire_and_forget(job_future)
 
         return True
@@ -100,7 +101,6 @@ class DaskDelegate(Delegate):
             return False
 
         dill.loads(self.redis.get(id)).cancel()
-        # self.task_map[id].cancel()
 
         return True
 
