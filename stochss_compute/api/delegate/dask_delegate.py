@@ -5,7 +5,6 @@ from typing import Callable
 from redis import Redis
 from dask.distributed import Future
 from dask.distributed import Client
-from dask.distributed import LocalCluster
 from dask.distributed import fire_and_forget
 
 from stochss_compute.api.delegate.delegate import Delegate
@@ -20,15 +19,6 @@ class DaskDelegateConfig(DelegateConfig):
 
     dask_cluster_port = 8786
     dask_cluster_address = "localhost"
-    dask_use_remote_cluster = False
-
-    dask_worker_count = 1
-    dask_worker_threads = 2
-    dask_worker_memory_limit = "4GB"
-
-    dask_dashboard_port = 8788
-    dask_dashboard_address = "localhost"
-    dask_dashboard_enabled = False
 
 class DaskDelegate(Delegate):
     type: str = "dask"
