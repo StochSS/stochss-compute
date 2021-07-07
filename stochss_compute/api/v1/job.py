@@ -74,11 +74,6 @@ def start_job():
 
 @v1_job.route("/<string:job_id>/status")
 def job_status(job_id: str):
-    if not delegate.job_exists(job_id):
-        return make_response(ErrorResponse(
-            msg=f"A job with id '{job_id}' does not exist."
-        ).dict(), 404)
-
     job_status = delegate.job_status(job_id)
 
     return make_response(JobStatusResponse(
@@ -91,10 +86,10 @@ def job_status(job_id: str):
 
 @v1_job.route("/<string:job_id>/results")
 def job_results(job_id: str):
-    if not delegate.job_exists(job_id):
+    if not delegate.job_exists(job_id) and not delegate.job_complete(job_id):
         return ErrorResponse(
             msg=f"A job with id '{job_id}' does not exist."
-        ), 404
+        ).dict(), 404
 
     if not delegate.job_status(job_id).is_done:
         return ErrorResponse(
@@ -109,20 +104,20 @@ def job_stop(job_id: str):
     if not delegate.job_exists(job_id):
         return ErrorResponse(
             msg=f"A job with id {job_id} does not exist."
-        ), 404
+        ).dict(), 404
 
     if not delegate.stop_job(job_id):
         return JobStopResponse(
             job_id=job_id,
             msg=f"Failed to stop job with id '{job_id}'.",
             success=False
-        ), 500
+        ).dict(), 500
 
     return JobStopResponse(
         job_id=job_id,
         msg=f"Job with id '{job_id}' has been stopped.",
         success=True
-    ), 200
+    ).dict(), 200
 
 # class Create(MethodView):
 #     parser = reqparse.RequestParser()
