@@ -133,8 +133,6 @@ class DaskDelegate(Delegate):
             "erred": (JobState.FAILED, "The job has failed."),
         }
 
-        # job_future: Future = dill.loads(self.redis.get(id))
-        # job_future = self.task_map[id]
         future_status = self.client.run_on_scheduler(self.scheduler_job_status, id=id)
 
         status = JobStatus()

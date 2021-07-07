@@ -11,7 +11,7 @@ def start_api(
         host: str, 
         port: int, 
         debug: bool = False, 
-        delegate_type: Delegate = DaskDelegate,
+        delegate_type: type[Delegate] = DaskDelegate,
         delegate_config: DelegateConfig = DaskDelegateConfig(),
         **kwargs):
     
