@@ -25,9 +25,9 @@ def start_api(
     :param port: The port to listen on.
     :type port: int
 
-    :param delegate: The type of delegate to be used to run simulation jobs. Defaults
-        to the DaskDelegate.
-    :type delegate: Delegate
+    :param delegate_type: The type of delegate to be used to run simulation jobs. Defaults
+        to DaskDelegate.
+    :type delegate_type: type[Delegate]
 
     :param delegate_config: Delegate-specific configuration options. These will be
         passed directly to the Delegate instance. If None then the default config
