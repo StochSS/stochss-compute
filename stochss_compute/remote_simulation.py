@@ -1,8 +1,8 @@
 import time
 import json
-from typing import Union
 import requests
 
+from gillespy2.core import Model
 from gillespy2.core import Results
 
 from .api.v1.job import (
@@ -13,22 +13,49 @@ from .api.v1.job import (
     ErrorResponse
 )
 
-def connect_to(host, port):
-    return RemoteSimulation(host, port)
+class ComputeServer():
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.address = f"http://{host}:{port}"
 
 class RemoteSimulation():
-    def on(server):
+    @classmethod
+    def on(cls, server: ComputeServer):
+        """
+        Specify a stochss-compute server that subsequent simulations will be run on.
+
+        :param server: A ComputeServer instance which contains connection details
+            of the stochss-compute instance to run simulations on.
+        :type server: ComputeServer
+        """
+
         sim = RemoteSimulation()
         sim.server = server
 
         return sim
 
-    def with_model(self, model):
+    def with_model(self, model: Model):
+        """
+        Specify the GillesPy2 Model that will be run in subquent simulations.
+
+        :param model: The GillesPy2 Model to simulate.
+        :type model: Model
+        """
+
         self.model = model
 
         return self
 
-    def run(self, **params):
+    def run(self, **params) -> Results:
+        """
+        Simulate the Model on the target ComputeServer, returning the results once complete.
+
+        :param **params: Arguments to pass directly to the Model#run call on the server.
+        
+        :returns: Results
+        """
+
         params = json.dumps(params)
 
         model_hash = self.model.get_json_hash()
@@ -46,7 +73,7 @@ class RemoteSimulation():
 
         start_raw = requests.post(f"{self.server.address}/api/v1/job/start", json=request.json())
 
-        if start_raw.status_code is not 202:
+        if start_raw.status_code != 202:
             print(start_raw)
             error = ErrorResponse.parse_raw(start_raw.text)
 
@@ -58,7 +85,7 @@ class RemoteSimulation():
         print(status_url)
         status_raw = requests.get(status_url)
 
-        if status_raw.status_code is not 200:
+        if status_raw.status_code != 200:
             error = ErrorResponse.parse_raw(status_raw.text)
             raise Exception(error.msg)
 
@@ -71,7 +98,7 @@ class RemoteSimulation():
 
         results_raw = requests.get(f"{self.server.address}/api/v1/job/{request.job_id}/results")
 
-        if results_raw.status_code is not 200:
+        if results_raw.status_code != 200:
             error = ErrorResponse.parse_raw(results_raw.text)
             raise Exception(error.msg)
 
@@ -80,14 +107,9 @@ class RemoteSimulation():
     def __get_job_status(self, status_url: str) -> JobStatusResponse:
         status_raw = requests.get(status_url)
 
-        if status_raw.status_code is not 200:
+        if status_raw.status_code != 200:
             error = ErrorResponse.parse_raw(status_raw.text)
             raise Exception(error)
 
         return JobStatusResponse.parse_raw(status_raw.text)
 
-class ComputeServer():
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-        self.address = f"http://{host}:{port}"
