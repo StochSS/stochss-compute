@@ -3,6 +3,8 @@ import click
 from redis import Redis
 from distributed.diagnostics.plugin import SchedulerPlugin
 
+from stochss_compute import RemoteSimulation
+
 class DaskWorkerPlugin(SchedulerPlugin):
     name = "test_plugin"
 
@@ -18,7 +20,7 @@ class DaskWorkerPlugin(SchedulerPlugin):
         if start == "memory" and finish == "forgotten":
             finish = "done"
 
-        self.redis.set("test_key", finish)
+        self.redis.set(f"state-{key}", finish)
 
 @click.command()
 def dask_setup(scheduler):
