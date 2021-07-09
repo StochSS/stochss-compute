@@ -1,5 +1,6 @@
 import dill
 
+from pathlib import Path
 from typing import Callable
 
 from redis import Redis
@@ -16,15 +17,25 @@ class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
     redis_address = "0.0.0.0"
     redis_db = 0
+    redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
     dask_cluster_address = "localhost"
+    dask_use_remote_cluster = False
+
+    dask_worker_count = 1
+    dask_worker_threads = 2
+    dask_worker_memory_limit = "4GB"
+
+    dask_dashboard_port = 8788
+    dask_dashboard_address = "localhost"
+    dask_dashboard_enabled = False
 
 class DaskDelegate(Delegate):
     type: str = "dask"
 
     def __init__(self, delegate_config: DaskDelegateConfig):
-        self.task_map: dict[str, Future] = { }
+        self.delegate_config = delegate_config
         # self.cluster = LocalCluster(
         #     dashboard_address=f"{delegate_config.dask_dashboard_address}:{delegate_config.dask_dashboard_port}",
         #     n_workers=delegate_config.dask_worker_count,
@@ -42,7 +53,6 @@ class DaskDelegate(Delegate):
             port=delegate_config.redis_port,
             db=delegate_config.redis_db
         )
-
         # These routines are meant to be run on the Dask scheduler for an internal view on running tasks.
         self.scheduler_job_exists = lambda dask_scheduler, id: id in dask_scheduler.tasks
         self.scheduler_job_status = lambda dask_scheduler, id: dask_scheduler.tasks[id].state
@@ -50,12 +60,15 @@ class DaskDelegate(Delegate):
     def __cache_results(self, future: Future):
         # This function will be fired on the Dask worker after the job is complete.
         # It will save the results in the Redis cache.
-        result = future.result()
+        result = dill.dumps(future.result())
+        
+        # Save the results on Disk, store the path in Redis.
+        outpath = Path(self.delegate_config.redis_vault_dir).joinpath(future.key)
+        with outpath.open("w+b") as outfile:
+            outfile.write(result)
 
-        self.redis.set(f"{future.key}", dill.dumps(result))
+        self.redis.set(f"{future.key}", str(outpath.resolve()))
         self.redis.save()
-
-        print(f"Task with ID {future.key} has been cached.")
 
     def connect(self) -> bool:
         # No need to connect.
@@ -136,11 +149,14 @@ class DaskDelegate(Delegate):
 
     def job_results(self, id: str):
         # Results are stored and recieved from the Redis cache.
-        redis_results = self.redis.get(f"{id}")
+        results_file = self.redis.get(f"{id}")
 
-        if redis_results is not None:
-            print("Getting cached results.")
-            return dill.loads(redis_results)
+        with open(results_file, "rb") as infile:
+            results = dill.load(infile)
+
+        if results is not None:
+            print(f"Getting cached results from file {results_file}.")
+            return results
 
     def job_complete(self, id: str) -> bool:
         return self.redis.get(id) is not None
