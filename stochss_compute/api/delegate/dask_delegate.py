@@ -36,10 +36,7 @@ class DaskDelegate(Delegate):
 
     def __init__(self, delegate_config: DaskDelegateConfig):
         self.vault_dir = delegate_config.redis_vault_dir
-
-        # Initialize the Dask client and connect to the specified cluster.
-        cluster_address = f"tcp://{delegate_config.dask_cluster_address}:{delegate_config.dask_cluster_port}"
-        self.client = Client(cluster_address)
+        self.cluster_address = f"tcp://{delegate_config.dask_cluster_address}:{delegate_config.dask_cluster_port}"
 
         # Connect to the Redis DB.
         self.redis = Redis(
@@ -78,15 +75,23 @@ class DaskDelegate(Delegate):
     def start_job(self, id: str, work: Callable, *args, **kwargs) -> bool:
         if self.job_exists(id) or self.job_complete(id):
             return False
+
+        # Initialize the Dask client and connect to the specified cluster.
+        client = Client(self.cluster_address)
         
         # Create a job and set a callback to cache the results once complete.
-        job_future: Future = self.client.submit(work, key=id)
+        job_future: Future = client.submit(work, key=id)
         job_future.add_done_callback(self.__cache_results)
  
         # Fire-and-forget the Future. This ensures that the job continues even
         # if we don't keep the object around.
         # Note: Once the job is complete it's removed from worker memory.
         fire_and_forget(job_future)
+
+        # Create the state value in Redis.
+        self.redis.set(f"state-{id}", "no-worker")
+
+        client.close()
 
         return True
 
