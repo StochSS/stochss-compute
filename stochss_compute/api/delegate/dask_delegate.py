@@ -35,13 +35,7 @@ class DaskDelegate(Delegate):
     type: str = "dask"
 
     def __init__(self, delegate_config: DaskDelegateConfig):
-        self.delegate_config = delegate_config
-        # self.cluster = LocalCluster(
-        #     dashboard_address=f"{delegate_config.dask_dashboard_address}:{delegate_config.dask_dashboard_port}",
-        #     n_workers=delegate_config.dask_worker_count,
-        #     threads_per_worker=delegate_config.dask_worker_threads,
-        #     memory_limit=delegate_config.dask_worker_memory_limit
-        # )
+        self.vault_dir = delegate_config.redis_vault_dir
 
         # Initialize the Dask client and connect to the specified cluster.
         cluster_address = f"tcp://{delegate_config.dask_cluster_address}:{delegate_config.dask_cluster_port}"
@@ -53,9 +47,6 @@ class DaskDelegate(Delegate):
             port=delegate_config.redis_port,
             db=delegate_config.redis_db
         )
-        # These routines are meant to be run on the Dask scheduler for an internal view on running tasks.
-        self.scheduler_job_exists = lambda dask_scheduler, id: id in dask_scheduler.tasks
-        self.scheduler_job_status = lambda dask_scheduler, id: dask_scheduler.tasks[id].state
 
     def __cache_results(self, future: Future):
         # This function will be fired on the Dask worker after the job is complete.
@@ -63,7 +54,7 @@ class DaskDelegate(Delegate):
         result = dill.dumps(future.result())
         
         # Save the results on Disk, store the path in Redis.
-        outpath = Path(self.delegate_config.redis_vault_dir).joinpath(future.key)
+        outpath = Path(self.vault_dir).joinpath(future.key)
         with outpath.open("w+b") as outfile:
             outfile.write(result)
 
@@ -103,8 +94,6 @@ class DaskDelegate(Delegate):
         if not self.job_exists(id):
             return False
 
-        dill.loads(self.redis.get(id)).cancel()
-
         return True
 
     def job_status(self, id: str) -> JobStatus:
@@ -134,9 +123,10 @@ class DaskDelegate(Delegate):
             "processing": (JobState.RUNNING, "The job is running."),
             "memory": (JobState.DONE, "The job is done and is being held in memory."),
             "erred": (JobState.FAILED, "The job has failed."),
+            "done": (JobState.DONE, "The job is done and is stored on disk.")
         }
 
-        future_status = self.client.run_on_scheduler(self.scheduler_job_status, id=id)
+        future_status = self.redis.get(f"state-{id}").decode("utf-8")
 
         status = JobStatus()
         status.status_id = status_mapping[future_status][0]
@@ -154,13 +144,12 @@ class DaskDelegate(Delegate):
         with open(results_file, "rb") as infile:
             results = dill.load(infile)
 
-        if results is not None:
-            print(f"Getting cached results from file {results_file}.")
-            return results
+        print(f"Getting cached results from file {results_file}.")
+        return results
 
     def job_complete(self, id: str) -> bool:
-        return self.redis.get(id) is not None
+        return self.redis.get(f"state-{id}") == "done"
 
     def job_exists(self, id: str) -> bool:
-        return self.client.run_on_scheduler(self.scheduler_job_exists, id=id)
+        return self.redis.get(f"state-{id}") is not None
 
