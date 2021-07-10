@@ -14,6 +14,10 @@ from .delegate import JobState
 from .delegate import JobStatus
 from .delegate import DelegateConfig
 
+from .redis_namespace import vault_prefix
+from .redis_namespace import cache_prefix
+from .redis_namespace import state_prefix
+
 class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
     redis_address = "0.0.0.0"
@@ -55,14 +59,14 @@ class DaskDelegate(Delegate):
         
 
         # Cache the results for a specified TTL (in seconds).
-        self.redis.set(f"cache-{future.key}", result, ex=self.delegate_config.redis_cache_ttl)
+        self.redis.set(cache_prefix(future.key), result, ex=self.delegate_config.redis_cache_ttl)
 
         # Save the results on Disk, store the path in Redis.
         outpath = Path(self.delegate_config.redis_vault_dir).joinpath(future.key)
         with outpath.open("w+b") as outfile:
             outfile.write(result)
 
-        self.redis.set(f"vault-{future.key}", str(outpath.resolve()))
+        self.redis.set(vault_prefix(future.key), str(outpath.resolve()))
 
         # Close the Client that started this job.
         with get_client() as client:
@@ -99,7 +103,7 @@ class DaskDelegate(Delegate):
         fire_and_forget(job_future)
 
         # Create the state value in Redis.
-        self.redis.set(f"state-{id}", "no-worker")
+        self.redis.set(state_prefix(id), "no-worker")
 
         return True
 
@@ -152,14 +156,14 @@ class DaskDelegate(Delegate):
 
     def job_results(self, id: str):
         # If the result is still cached, return it directly from memory.
-        cached_results = self.redis.get(f"cache-{id}")
+        cached_results = self.redis.get(cache_prefix(id))
 
         if cached_results is not None:
             print(f"Getting results from cache.")
             return dill.loads(cached_results)
 
         # If the results are not in the cache, return from the disk.
-        results_file = self.redis.get(f"vault-{id}")
+        results_file = self.redis.get(vault_prefix(id))
 
         with open(results_file, "rb") as infile:
             results = dill.load(infile)
@@ -168,7 +172,7 @@ class DaskDelegate(Delegate):
         return results
 
     def job_complete(self, id: str) -> bool:
-        redis_val = self.redis.get(f"state-{id}")
+        redis_val = self.redis.get(state_prefix(id))
 
         if redis_val is None:
             return False
@@ -176,5 +180,5 @@ class DaskDelegate(Delegate):
         return redis_val.decode("utf-8") == "done"
 
     def job_exists(self, id: str) -> bool:
-        return self.redis.get(f"state-{id}") is not None
+        return self.redis.get(state_prefix(id)) is not None
 
