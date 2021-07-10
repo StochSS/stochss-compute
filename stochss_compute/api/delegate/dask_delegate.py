@@ -56,13 +56,16 @@ class DaskDelegate(Delegate):
         # This function will be fired on the Dask worker after the job is complete.
         # It will save the results in the Redis cache.
         result = dill.dumps(future.result())
-        
 
         # Cache the results for a specified TTL (in seconds).
         self.redis.set(cache_prefix(future.key), result, ex=self.delegate_config.redis_cache_ttl)
 
         # Save the results on Disk, store the path in Redis.
         outpath = Path(self.delegate_config.redis_vault_dir).joinpath(future.key)
+
+        if not outpath.parent.is_dir():
+            outpath.parent.mkdir()
+
         with outpath.open("w+b") as outfile:
             outfile.write(result)
 
@@ -140,10 +143,10 @@ class DaskDelegate(Delegate):
             "processing": (JobState.RUNNING, "The job is running."),
             "memory": (JobState.DONE, "The job is done and is being held in memory."),
             "erred": (JobState.FAILED, "The job has failed."),
-            "done": (JobState.DONE, "The job is done and is stored on disk.")
+            "done": (JobState.DONE, "The job is done and has been cached / stored on disk.")
         }
 
-        future_status = self.redis.get(f"state-{id}").decode("utf-8")
+        future_status = self.redis.get(state_prefix(id)).decode("utf-8")
 
         status = JobStatus()
         status.status_id = status_mapping[future_status][0]
@@ -163,7 +166,7 @@ class DaskDelegate(Delegate):
             return dill.loads(cached_results)
 
         # If the results are not in the cache, return from the disk.
-        results_file = self.redis.get(vault_prefix(id))
+        results_file = self.redis.get(vault_prefix(id)).decode("utf-8")
 
         with open(results_file, "rb") as infile:
             results = dill.load(infile)
@@ -174,10 +177,7 @@ class DaskDelegate(Delegate):
     def job_complete(self, id: str) -> bool:
         redis_val = self.redis.get(state_prefix(id))
 
-        if redis_val is None:
-            return False
-
-        return redis_val.decode("utf-8") == "done"
+        return redis_val is not None and redis_val.decode("utf-8") == "done"
 
     def job_exists(self, id: str) -> bool:
         return self.redis.get(state_prefix(id)) is not None
