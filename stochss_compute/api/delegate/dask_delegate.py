@@ -91,8 +91,6 @@ class DaskDelegate(Delegate):
         # Create the state value in Redis.
         self.redis.set(f"state-{id}", "no-worker")
 
-        client.close()
-
         return True
 
     def stop_job(self, id: str) -> bool:
