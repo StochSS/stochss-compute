@@ -18,6 +18,8 @@ class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
     redis_address = "0.0.0.0"
     redis_db = 0
+
+    redis_cache_ttl = 60 * 60
     redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
@@ -36,8 +38,8 @@ class DaskDelegate(Delegate):
     type: str = "dask"
 
     def __init__(self, delegate_config: DaskDelegateConfig):
-        self.vault_dir = delegate_config.redis_vault_dir
         self.cluster_address = f"tcp://{delegate_config.dask_cluster_address}:{delegate_config.dask_cluster_port}"
+        self.delegate_config = delegate_config
 
         # Connect to the Redis DB.
         self.redis = Redis(
@@ -51,13 +53,16 @@ class DaskDelegate(Delegate):
         # It will save the results in the Redis cache.
         result = dill.dumps(future.result())
         
+
+        # Cache the results for a specified TTL (in seconds).
+        self.redis.set(f"cache-{future.key}", result, ex=self.delegate_config.redis_cache_ttl)
+
         # Save the results on Disk, store the path in Redis.
-        outpath = Path(self.vault_dir).joinpath(future.key)
+        outpath = Path(self.delegate_config.redis_vault_dir).joinpath(future.key)
         with outpath.open("w+b") as outfile:
             outfile.write(result)
 
-        self.redis.set(f"{future.key}", str(outpath.resolve()))
-        self.redis.save()
+        self.redis.set(f"vault-{future.key}", str(outpath.resolve()))
 
         # Close the Client that started this job.
         with get_client() as client:
@@ -146,13 +151,20 @@ class DaskDelegate(Delegate):
         return status
 
     def job_results(self, id: str):
-        # Results are stored and recieved from the Redis cache.
-        results_file = self.redis.get(f"{id}")
+        # If the result is still cached, return it directly from memory.
+        cached_results = self.redis.get(f"cache-{id}")
+
+        if cached_results is not None:
+            print(f"Getting results from cache.")
+            return dill.loads(cached_results)
+
+        # If the results are not in the cache, return from the disk.
+        results_file = self.redis.get(f"vault-{id}")
 
         with open(results_file, "rb") as infile:
             results = dill.load(infile)
 
-        print(f"Getting cached results from file {results_file}.")
+        print(f"Getting vaulted results from {results_file}.")
         return results
 
     def job_complete(self, id: str) -> bool:
