@@ -59,6 +59,10 @@ class DaskDelegate(Delegate):
         self.redis.set(f"{future.key}", str(outpath.resolve()))
         self.redis.save()
 
+        # Close the Client that started this job.
+        with get_client() as client:
+            client.close()
+
     def connect(self) -> bool:
         # No need to connect.
         return True
