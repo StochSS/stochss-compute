@@ -4,14 +4,15 @@ from pathlib import Path
 from typing import Callable
 
 from redis import Redis
-from dask.distributed import Future
-from dask.distributed import Client
-from dask.distributed import fire_and_forget
+from distributed import Future
+from distributed import Client
+from distributed import get_client
+from distributed import fire_and_forget
 
-from stochss_compute.api.delegate.delegate import Delegate
-from stochss_compute.api.delegate.delegate import JobState
-from stochss_compute.api.delegate.delegate import JobStatus
-from stochss_compute.api.delegate.delegate import DelegateConfig
+from .delegate import Delegate
+from .delegate import JobState
+from .delegate import JobStatus
+from .delegate import DelegateConfig
 
 class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
