@@ -151,7 +151,12 @@ class DaskDelegate(Delegate):
         return results
 
     def job_complete(self, id: str) -> bool:
-        return self.redis.get(f"state-{id}") == "done"
+        redis_val = self.redis.get(f"state-{id}")
+
+        if redis_val is None:
+            return False
+
+        return redis_val.decode("utf-8") == "done"
 
     def job_exists(self, id: str) -> bool:
         return self.redis.get(f"state-{id}") is not None
