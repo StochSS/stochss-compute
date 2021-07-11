@@ -1,13 +1,10 @@
 from gillespy2.core import Model
 from pydantic import BaseModel
 
-from flask import g
 from flask import request
 from flask import Blueprint
-from flask import current_app
-from flask import make_response
 
-from werkzeug.local import LocalProxy
+from .apiutils import delegate
 
 class StartJobRequest(BaseModel):
     job_id: str
@@ -34,22 +31,6 @@ class ErrorResponse(BaseModel):
     msg: str
 
 v1_job = Blueprint("V1 Job API Endpoint", __name__, url_prefix="/job")
-
-def get_delegate():
-    if "delegate" in g:
-        return g.delegate
-
-    delegate_config = current_app.config["DELEGATE_CONFIG"]
-    delegate_type = current_app.config["DELEGATE_TYPE"]
-
-    delegate = delegate_type(delegate_config)
-
-    if False in (delegate.connect(), delegate.test_connection()):
-        raise Exception("Delegate connection failed.")
-
-    return delegate
-
-delegate = LocalProxy(get_delegate)
 
 @v1_job.route("/start", methods=["POST"])
 def start_job():
