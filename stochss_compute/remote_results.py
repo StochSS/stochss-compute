@@ -1,6 +1,9 @@
 import sys
 import bz2
 import time
+import inspect
+
+from functools import partial
 
 import plotly.io as plotlyio
 
@@ -20,6 +23,16 @@ class RemoteResults(Results):
         self.result_id = result_id
         self.server = server
         self.model = model
+        self.local_results = None
+
+        # Patch backing Results functions to redirect to remote, if possible.
+        members = [key for key, value in inspect.getmembers(Results) if not key.startswith("_") and value.__module__ == Results.__module__]
+        for key in members:
+            if not hasattr(self, f"hook_{key}"):
+                setattr(self, key, partial(self.__local_hook, key))
+
+            else:
+                setattr(self, key, getattr(self, f"hook_{key}"))
 
     def __poll_job_status(self) -> bool:
         # Request the status of a running job.
@@ -32,6 +45,13 @@ class RemoteResults(Results):
         status = JobStatusResponse.parse_raw(status_response.text)
 
         return status.is_complete
+
+    def __local_hook(self, target: str = "", *args, **kwargs):
+        print(f"Calling proxy for: '{target}'...")
+        if self.local_results is None:
+            self.local_results = self.resolve()
+
+        return getattr(self.local_results, target)(*args, **kwargs)
 
     def status(self) -> JobStatusResponse:
         """
