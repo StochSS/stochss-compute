@@ -12,7 +12,9 @@ from matplotlib import pyplot
 from gillespy2.core import Results
 
 from .apiutils import delegate
+
 from .job import ErrorResponse
+from .job import StartJobResponse
 
 v1_result = Blueprint("V1 Result API Endpoint", __name__, url_prefix="result/")
 
@@ -36,6 +38,31 @@ def results_exist(result_id: str):
         return "False", 404
 
     return "True", 200
+
+@v1_result.route("/<string:result_id>/average_ensemble", methods=["POST"])
+def make_average_ensemble(result_id: str):
+    # Make sure we can grab a result with this ID.
+    if not delegate.job_complete(result_id):
+        return "Something broke", 404
+
+    job_id = f"average-ensemble-{result_id}"
+
+    if delegate.job_exists(job_id):
+        return StartJobResponse(
+            job_id=job_id,
+            msg="The job has already been started.",
+            status=f"/v1/job/{job_id}/status"
+        ).json(), 202
+
+    results: Results = delegate.job_results(result_id)
+
+    delegate.start_job(job_id, results.average_ensemble)
+
+    return StartJobResponse(
+        job_id=job_id,
+        msg="The job has been successfully started.",
+        status=f"/v1/job/{results_hash}/status"
+    ).json(), 202
 
 @v1_result.route("/<string:result_id>/plot", methods=["GET"])
 def make_plot(result_id: str):
