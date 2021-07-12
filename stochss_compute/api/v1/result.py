@@ -61,7 +61,7 @@ def make_average_ensemble(result_id: str):
     return StartJobResponse(
         job_id=job_id,
         msg="The job has been successfully started.",
-        status=f"/v1/job/{results_hash}/status"
+        status=f"/v1/job/{job_id}/status"
     ).json(), 202
 
 @v1_result.route("/<string:result_id>/plot", methods=["GET"])
