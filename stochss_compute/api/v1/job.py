@@ -55,10 +55,17 @@ delegate = LocalProxy(get_delegate)
 def start_job():
     request_obj = StartJobRequest.parse_raw(request.json)
 
-    if delegate.job_exists(request_obj.job_id):
+    if delegate.job_complete(request_obj.job_id):
         return ErrorResponse(
-            msg=f"A job with id '{request_obj.job_id}' already exists."
+            msg=f"The job with id '{request_obj.job_id} has already completed."
         ).json(), 400
+
+    if delegate.job_exists(request_obj.job_id):
+        return StartJobResponse(
+            job_id=request_obj.job_id,
+            msg="The job has already been started.",
+            status=f"/v1/job/{request_obj.job_id}/status"
+        ).json(), 202
 
     model = Model.from_json(request_obj.model)
     delegate.start_job(request_obj.job_id, model.run)
@@ -71,6 +78,11 @@ def start_job():
 
 @v1_job.route("/<string:job_id>/status")
 def job_status(job_id: str):
+    if not delegate.job_exists(job_id):
+        return ErrorResponse(
+            msg=f"A job with id '{job_id}' does not exist."
+        ).json(), 404
+
     job_status = delegate.job_status(job_id)
 
     return JobStatusResponse(
@@ -83,12 +95,12 @@ def job_status(job_id: str):
 
 @v1_job.route("/<string:job_id>/results")
 def job_results(job_id: str):
-    if not delegate.job_exists(job_id) and not delegate.job_complete(job_id):
+    if not delegate.job_exists(job_id):
         return ErrorResponse(
             msg=f"A job with id '{job_id}' does not exist."
         ).json(), 404
 
-    if not delegate.job_status(job_id).is_done:
+    if not delegate.job_complete(job_id):
         return ErrorResponse(
             msg=f"The job with id {job_id} is not yet complete."
         ).json(), 400
