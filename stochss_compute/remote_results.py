@@ -7,10 +7,10 @@ from functools import partial
 
 import plotly.io as plotlyio
 
+from IPython.display import Image
+
 from gillespy2.core import Model
 from gillespy2.core import Results
-
-from .remote_utils import unwrap_or_err
 
 from .compute_server import Endpoint
 from .compute_server import ComputeServer
@@ -86,6 +86,15 @@ class RemoteResults(Results):
         results = Results.from_json(results_json)
 
         return results
+
+    def hook_plot(self, *args, **kwargs):
+        plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plot")
+
+        print(f"Plot size: {sys.getsizeof(plot_response.content)}")
+        plot_image = bz2.decompress(plot_response.content)
+        print(f"Expanded to: {sys.getsizeof(plot_image)}")
+
+        return Image(data=plot_image, format="png")
 
     def hook_plotplotly(self, *args, **kwargs):
         plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plotplotly")
