@@ -15,7 +15,10 @@ from gillespy2.core import Results
 from .compute_server import Endpoint
 from .compute_server import ComputeServer
 
+from .remote_utils import unwrap_or_err
+
 from .api.v1.job import ErrorResponse
+from .api.v1.job import StartJobResponse
 from .api.v1.job import JobStatusResponse
 
 class RemoteResults(Results):
@@ -60,6 +63,19 @@ class RemoteResults(Results):
         :returns: JobStatusResponse
         """
 
+        status_response = self.server.get(Endpoint.JOB, f"/{self.result_id}/status")
+        status: JobStatusResponse = unwrap_or_err(JobStatusResponse, status_response)
+
+        return status
+
+    def wait(self):
+        """
+        Wait for the job to finish.
+        """
+
+        while not self.__poll_job_status():
+            time.sleep(5)
+
     def resolve(self) -> Results:
         """
         Finish the remote job and return the results.
@@ -86,6 +102,17 @@ class RemoteResults(Results):
         results = Results.from_json(results_json)
 
         return results
+
+    def hook_average_ensemble(self, *args, **kwargs):
+        start_response = self.server.post(Endpoint.RESULT, f"/{self.result_id}/average_ensemble")
+
+        if not start_response.ok:
+            raise Exception("Something broke.")
+
+        start = StartJobResponse.parse_raw(start_response.text)
+
+        RemoteResults.__getattribute__ = object.__getattribute__
+        return RemoteResults(result_id=start.job_id, server=self.server, model=self.model)
 
     def hook_plot(self, *args, **kwargs):
         plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plot")
