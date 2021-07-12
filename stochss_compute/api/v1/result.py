@@ -1,10 +1,14 @@
+import os
 import bz2
-import dill
+import tempfile
 
 import plotly.io as plotlyio
 
 from flask import Blueprint
 from flask import make_response
+
+from matplotlib import pyplot
+
 from gillespy2.core import Results
 
 from .apiutils import delegate
@@ -33,8 +37,37 @@ def results_exist(result_id: str):
 
     return "True", 200
 
-@v1_result.route("/<string:result_id>/plotplotly", methods=["GET"])
+@v1_result.route("/<string:result_id>/plot", methods=["GET"])
 def make_plot(result_id: str):
+    # Make sure we can grab a result with this ID.
+    if not delegate.job_complete(result_id):
+        return "Something broke", 404
+
+    # Grab the results.
+    results: Results = delegate.job_results(result_id)
+
+    # Swap the pyplot backend so the Results#plot call won't try to write to a GUI.
+    pyplot.switch_backend("template")
+
+    # Write the plot as a .png to the tempfile.
+    _, temp = tempfile.mkstemp(suffix=".png")
+    results.plot(save_png=temp)
+
+    # Read the contents of the temp file and cleanup.
+    with open(temp, "rb") as infile:
+        plot_bytes = infile.read()
+
+    os.remove(temp)
+
+    compressed_plot = bz2.compress(plot_bytes)
+
+    response = make_response(compressed_plot)
+    response.headers["Content-Encoding"] = "bzip2"
+
+    return response, 200
+
+@v1_result.route("/<string:result_id>/plotplotly", methods=["GET"])
+def make_plotplotly(result_id: str):
     # Ensure that a result with this ID exists.
     if not delegate.job_complete(result_id):
         return "Something broke", 404
