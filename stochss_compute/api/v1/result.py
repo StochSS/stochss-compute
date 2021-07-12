@@ -33,7 +33,7 @@ def results_exist(result_id: str):
 
     return "True", 200
 
-@v1_result.route("/<string:result_id>/plot", methods=["GET"])
+@v1_result.route("/<string:result_id>/plotplotly", methods=["GET"])
 def make_plot(result_id: str):
     # Ensure that a result with this ID exists.
     if not delegate.job_complete(result_id):
