@@ -67,8 +67,8 @@ class RemoteResults(Results):
 
         return results
 
-    def plotplotly(self):
-        plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plot")
+    def hook_plotplotly(self, *args, **kwargs):
+        plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plotplotly")
         
         print(f"Plot size: {sys.getsizeof(plot_response.content)}")
         plot_json = bz2.decompress(plot_response.content).decode()
