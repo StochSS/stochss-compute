@@ -22,20 +22,24 @@ from .api.v1.job import StartJobResponse
 from .api.v1.job import JobStatusResponse
 
 class RemoteResults(Results):
-    def __init__(self, result_id: str, server: ComputeServer, model: Model):
+    def __init__(self, result_id: str, server: ComputeServer):
+        Results.__new__(Results)
+
         self.result_id = result_id
         self.server = server
-        self.model = model
         self.local_results = None
 
         # Patch backing Results functions to redirect to remote, if possible.
         members = [key for key, value in inspect.getmembers(Results) if not key.startswith("_") and value.__module__ == Results.__module__]
+        print(members)
         for key in members:
             if not hasattr(self, f"hook_{key}"):
                 setattr(self, key, partial(self.__local_hook, key))
 
             else:
                 setattr(self, key, getattr(self, f"hook_{key}"))
+
+        print(self.__class__)
 
     def __poll_job_status(self) -> bool:
         # Request the status of a running job.
@@ -46,6 +50,8 @@ class RemoteResults(Results):
 
         # Parse the body of the response into a JobStatusResponse object.
         status = JobStatusResponse.parse_raw(status_response.text)
+        print(status.status_msg)
+        print(status.status_id)
 
         return status.is_complete
 
@@ -104,6 +110,12 @@ class RemoteResults(Results):
         return results
 
     def hook_average_ensemble(self, *args, **kwargs):
+        status_response = self.server.get(Endpoint.JOB, f"/{self.result_id}/status")
+        status: JobStatusResponse = unwrap_or_err(JobStatusResponse, status_response)
+
+        if status.has_failed:
+            raise Exception("Something broke, not sure. Oh well.")
+
         start_response = self.server.post(Endpoint.RESULT, f"/{self.result_id}/average_ensemble")
 
         if not start_response.ok:
@@ -111,8 +123,13 @@ class RemoteResults(Results):
 
         start = StartJobResponse.parse_raw(start_response.text)
 
-        RemoteResults.__getattribute__ = object.__getattribute__
-        return RemoteResults(result_id=start.job_id, server=self.server, model=self.model)
+        import copy
+        test = copy.deepcopy(self)
+        test.result_id = start.job_id
+        test.data = None
+        print(test)
+
+        return test
 
     def hook_plot(self, *args, **kwargs):
         plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plot")
