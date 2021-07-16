@@ -64,7 +64,7 @@ class RemoteSimulation():
         model_hash = self.model.get_json_hash()
         model = self.model.to_json()
 
-        remote_results = RemoteResults(result_id=model_hash, server=self.server, model=self.model)
+        remote_results = RemoteResults(result_id=model_hash, server=self.server)
 
         # Check to see if results already exist for this ID.
         results_response = self.server.get(Endpoint.RESULT, f"/{model_hash}/exists")
@@ -81,7 +81,7 @@ class RemoteSimulation():
             return remote_results
 
         # If we make it this far then the job either doesn't exist or has failed. Either way, start a new one.
-        start_request = StartJobRequest(job_id=model_hash, model=model)
+        start_request = StartJobRequest(job_id=model_hash, model=model, args="", kwargs=params)
         start_response = self.server.post(Endpoint.JOB, "/start", request=start_request)
 
         # Attempt to unwrap the response. If the request failed though, raise an Exception.
