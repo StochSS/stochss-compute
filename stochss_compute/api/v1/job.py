@@ -1,3 +1,5 @@
+import json
+
 from gillespy2.core import Model
 from pydantic import BaseModel
 
@@ -9,6 +11,8 @@ from .apiutils import delegate
 class StartJobRequest(BaseModel):
     job_id: str
     model: str
+    args: str
+    kwargs: str
 
 class StartJobResponse(BaseModel):
     job_id: str
@@ -49,7 +53,38 @@ def start_job():
         ).json(), 202
 
     model = Model.from_json(request_obj.model)
-    delegate.start_job(request_obj.job_id, model.run)
+    kwargs = json.loads(request_obj.kwargs)
+
+    from gillespy2.solvers import SSACSolver
+    kwargs["solver"] = SSACSolver
+
+    if not "number_of_trajectories" in kwargs:
+        delegate.start_job(request_obj.job_id, Model.run, model, **kwargs)
+
+    else:
+        trajectories = kwargs["number_of_trajectories"]
+        del kwargs["number_of_trajectories"]
+
+        # dependencies = []
+
+        # for trajectory in range(trajectories):
+        #     delegate.start_job(f"{request_obj.job_id}-{trajectory}", Model.run, model, **kwargs)
+        #     dependencies.append(f"result://{request_obj.job_id}-{trajectory}")
+
+        # Hacky, but it works for now.
+        delegate.client.scatter([model, kwargs])
+        dependencies = delegate.client.map(Model.run, [model, kwargs] * trajectories, key=request_obj.job_id)
+
+        def test_job(*args, **kwargs):
+            data = []
+
+            for result in args:
+                data = data + result.data
+
+            from gillespy2.core import Results
+            return Results(data)
+
+        delegate.start_job(request_obj.job_id, test_job, *dependencies)
 
     return StartJobResponse(
         job_id=request_obj.job_id,
@@ -59,7 +94,8 @@ def start_job():
 
 @v1_job.route("/<string:job_id>/status")
 def job_status(job_id: str):
-    if not delegate.job_exists(job_id):
+    # Check if the job has finished.
+    if not delegate.job_exists(job_id) and not delegate.job_complete(job_id):
         return ErrorResponse(
             msg=f"A job with id '{job_id}' does not exist."
         ).json(), 404
@@ -76,11 +112,6 @@ def job_status(job_id: str):
 
 @v1_job.route("/<string:job_id>/results")
 def job_results(job_id: str):
-    if not delegate.job_exists(job_id):
-        return ErrorResponse(
-            msg=f"A job with id '{job_id}' does not exist."
-        ).json(), 404
-
     if not delegate.job_complete(job_id):
         return ErrorResponse(
             msg=f"The job with id {job_id} is not yet complete."
