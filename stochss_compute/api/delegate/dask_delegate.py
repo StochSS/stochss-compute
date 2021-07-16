@@ -6,8 +6,8 @@ from typing import Callable
 from redis import Redis
 from distributed import Future
 from distributed import Client
+from distributed import Variable
 from distributed import get_client
-from distributed import fire_and_forget
 
 from .delegate import Delegate
 from .delegate import JobState
@@ -52,28 +52,36 @@ class DaskDelegate(Delegate):
             db=delegate_config.redis_db
         )
 
+        # Attempt to load the global Dask client.
+        try:
+            self.client = get_client()
+        except:
+            self.client = Client(self.cluster_address)
+
+        # Setup functions to be run on the schedule.
+        def __scheduler_job_exists(dask_scheduler, id):
+            return id in dask_scheduler.tasks
+
+        def __scheduler_job_state(dask_scheduler, id):
+            return dask_scheduler.tasks[id].state
+
+        self.scheduler_job_exists = __scheduler_job_exists
+        self.scheduler_job_state = __scheduler_job_state
+
+
     def __cache_results(self, future: Future):
-        # This function will be fired on the Dask worker after the job is complete.
-        # It will save the results in the Redis cache.
-        result = dill.dumps(future.result())
-
-        # Cache the results for a specified TTL (in seconds).
-        self.redis.set(cache_prefix(future.key), result, ex=self.delegate_config.redis_cache_ttl)
-
-        # Save the results on Disk, store the path in Redis.
+        # Save the results in the vault.
         outpath = Path(self.delegate_config.redis_vault_dir).joinpath(future.key)
 
         if not outpath.parent.is_dir():
             outpath.parent.mkdir()
 
         with outpath.open("w+b") as outfile:
+            result = dill.dumps(future.result())
             outfile.write(result)
 
-        self.redis.set(vault_prefix(future.key), str(outpath.resolve()))
-
-        # Close the Client that started this job.
-        with get_client() as client:
-            client.close()
+    def __job_state(self, id: str):
+        return self.client.run_on_scheduler(self.scheduler_job_state, id=id)
 
     def connect(self) -> bool:
         # No need to connect.
@@ -81,8 +89,6 @@ class DaskDelegate(Delegate):
 
     def test_connection(self) -> bool:
         # Shim this out until I figure out a good way to test a Dask and Redis connection.
-        self.redis.ping()
-
         return True
 
     def create_job(self, id: str) -> bool:
@@ -93,20 +99,16 @@ class DaskDelegate(Delegate):
         if self.job_exists(id) or self.job_complete(id):
             return False
 
-        # Initialize the Dask client and connect to the specified cluster.
-        client = Client(self.cluster_address)
-        
-        # Create a job and set a callback to cache the results once complete.
-        job_future: Future = client.submit(work, key=id)
-        job_future.add_done_callback(self.__cache_results)
- 
-        # Fire-and-forget the Future. This ensures that the job continues even
-        # if we don't keep the object around.
-        # Note: Once the job is complete it's removed from worker memory.
-        fire_and_forget(job_future)
+        # Parse *args and **kwargs for references to remote data.
+        function_args = [(self.client.get_dataset(arg.replace("result://", "")) if isinstance(arg, str) and arg.startswith("result://") else arg) for arg in args]
 
-        # Create the state value in Redis.
-        self.redis.set(state_prefix(id), "no-worker")
+        # Create a job and set a callback to cache the results once complete.
+        job_future: Future = self.client.submit(work, *function_args, **kwargs, key=id, pure=False)
+        job_future.add_done_callback(self.__cache_results)
+
+        # Publish the job as a dataset to maintain state across requests.
+        if not kwargs.get("no_publish", False):
+            self.client.publish_dataset(job_future, name=id)
 
         return True
 
@@ -114,10 +116,13 @@ class DaskDelegate(Delegate):
         if not self.job_exists(id):
             return False
 
+        job_future: Future = self.client.get_dataset(id)
+        job_future.cancel()
+
         return True
 
     def job_status(self, id: str) -> JobStatus:
-        # The job may exist in the cache.
+        # If the job is complete (results exist as a dataset or in the vault).
         if self.job_complete(id):
             status = JobStatus()
             status.status_id = JobState.DONE
@@ -127,6 +132,7 @@ class DaskDelegate(Delegate):
 
             return status
 
+        # If the job doesn't exist.
         if not self.job_exists(id):
             status = JobStatus()
             status.status_id = JobState.DOES_NOT_EXIST
@@ -146,7 +152,8 @@ class DaskDelegate(Delegate):
             "done": (JobState.DONE, "The job is done and has been cached / stored on disk.")
         }
 
-        future_status = self.redis.get(state_prefix(id)).decode("utf-8")
+        # Grab the task state from the scheduler.
+        future_status = self.__job_state(id)
 
         status = JobStatus()
         status.status_id = status_mapping[future_status][0]
@@ -158,27 +165,27 @@ class DaskDelegate(Delegate):
         return status
 
     def job_results(self, id: str):
-        # If the result is still cached, return it directly from memory.
-        cached_results = self.redis.get(cache_prefix(id))
+        # The results of this job may exist on the client dataset.
+        result_dataset = self.client.get_dataset(name=id).result()
 
-        if cached_results is not None:
-            print(f"Getting results from cache.")
-            return dill.loads(cached_results)
+        if result_dataset is not None:
+            print(f"[DEBUG] Getting results from dataset.")
+            return result_dataset
 
         # If the results are not in the cache, return from the disk.
-        results_file = self.redis.get(vault_prefix(id)).decode("utf-8")
+        results_file = Path(self.delegate_config.redis_vault_dir, id)
 
-        with open(results_file, "rb") as infile:
-            results = dill.load(infile)
+        if not results_file.is_file():
+            raise Exception(f"Results file '{results_file} does not exist in the vault.")
 
-        print(f"Getting vaulted results from {results_file}.")
-        return results
+        print(f"[DEBUG] Getting vaulted results from {results_file}.")
+        return dill.loads(results_file.read_bytes())
 
     def job_complete(self, id: str) -> bool:
-        redis_val = self.redis.get(state_prefix(id))
-
-        return redis_val is not None and redis_val.decode("utf-8") == "done"
+        # Finished jobs must exist in the Vault (even if they exist within Redis or as a dataset).
+        return Path(self.delegate_config.redis_vault_dir, id).is_file()
 
     def job_exists(self, id: str) -> bool:
-        return self.redis.get(state_prefix(id)) is not None
+        # Check if the job exists in the scheduler.
+        return self.client.run_on_scheduler(self.scheduler_job_exists, id=id)
 
