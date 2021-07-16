@@ -21,7 +21,7 @@ v1_result = Blueprint("V1 Result API Endpoint", __name__, url_prefix="result/")
 @v1_result.route("/<string:result_id>/get", methods=["GET"])
 def get_results(result_id: str):
     if not delegate.job_complete(result_id):
-        return ErrorResponse(msg="A result with this ID does not yet exist."), 404
+        return ErrorResponse(msg="A result with this ID does not yet exist.").json(), 404
 
     results_json = delegate.job_results(result_id).to_json()
     compressed_results = bz2.compress(results_json.encode())
@@ -42,10 +42,7 @@ def results_exist(result_id: str):
 @v1_result.route("/<string:result_id>/average_ensemble", methods=["POST"])
 def make_average_ensemble(result_id: str):
     # Make sure we can grab a result with this ID.
-    if not delegate.job_complete(result_id):
-        return "Something broke", 404
-
-    job_id = f"average-ensemble-{result_id}"
+    job_id = f"average_ensemble-{result_id}"
 
     if delegate.job_exists(job_id):
         return StartJobResponse(
@@ -54,9 +51,8 @@ def make_average_ensemble(result_id: str):
             status=f"/v1/job/{job_id}/status"
         ).json(), 202
 
-    results: Results = delegate.job_results(result_id)
-
-    delegate.start_job(job_id, results.average_ensemble)
+    from gillespy2.core import Results
+    delegate.start_job(job_id, Results.average_ensemble, f"result://{result_id}")
 
     return StartJobResponse(
         job_id=job_id,
@@ -73,7 +69,7 @@ def make_plot(result_id: str):
     # Grab the results.
     results: Results = delegate.job_results(result_id)
 
-    # Swap the pyplot backend so the Results#plot call won't try to write to a GUI.
+    # Swap the pyplot backend so the Results#plot call wont try to write to a GUI.
     pyplot.switch_backend("template")
 
     # Write the plot as a .png to the tempfile.
