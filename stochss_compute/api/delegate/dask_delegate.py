@@ -104,11 +104,10 @@ class DaskDelegate(Delegate):
 
         # Create a job and set a callback to cache the results once complete.
         job_future: Future = self.client.submit(work, *function_args, **kwargs, key=id, pure=False)
-        job_future.add_done_callback(self.__cache_results)
+        # job_future.add_done_callback(self.__cache_results)
 
         # Publish the job as a dataset to maintain state across requests.
-        if not kwargs.get("no_publish", False):
-            self.client.publish_dataset(job_future, name=id)
+        self.client.publish_dataset(job_future, name=id, override=True)
 
         return True
 
@@ -116,8 +115,17 @@ class DaskDelegate(Delegate):
         if not self.job_exists(id):
             return False
 
-        job_future: Future = self.client.get_dataset(id)
-        job_future.cancel()
+        # Iterate through the dependencies of this job.
+        dependencies = self.client.run_on_scheduler(lambda dask_scheduler: [(state.key) for state in dask_scheduler.tasks[id].dependencies])
+
+        # Filter out any weak depenencies. Strong dependencies are suffixed with "/" and the name of the job.
+        dependencies = [(dependency) for dependency in dependencies if dependency.replace(id, "").startswith("/")]
+
+        futures = [(Future(key)) for key in dependencies]
+        futures.append(Future(id))
+
+        self.client.cancel(futures)
+        self.client.unpublish_dataset(id)
 
         return True
 
