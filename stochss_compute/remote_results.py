@@ -109,6 +109,9 @@ class RemoteResults(Results):
 
         return results
 
+    def cancel(self):
+        stop_response = self.server.post(Endpoint.JOB, f"/{self.result_id}/stop")
+
     def hook_average_ensemble(self, *args, **kwargs):
         status_response = self.server.get(Endpoint.JOB, f"/{self.result_id}/status")
         status: JobStatusResponse = unwrap_or_err(JobStatusResponse, status_response)
