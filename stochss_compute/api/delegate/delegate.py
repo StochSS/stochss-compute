@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import IntEnum
 from abc import ABC, abstractmethod
 from typing import Callable
@@ -22,7 +24,7 @@ class DelegateConfig(ABC):
         Easy way to apply some number of named arguments onto self.
         """
 
-        self.__dict__ = self.__dict__ | kwargs
+        self.__dict__ = {**self.__dict__, **kwargs}
 
 class Delegate(ABC):
     type: str = ""

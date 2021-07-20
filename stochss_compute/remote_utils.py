@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from requests import Response
 from pydantic import BaseModel
 
