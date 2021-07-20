@@ -65,15 +65,11 @@ def start_job():
         trajectories = kwargs["number_of_trajectories"]
         del kwargs["number_of_trajectories"]
 
-        # dependencies = []
-
-        # for trajectory in range(trajectories):
-        #     delegate.start_job(f"{request_obj.job_id}-{trajectory}", Model.run, model, **kwargs)
-        #     dependencies.append(f"result://{request_obj.job_id}-{trajectory}")
-
         # Hacky, but it works for now.
+        keys = [f"{request_obj.job_id}/trajectory_{i}" for i in range(0, trajectories)]
         delegate.client.scatter([model, kwargs])
-        dependencies = delegate.client.map(Model.run, [model, kwargs] * trajectories, key=request_obj.job_id)
+
+        dependencies = delegate.client.map(Model.run, [model] * trajectories, **kwargs, key=keys)
 
         def test_job(*args, **kwargs):
             data = []
@@ -120,7 +116,7 @@ def job_results(job_id: str):
     job_results = delegate.job_results(job_id)
     return job_results.to_json(), 200
 
-@v1_job.route("/<string:job_id>/stop")
+@v1_job.route("/<string:job_id>/stop", methods=["POST"])
 def job_stop(job_id: str):
     if not delegate.job_exists(job_id):
         return ErrorResponse(
