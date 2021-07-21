@@ -124,8 +124,15 @@ class DaskDelegate(Delegate):
         futures = [(Future(key)) for key in dependencies]
         futures.append(Future(id))
 
-        self.client.cancel(futures)
+        self.client.cancel(Future(id))
         self.client.unpublish_dataset(id)
+
+        # Hacky fix -- Simulation processes continue executing EVEN IF the parent task is killed.
+        def hacky():
+            import os
+            os.system("pkill -f 'Simulation.out'")
+
+        self.client.run(hacky)
 
         return True
 
