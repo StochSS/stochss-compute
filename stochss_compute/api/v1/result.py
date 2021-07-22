@@ -51,7 +51,6 @@ def make_average_ensemble(result_id: str):
             status=f"/v1/job/{job_id}/status"
         ).json(), 202
 
-    from gillespy2.core import Results
     delegate.start_job(job_id, Results.average_ensemble, f"result://{result_id}")
 
     return StartJobResponse(
