@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dask
+spec:
+  selector:
+    matchLabels:
+      app: dask
+  template:
+    metadata:
+      labels:
+        app: dask
+    spec:
+      containers:
+      - name: dask
+        image: daskdev/dask
+        ports:
+        - containerPort: 8786
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dask-service
+spec:
+  selector:
+    app: dask
+  ports:
+  - port: 8786
+    targetPort: 8786
+
