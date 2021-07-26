@@ -29,7 +29,7 @@ class DaskDelegateConfig(DelegateConfig):
     redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
-    dask_cluster_address = os.environ.get("DASK_CLUSTER_ADDRESS")
+    dask_cluster_address = os.environ.get("DASK_SCHEDULER_ADDRESS")
     dask_use_remote_cluster = False
 
     dask_worker_count = 1
