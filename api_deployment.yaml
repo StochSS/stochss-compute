@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stochss-compute
+spec:
+  selector:
+    matchLabels:
+      app: stochss-compute
+  template:
+    metadata:
+      labels:
+        app: stochss-compute
+    spec:
+      containers:
+      - name: stochss-compute
+        image: mdip226/stochss-compute:latest
+        env:
+          - name: REDIS_ADDRESS
+            value: "redis-service.default"
+          - name: DASK_SCHEDULER_ADDRESS
+            value: "dask-service.default"
+        ports:
+        - containerPort: 1234
