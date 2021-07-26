@@ -18,16 +18,18 @@ from .redis_namespace import vault_prefix
 from .redis_namespace import cache_prefix
 from .redis_namespace import state_prefix
 
+import os
+
 class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
-    redis_address = "0.0.0.0"
+    redis_address = os.environ.get("REDIS_ADDRESS")
     redis_db = 0
 
     redis_cache_ttl = 60 * 60
     redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
-    dask_cluster_address = "localhost"
+    dask_cluster_address = os.environ.get("DASK_CLUSTER_ADDRESS")
     dask_use_remote_cluster = False
 
     dask_worker_count = 1
