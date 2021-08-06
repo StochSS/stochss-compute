@@ -21,6 +21,9 @@ class PlotPlotlyRequest(BaseModel):
     args: List[str] = []
     kwargs: Dict[str, Any] = {}
 
+class AverageEnsembleRequest(BaseModel):
+    result_id: str
+
 @results_endpoint.route("/plotplotly", methods=["POST"])
 def plotplotly():
     # Attempt to parse incoming request data.
@@ -30,7 +33,11 @@ def plotplotly():
     except ValidationError as e:
         return ErrorResponse(msg=f"Invalid request data: '{e}'").json(), 400
 
-    job_id = f"{plot_request.result_id}_plotplotly"
+    job_id = f"{plot_request.result_id}-plotplotly"
+
+    # Ensure that the parent job (result_id) exists or has saved results.
+    if not delegate.job_exists(plot_request.result_id) and not delegate.job_complete(plot_request.result_id):
+        return ErrorResponse(msg=f"No parent job with ID '{plot_request.result_id}' exists.").json(), 400
 
     # If a job or results object does not exist for this ID, start it.
     if not delegate.job_exists(job_id) and not delegate.job_complete(job_id):
@@ -44,6 +51,37 @@ def plotplotly():
             return plot_json
                 
         delegate.start_job(job_id, make_plotplotly, f"result://{plot_request.result_id}", *plot_request.args, **plot_request.kwargs)
+
+    # Return the status of the currently running job.
+    job_status = delegate.job_status(job_id)
+    return JobStatusResponse(
+        job_id=job_id,
+        status_id=job_status.status_id,
+        status_msg=job_status.status_text,
+        is_complete=job_status.is_done,
+        has_failed=job_status.has_failed
+    ).json(), 200
+
+@results_endpoint.route("/average_ensemble", methods=["POST"])
+def make_average_ensemble():
+    # Attempt to parse incoming request data.
+    try:
+        ensemble_request = AverageEnsembleRequest.parse_raw(request.json)
+
+    except ValidationError as e:
+        return ErrorResponse(msg=f"Invalid request data: '{e}'").json(), 400
+
+    # Make sure we can grab a result with this ID.
+    result_id = ensemble_request.result_id
+    job_id = f"{result_id}-average_ensemble"
+
+    # Ensure that the parent job (result_id) exists or has saved results.
+    if not delegate.job_exists(result_id) and not delegate.job_complete(result_id):
+        return ErrorResponse(msg=f"No parent job with ID '{result_id}' exists.").json(), 400
+
+    # If a job or results object does not exist for this ID, start it.
+    if not delegate.job_exists(job_id) and not delegate.job_complete(job_id):
+        delegate.start_job(job_id, Results.average_ensemble, f"result://{result_id}")
 
     # Return the status of the currently running job.
     job_status = delegate.job_status(job_id)
