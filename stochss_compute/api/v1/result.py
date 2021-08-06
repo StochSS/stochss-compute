@@ -1,5 +1,6 @@
 import os
 import bz2
+import json
 import tempfile
 
 import plotly.io as plotlyio
@@ -23,11 +24,11 @@ def get_results(result_id: str):
     if not delegate.job_complete(result_id):
         return ErrorResponse(msg="A result with this ID does not yet exist.").json(), 404
 
-    results_json = delegate.job_results(result_id).to_json()
-    compressed_results = bz2.compress(results_json.encode())
+    results_json = delegate.job_results(result_id)
+    # compressed_results = bz2.compress(results_json.encode())
 
-    response = make_response(compressed_results)
-    response.headers["Content-Encoding"] = "bzip2"
+    response = make_response(results_json)
+    # response.headers["Content-Encoding"] = "bzip2"
 
     return response, 200
 
