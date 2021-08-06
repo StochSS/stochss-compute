@@ -44,10 +44,11 @@ def run():
     # Attempt to parse request data.
     try:
         run_request = ModelRunRequest.parse_raw(request.json)
+
     except ValidationError as e:
         return ErrorResponse(msg=f"Invalid request data: '{e}'").json(), 400
 
-    model_id = f"{run_request.model.get_json_hash()}_run"
+    model_id = f"{run_request.model.get_json_hash()}-run"
 
     # If neither job or results already exist, start it.
     if not delegate.job_exists(model_id) and not delegate.job_complete(model_id):

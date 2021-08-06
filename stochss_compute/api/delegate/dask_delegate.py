@@ -73,7 +73,7 @@ class DaskDelegate(Delegate):
             outfile.write(result)
 
     def __job_state(self, job_id: str) -> TaskState:
-        return self.client.run_on_scheduler(self.scheduler_job_state, id=job_id)
+        return self.client.run_on_scheduler(self.scheduler_job_state, job_id=job_id)
 
     def connect(self) -> bool:
         # No need to connect.
@@ -91,12 +91,13 @@ class DaskDelegate(Delegate):
         if self.job_exists(job_id) or self.job_complete(job_id):
             return False
 
-        # Parse *args and **kwargs for references to remote data.
+        # Parse and replace instances of the internal `result://` proxy protocol.
+        # In short, this allows for callees to reference an in-progress or remote job without needing direct access.
         function_args = [(self.client.get_dataset(arg.replace("result://", "")) if isinstance(arg, str) and arg.startswith("result://") else arg) for arg in args]
 
         # Create a job and set a callback to cache the results once complete.
         job_future: Future = self.client.submit(work, *function_args, **kwargs, key=job_id, pure=False)
-        job_future.add_done_callback(self.__cache_results)
+        # job_future.add_done_callback(self.__cache_results)
 
         # Publish the job as a dataset to maintain state across requests.
         self.client.publish_dataset(job_future, name=job_id, override=True)
@@ -188,9 +189,19 @@ class DaskDelegate(Delegate):
         return dill.loads(results_file.read_bytes())
 
     def job_complete(self, job_id: str) -> bool:
-        # Finished jobs must exist in the Vault (even if they exist within Redis or as a dataset).
-        return Path(self.delegate_config.redis_vault_dir, job_id).is_file()
+        # Finished jobs must exist in the Vault (even if they exist within Redis or as a dataset
+        # return Path(self.delegate_config.redis_vault_dir, job_id).is_file()
+        return self.client.get_dataset(job_id, default=None) is not None
 
     def job_exists(self, job_id: str) -> bool:
         # Check if the job exists in the scheduler.
         return self.client.run_on_scheduler(self.scheduler_job_exists, job_id=job_id)
+
+    def get_remote_dependency(self, dependency_id: str):
+        # Check to see if the job exists as a dataset.
+        dependency = self.client.get_dataset(name=dependency_id)
+
+        if dependency is not None:
+            return dependency
+
+        raise Exception("Something broke, dependency does not exist within distributed memory.")
