@@ -52,31 +52,47 @@ def run():
     model_id = f"{model.get_json_hash()}"
     number_trajectories = int(run_request.kwargs.pop("number_of_trajectories", 1))
 
+    print(run_request.kwargs)
+    print(run_request.args)
+
+    import hashlib
+    model_id = hashlib.md5(f"{model.get_json_hash()}_{run_request.kwargs}_{run_request.args}".encode()).hexdigest()
+
+    if "solver" in run_request.kwargs:
+        from pydoc import locate
+        run_request.kwargs["solver"] = locate(run_request.kwargs["solver"])
+
     # Build a list of job key values which will need to be run.
-    keys = [f"{model_id}/trajectory_{i}" for i in range(number_trajectories)]
+    keys = [f"{model_id}-trajectory_{i}" for i in range(number_trajectories)]
 
     # Run each trajectory and save in a dataset.
+    # Warning: Here be possible threading issues. Needs investigation.
     dependencies = delegate.client.map(gillespy2.core.Model.run, [model] * number_trajectories, **run_request.kwargs, key=keys)
-    delegate.client.publish_dataset(dependencies, name=f"{model_id}/{number_trajectories}_trajectories", override=True)
 
     def join_results(results):
+        # Save the dependent trajectories in memory.
+        from distributed import get_client
+        client = get_client()
+        client.publish_dataset(dependencies, name=f"{model_id}-trajectories", override=True)
+
         data = []
 
         for result in results:
             data = data + result.data
 
         from gillespy2.core import Results
-        return Results(data)
+        return Results(data).to_json()
 
-    delegate.start_job(f"{model_id}/run:{number_trajectories}", join_results, dependencies)
+    job_id = f"{model_id}-run_{number_trajectories}"
+    delegate.start_job(job_id, join_results, dependencies)
 
     # Return the status of the currently running job.
-    job_status = delegate.job_status(model_id)
+    job_status = delegate.job_status(job_id)
     return JobStatusResponse(
-        job_id=f"{model_id}/run:{number_trajectories}",
+        job_id=job_id,
         status_id=job_status.status_id,
         status_msg=job_status.status_text,
         is_complete=job_status.is_done,
         has_failed=job_status.has_failed
-    ).json(), 200
+    ).json(), 201
 
