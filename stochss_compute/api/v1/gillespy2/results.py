@@ -42,9 +42,10 @@ def plotplotly():
     # If a job or results object does not exist for this ID, start it.
     if not delegate.job_exists(job_id) and not delegate.job_complete(job_id):
         # Hacky fix to ensure that the output plot is of the correct format.
-        def make_plotplotly(results: "Results", *args, **kwargs) -> str:
+        def make_plotplotly(results_json: str, *args, **kwargs) -> str:
             import plotly.io as plotlyio
 
+            results = Results.from_json(results_json)
             plot = Results.plotplotly(results, return_plotly_figure=True, **kwargs)
             plot_json = plotlyio.to_json(plot)
 
@@ -81,7 +82,11 @@ def make_average_ensemble():
 
     # If a job or results object does not exist for this ID, start it.
     if not delegate.job_exists(job_id) and not delegate.job_complete(job_id):
-        delegate.start_job(job_id, Results.average_ensemble, f"result://{result_id}")
+        def results_to_json(results_json):
+            results = Results.from_json(results_json)
+            return results.average_ensemble().to_json()
+
+        delegate.start_job(job_id, results_to_json, f"result://{result_id}")
 
     # Return the status of the currently running job.
     job_status = delegate.job_status(job_id)
