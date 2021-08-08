@@ -14,6 +14,8 @@ from .compute_server import ComputeServer
 
 from .remote_results import RemoteResults
 
+from .api.v1.gillespy2.model import ModelRunRequest
+
 from .api.v1.job import (
     StartJobRequest,
     StartJobResponse,
@@ -58,36 +60,14 @@ class RemoteSimulation():
         
         :returns: Results
         """
+    
+        if "solver" in params:
+            params["solver"] = str(type(params["solver"]))
 
-        params = json.dumps(params)
+        start_request = ModelRunRequest(model=self.model, kwargs=params)
+        start_response = unwrap_or_err(JobStatusResponse, self.server.post(Endpoint.GILLESPY2_MODEL, sub="/run", request=start_request))
 
-        model_hash = self.model.get_json_hash()
-        model = self.model.to_json()
-
-        remote_results = RemoteResults(result_id=model_hash, server=self.server)
-
-        # Check to see if results already exist for this ID.
-        results_response = self.server.get(Endpoint.RESULT, f"/{model_hash}/exists")
-
-        # If this query returns a 200 then a result with this ID exists.
-        if results_response.ok:
-            return remote_results 
-
-        # Get the status of a job with this ID.
-        status_response = self.server.get(Endpoint.JOB, f"/{model_hash}/status")
-
-        # If the job exists and it hasn't failed, return the RemoteResult.
-        if status_response.ok and not JobStatusResponse.parse_raw(status_response.text).has_failed:
-            return remote_results
-
-        # If we make it this far then the job either doesn't exist or has failed. Either way, start a new one.
-        start_request = StartJobRequest(job_id=model_hash, model=model, args="", kwargs=params)
-        start_response = self.server.post(Endpoint.JOB, "/start", request=start_request)
-
-        # Attempt to unwrap the response. If the request failed though, raise an Exception.
-        unwrap_or_err(StartJobResponse, start_response)
-
-        # Looks like everything went well, return the RemoteResult.
+        remote_results = RemoteResults(result_id=start_response.job_id, server=self.server)
         return remote_results
 
     def test_plot(self):
