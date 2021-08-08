@@ -97,7 +97,7 @@ class DaskDelegate(Delegate):
 
         # Create a job and set a callback to cache the results once complete.
         job_future: Future = self.client.submit(work, *function_args, **kwargs, key=job_id, pure=False)
-        # job_future.add_done_callback(self.__cache_results)
+        job_future.add_done_callback(self.__cache_results)
 
         # Publish the job as a dataset to maintain state across requests.
         self.client.publish_dataset(job_future, name=job_id, override=True)
@@ -190,8 +190,7 @@ class DaskDelegate(Delegate):
 
     def job_complete(self, job_id: str) -> bool:
         # Finished jobs must exist in the Vault (even if they exist within Redis or as a dataset
-        # return Path(self.delegate_config.redis_vault_dir, job_id).is_file()
-        return self.client.get_dataset(job_id, default=None) is not None
+        return Path(self.delegate_config.redis_vault_dir, job_id).is_file()
 
     def job_exists(self, job_id: str) -> bool:
         # Check if the job exists in the scheduler.
