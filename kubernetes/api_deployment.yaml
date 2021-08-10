@@ -17,8 +17,8 @@ spec:
         env:
           - name: REDIS_ADDRESS
             value: "redis-service.default"
-          - name: DASK_SCHEDULER_ADDRESS
-            value: "dask-service.default"
+          - name: WORKER_SPEC_PATH
+            value: "../../../kubernetes/dask_worker_spec.yaml"
         ports:
         - containerPort: 1234
 ---

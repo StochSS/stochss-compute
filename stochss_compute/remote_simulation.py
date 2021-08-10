@@ -82,7 +82,7 @@ class RemoteSimulation():
         start_response = StartJobResponse.parse_raw(start_raw.text)
 
         status_url = f"{self.server.address}/api{start_response.status}"
-        print(status_url)
+        # print(status_url)
         status_raw = requests.get(status_url)
 
         if status_raw.status_code != 200:

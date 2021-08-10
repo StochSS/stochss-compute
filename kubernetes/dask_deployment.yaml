@@ -15,29 +15,30 @@ spec:
       - name: dask-scheduler
         image: daskdev/dask
         imagePullPolicy: IfNotPresent
-        args: [dask-scheduler, --host, localhost]
+        args: [dask-scheduler]
         ports:
         - containerPort: 8786
         resources:
           limits:
-            cpu: "2"
-            memory: 6G
+            cpu: "1"
+            memory: 1G
           requests:
-            cpu: "2"
-            memory: 6G
+            cpu: "1"
+            memory: 1G
       - name: dask-worker
         image: daskdev/dask
         imagePullPolicy: IfNotPresent
-        args: [dask-worker, localhost:8786]
+        args: [dask-worker, dask-service.default:8786]
+        
         ports:
         - containerPort: 8786
         resources:
           limits:
-            cpu: "2"
-            memory: 6G
+            cpu: "1"
+            memory: 1G
           requests:
-            cpu: "2"
-            memory: 6G
+            cpu: "1"
+            memory: 1G
 ---
 apiVersion: v1
 kind: Service
