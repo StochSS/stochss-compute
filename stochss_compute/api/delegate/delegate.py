@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import IntEnum
 from abc import ABC, abstractmethod
 from typing import Callable
@@ -22,7 +24,7 @@ class DelegateConfig(ABC):
         Easy way to apply some number of named arguments onto self.
         """
 
-        self.__dict__ = self.__dict__ | kwargs
+        self.__dict__ = {**self.__dict__, **kwargs}
 
 class Delegate(ABC):
     type: str = ""
@@ -51,7 +53,7 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def create_job(self, id: str) -> bool:
+    def create_job(self, job_id: str) -> bool:
         """
         Create a new job with the specified ID.
 
@@ -60,7 +62,7 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def start_job(self, id: str, work: Callable, *args, **kwargs) -> bool:
+    def start_job(self, job_id: str, work: Callable, *args, **kwargs) -> bool:
         """
         Start a job with the specified ID.
 
@@ -69,7 +71,7 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def stop_job(self, id: str) -> bool:
+    def stop_job(self, job_id: str) -> bool:
         """
         Stop a job with the specified ID.
 
@@ -78,7 +80,7 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def job_status(self, id: str) -> JobStatus:
+    def job_status(self, job_id: str) -> JobStatus:
         """
         Get the status of a job with the specified ID.
 
@@ -87,7 +89,7 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def job_results(self, id: str) -> str:
+    def job_results(self, job_id: str) -> str:
         """
         The raw results of a job with the specified ID.
 
@@ -96,7 +98,7 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def job_exists(self, id: str) -> bool:
+    def job_exists(self, job_id: str) -> bool:
         """
         Check if a job with the specified ID exists in the delegate.
 
@@ -105,7 +107,7 @@ class Delegate(ABC):
         pass
 
     @abstractmethod
-    def job_complete(self, id: str) -> bool:
+    def job_complete(self, job_id: str) -> bool:
         """
         Check if a job with the specified ID is complete.
 

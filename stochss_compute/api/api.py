@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from flask import Flask
 
 from .v1 import v1_api

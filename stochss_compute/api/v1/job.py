@@ -1,17 +1,18 @@
+import json
+
 from gillespy2.core import Model
 from pydantic import BaseModel
 
-from flask import g
 from flask import request
 from flask import Blueprint
-from flask import current_app
-from flask import make_response
 
-from werkzeug.local import LocalProxy
+from .apiutils import delegate
 
 class StartJobRequest(BaseModel):
     job_id: str
     model: str
+    args: str
+    kwargs: str
 
 class StartJobResponse(BaseModel):
     job_id: str
@@ -35,22 +36,6 @@ class ErrorResponse(BaseModel):
 
 v1_job = Blueprint("V1 Job API Endpoint", __name__, url_prefix="/job")
 
-def get_delegate():
-    if "delegate" in g:
-        return g.delegate
-
-    delegate_config = current_app.config["DELEGATE_CONFIG"]
-    delegate_type = current_app.config["DELEGATE_TYPE"]
-
-    delegate = delegate_type(delegate_config)
-
-    if False in (delegate.connect(), delegate.test_connection()):
-        raise Exception("Delegate connection failed.")
-
-    return delegate
-
-delegate = LocalProxy(get_delegate)
-
 @v1_job.route("/start", methods=["POST"])
 def start_job():
     request_obj = StartJobRequest.parse_raw(request.json)
@@ -68,7 +53,34 @@ def start_job():
         ).json(), 202
 
     model = Model.from_json(request_obj.model)
-    delegate.start_job(request_obj.job_id, model.run)
+    kwargs = json.loads(request_obj.kwargs)
+
+    from gillespy2.solvers import SSACSolver
+    kwargs["solver"] = SSACSolver
+
+    if not "number_of_trajectories" in kwargs:
+        delegate.start_job(request_obj.job_id, Model.run, model, **kwargs)
+
+    else:
+        trajectories = kwargs["number_of_trajectories"]
+        del kwargs["number_of_trajectories"]
+
+        # Hacky, but it works for now.
+        keys = [f"{request_obj.job_id}/trajectory_{i}" for i in range(0, trajectories)]
+        delegate.client.scatter([model, kwargs])
+
+        dependencies = delegate.client.map(Model.run, [model] * trajectories, **kwargs, key=keys)
+
+        def test_job(*args, **kwargs):
+            data = []
+
+            for result in args:
+                data = data + result.data
+
+            from gillespy2.core import Results
+            return Results(data)
+
+        delegate.start_job(request_obj.job_id, test_job, *dependencies)
 
     return StartJobResponse(
         job_id=request_obj.job_id,
@@ -78,7 +90,8 @@ def start_job():
 
 @v1_job.route("/<string:job_id>/status")
 def job_status(job_id: str):
-    if not delegate.job_exists(job_id):
+    # Check if the job has finished.
+    if not delegate.job_exists(job_id) and not delegate.job_complete(job_id):
         return ErrorResponse(
             msg=f"A job with id '{job_id}' does not exist."
         ).json(), 404
@@ -95,11 +108,6 @@ def job_status(job_id: str):
 
 @v1_job.route("/<string:job_id>/results")
 def job_results(job_id: str):
-    if not delegate.job_exists(job_id):
-        return ErrorResponse(
-            msg=f"A job with id '{job_id}' does not exist."
-        ).json(), 404
-
     if not delegate.job_complete(job_id):
         return ErrorResponse(
             msg=f"The job with id {job_id} is not yet complete."
@@ -108,7 +116,7 @@ def job_results(job_id: str):
     job_results = delegate.job_results(job_id)
     return job_results.to_json(), 200
 
-@v1_job.route("/<string:job_id>/stop")
+@v1_job.route("/<string:job_id>/stop", methods=["POST"])
 def job_stop(job_id: str):
     if not delegate.job_exists(job_id):
         return ErrorResponse(
