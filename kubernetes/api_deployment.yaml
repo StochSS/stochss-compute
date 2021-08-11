@@ -18,7 +18,7 @@ spec:
           - name: REDIS_ADDRESS
             value: "redis-service.default"
           - name: WORKER_SPEC_PATH
-            value: "../../../kubernetes/dask_worker_spec.yaml"
+            value: "dask_worker_spec.yaml"
         ports:
         - containerPort: 1234
 ---
@@ -34,4 +34,66 @@ spec:
   - protocol: 'TCP'
     port: 1234
     targetPort: 1234
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dask
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: daskKubernetes
+rules:
+- apiGroups:
+  - ""  # indicates the core API group
+  resources:
+  - "pods"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "create"
+  - "delete"
+- apiGroups:
+  - ""  # indicates the core API group
+  resources:
+  - "pods/log"
+  verbs:
+  - "get"
+  - "list"
+- apiGroups:
+  - "" # indicates the core API group
+  resources:
+  - "services"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "create"
+  - "delete"
+- apiGroups:
+  - "policy"  # indicates the policy API group
+  resources:
+  - "poddisruptionbudgets"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "create"
+  - "delete"
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: testrolebinding
+  namespace: assembly-prod
+subjects:
+  - kind: ServiceAccount
+    name: testsa
+    namespace: assembly-prod
+roleRef:
+  kind: Role
+  name: testreadrole
+  apiGroup: rbac.authorization.k8s.io
 

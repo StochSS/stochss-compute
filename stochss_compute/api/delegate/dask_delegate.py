@@ -45,15 +45,17 @@ class DaskDelegate(Delegate):
     def __init__(self, delegate_config: DaskDelegateConfig):
 
         super()
-
         self.delegate_config = delegate_config
+        cluster = KubeCluster(self.delegate_config.dask_worker_spec)
+        cluster.adapt(minimum=1, maximum=100)
+        self.client = Client(cluster)
 
-        # Attempt to load the global Dask client.
-        try:
-            self.client = get_client()
+        # # Attempt to load the global Dask client.
+        # try:
+        #     self.client = get_client()
 
-        except ValueError as _:
-            self.client = Client(self.cluster_address)
+        # except ValueError as _:
+        #     self.client = Client(self.cluster_address)
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
