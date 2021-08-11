@@ -1,7 +1,7 @@
 kind: Pod
 metadata:
   labels:
-    app: bar
+    app: worker
 spec:
   restartPolicy: Never
   containers:

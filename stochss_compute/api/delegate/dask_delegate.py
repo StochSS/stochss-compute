@@ -9,6 +9,8 @@ from distributed import Client
 from distributed import get_client
 from distributed import fire_and_forget
 
+from dask_kubernetes import KubeCluster
+
 from .delegate import Delegate
 from .delegate import JobState
 from .delegate import JobStatus
@@ -40,11 +42,13 @@ class DaskDelegateConfig(DelegateConfig):
     dask_dashboard_address = "localhost"
     dask_dashboard_enabled = False
 
+    dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
+
 class DaskDelegate(Delegate):
     type: str = "dask"
 
     def __init__(self, delegate_config: DaskDelegateConfig):
-        self.cluster_address = f"tcp://{delegate_config.dask_cluster_address}:{delegate_config.dask_cluster_port}"
+        # self.cluster_address = f"tcp://{delegate_config.dask_cluster_address}:{delegate_config.dask_cluster_port}"
         self.delegate_config = delegate_config
 
         # Connect to the Redis DB.
@@ -96,6 +100,8 @@ class DaskDelegate(Delegate):
             return False
 
         # Initialize the Dask client and connect to the specified cluster.
+        cluster = KubeCluster(self.delegate_config.dask_worker_spec)
+        cluster.adapt(minimum=1, maximum=100)
         client = Client(self.cluster_address)
         
         # Create a job and set a callback to cache the results once complete.
