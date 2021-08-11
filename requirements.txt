@@ -6,5 +6,6 @@ pydantic>=1.8.2
 dill
 requests
 dask_kubernetes
+jupyter
 
 gillespy2 @ git+https://github.com/StochSS/GillesPy2@develop
