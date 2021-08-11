@@ -9,9 +9,10 @@ spec:
     imagePullPolicy: IfNotPresent
     args: [dask-worker, --nthreads, '2', --no-dashboard, --memory-limit, 6GB, --death-timeout, '60']
     name: dask
+    
     env:
       - name: EXTRA_PIP_PACKAGES
-        value: git+https://github.com/dask/distributed
+        value: "git+https://github.com/dask/distributed gillespy2"
     resources:
       limits:
         cpu: "2"
