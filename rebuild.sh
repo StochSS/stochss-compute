@@ -5,3 +5,4 @@ docker push mdip226/stochss-compute:latest
 cd kubernetes
 kubectl delete -f api_deployment.yaml
 kubectl apply -f api_deployment.yaml
+cd ..
