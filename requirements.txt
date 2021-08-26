@@ -1,6 +1,6 @@
 Flask>=2.0.1
 dask>=2021.5.1
-distributed>=2021.5.1
+distributed @ git+https://github.com/dask/distributed
 redis>=3.5.3
 pydantic>=1.8.2
 dill
