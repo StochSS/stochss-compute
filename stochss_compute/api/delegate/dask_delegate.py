@@ -47,7 +47,7 @@ class DaskDelegate(Delegate):
         super()
         self.delegate_config = delegate_config
         cluster = KubeCluster(self.delegate_config.dask_worker_spec)
-        cluster.adapt(minimum=1, maximum=100)
+        cluster.adapt(minimum=1, maximum=3)
         self.client = Client(cluster)
 
         # # Attempt to load the global Dask client.
