@@ -14,6 +14,13 @@ spec:
       containers:
       - name: stochss-compute
         image: mdip226/stochss-compute:latest
+        resources:
+          limits:
+            memory: "1G"
+            cpu: "2"
+          requests:
+            memory: "500Mi"
+            cpu: "1"
         env:
           - name: REDIS_ADDRESS
             value: "redis-service.default"
@@ -41,7 +48,7 @@ metadata:
   name: dask
 ---
 kind: Role
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: daskKubernetes
 rules:
@@ -86,14 +93,14 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: testrolebinding
-  namespace: assembly-prod
+  name: dask-role-binding
+  namespace: default
 subjects:
   - kind: ServiceAccount
-    name: testsa
-    namespace: assembly-prod
+    name: default
+    namespace: default
 roleRef:
   kind: Role
-  name: testreadrole
+  name: daskKubernetes
   apiGroup: rbac.authorization.k8s.io
 
