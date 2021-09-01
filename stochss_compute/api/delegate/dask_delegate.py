@@ -99,7 +99,7 @@ class DaskDelegate(Delegate):
 
         # Initialize the Dask client and connect to the specified cluster.
         cluster = KubeCluster(self.delegate_config.dask_worker_spec)
-        cluster.adapt(minimum=1, maximum=100)
+        cluster.adapt(minimum=1, maximum=3)
         client = Client(self.cluster_address)
         
         # Parse *args and **kwargs for references to remote data.

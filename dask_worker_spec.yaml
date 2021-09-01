@@ -1,7 +1,7 @@
 kind: Pod
 metadata:
   labels:
-    app: worker
+    app: stochss-compute
 spec:
   restartPolicy: Never
   containers:
