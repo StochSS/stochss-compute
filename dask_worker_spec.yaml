@@ -12,6 +12,8 @@ spec:
     env:
       - name: EXTRA_PIP_PACKAGES
         value: "git+https://github.com/dask/distributed gillespy2"
+      - name: EXTRA_APT_PACKAGES
+        value: "build-essential"
     resources:
       limits:
         cpu: "1"
