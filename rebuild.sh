@@ -7,3 +7,7 @@ kubectl delete -f api_deployment.yaml
 kubectl delete --all pods
 kubectl apply -f api_deployment.yaml
 cd ..
+# open up jupyter for testing
+# source ./env/bin/activate
+# cd ./examples
+# jupyter notebook .
