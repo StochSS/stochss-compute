@@ -46,16 +46,19 @@ class DaskDelegate(Delegate):
 
         super()
         self.delegate_config = delegate_config
-        cluster = KubeCluster(self.delegate_config.dask_worker_spec)
-        cluster.adapt(minimum=1, maximum=3)
-        self.client = Client(cluster)
+        # cluster.adapt(minimum=1, maximum=3)
+        # print(self.client.address)
 
-        # # Attempt to load the global Dask client.
-        # try:
-        #     self.client = get_client()
-
-        # except ValueError as _:
-        #     self.client = Client(self.cluster_address)
+        # # Attempt to load the global mDask client.
+        try:
+            self.client = get_client()
+        except ValueError as _:
+            cluster = KubeCluster(pod_template= self.delegate_config.dask_worker_spec, n_workers = 1)
+            cluster.adapt(minimum=1, maximum=7)
+            self.client = Client(cluster)
+            
+            print(cluster)
+            # self.client = Client(self.cluster_address)
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
@@ -98,9 +101,9 @@ class DaskDelegate(Delegate):
             return False
 
         # Initialize the Dask client and connect to the specified cluster.
-        cluster = KubeCluster(self.delegate_config.dask_worker_spec)
-        cluster.adapt(minimum=1, maximum=3)
-        client = Client(self.cluster_address)
+        # cluster = KubeCluster(self.delegate_config.dask_worker_spec)
+        # cluster.adapt(minimum=1, maximum=3)
+        # self.client = Client(cluster)
         
         # Parse *args and **kwargs for references to remote data.
         function_args = [(self.client.get_dataset(arg.replace("result://", "")) if isinstance(arg, str) and arg.startswith("result://") else arg) for arg in args]
