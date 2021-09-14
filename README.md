@@ -7,6 +7,16 @@ The easiest way to get stochss-compute running is with docker. Clone the reposit
 ```
 docker-compose up --build
 ```
+#### Minikube
+minikube start
+cd into kubernetes directory
+kubectl apply -f api_deployment.yaml
+minikube dashboard
+minikube service stochss-compute-service
+- to get external IP (on EKS or otherwise this is handled by your cloud provider)
+- use this host and IP when calling ComputeServer()
+first time will be slow because the containers have to start up
+
 
 #### Manually
 
