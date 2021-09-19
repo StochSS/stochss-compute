@@ -12,8 +12,10 @@ class Endpoint(Enum):
     RESULT = 2
 
 class ComputeServer():
-    def __init__(self, host, port):
+    def __init__(self, host, port=None):
         self.host = host
+        if not port:
+            port = 80
         self.port = port
 
         self.address = f"http://{host}:{port}/api/v1"
