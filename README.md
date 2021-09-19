@@ -19,13 +19,13 @@ minikube dashboard
 
 From here, there are two ways to access the cluster.
 
-# To set up local access:
+##### To set up local access:
 `minikube service --url stochss-compute-service`
 - exposes external IP (on EKS or otherwise this is handled by your cloud provider)
 - use this host and IP when calling ComputeServer()
 - first time will be slow because the dask containers have to start up
 
-# To use ngrok to set up public access  (ngrok.com to sign up for a free account and download/install):
+##### To use ngrok to set up public access  (ngrok.com to sign up for a free account and download/install):
 - `url=$(minikube service --url stochss-compute-service)`
 - `ngrok http $url`
 - use this URL when calling ComputeServer()
