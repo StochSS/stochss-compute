@@ -26,8 +26,10 @@ From here, there are two ways to access the cluster.
 - first time will be slow because the dask containers have to start up
 
 ##### To use ngrok to set up public access  (ngrok.com to sign up for a free account and download/install):
-- `url=$(minikube service --url stochss-compute-service)`
-- `ngrok http $url`
+```
+url=$(minikube service --url stochss-compute-service)
+ngrok http $url
+```
 - use this URL when calling ComputeServer()
 
 #### Manually
