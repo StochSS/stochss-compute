@@ -7,25 +7,25 @@ The easiest way to get stochss-compute running is with docker. Clone the reposit
 ```
 docker-compose up --build
 ```
-#### `minikube`
+#### Minikube
 - first requires `minikube`, `docker`, and `kubectl` to be installed. Then:
 ```
 minikube start
 cd into kubernetes directory
-kubectl apply -f api_deployment.yaml`
+kubectl apply -f api_deployment.yaml
 minikube dashboard
 ```
 - Now, wait for the stochss-compute container to be created.
 
 From here, there are two ways to access the cluster.
 
-Option 1: To set up local access
+# To set up local access:
 `minikube service --url stochss-compute-service`
-- to expose external IP (on EKS or otherwise this is handled by your cloud provider)
+- exposes external IP (on EKS or otherwise this is handled by your cloud provider)
 - use this host and IP when calling ComputeServer()
 - first time will be slow because the dask containers have to start up
 
-Option 2: To use ngrok to set up public access  (ngrok.com to sign up for a free account and download/install)
+# To use ngrok to set up public access  (ngrok.com to sign up for a free account and download/install):
 - `url=$(minikube service --url stochss-compute-service)`
 - `ngrok http $url`
 - use this URL when calling ComputeServer()
