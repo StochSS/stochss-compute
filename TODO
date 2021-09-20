@@ -1,0 +1,3 @@
+- start kubecluster when api starts
+- handle replica sets and scheduler addressing and discovery
+- dynamic scaling???
