@@ -1,3 +1,5 @@
 - start kubecluster when api starts
 - handle replica sets and scheduler addressing and discovery
 - dynamic scaling???
+- handle "plot not ready" error
+- error handling in general by trying to break it
