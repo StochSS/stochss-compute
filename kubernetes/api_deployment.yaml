@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: stochss-compute
 spec:
+  replicas: 2
   selector:
     matchLabels:
       app: stochss-compute
@@ -22,10 +23,10 @@ spec:
             memory: "500Mi"
             cpu: "1"
         env:
-          - name: REDIS_ADDRESS
-            value: "redis-service.default"
           - name: WORKER_SPEC_PATH
             value: "dask_worker_spec.yaml"
+          # - name: REDIS_ADDRESS
+          #   value: "redis-service.default"
         ports:
         - containerPort: 1234
 ---
