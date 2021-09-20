@@ -53,8 +53,8 @@ class DaskDelegate(Delegate):
         try:
             self.client = get_client()
         except ValueError as _:
-            cluster = KubeCluster(pod_template= self.delegate_config.dask_worker_spec, n_workers = 1)
-            cluster.adapt(minimum=1, maximum=7)
+            cluster = KubeCluster(pod_template= self.delegate_config.dask_worker_spec, n_workers = 6)
+            # cluster.adapt(minimum=1, maximum=7)
             self.client = Client(cluster)
             
             print(cluster)
