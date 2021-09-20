@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: stochss-compute
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: stochss-compute
