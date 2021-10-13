@@ -11,8 +11,10 @@ def get_delegate():
 
     delegate_config = current_app.config["DELEGATE_CONFIG"]
     delegate_type = current_app.config["DELEGATE_TYPE"]
-    kube_cluster = current_app.config["KUBE_CLUSTER"]
 
+    # May be None
+    kube_cluster = current_app.config["KUBE_CLUSTER"]
+    
     delegate = delegate_type(delegate_config, kube_cluster)
 
     if False in (delegate.connect(), delegate.test_connection()):

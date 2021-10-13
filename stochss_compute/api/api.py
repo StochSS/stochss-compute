@@ -46,21 +46,26 @@ def start_api(
 
     # Instantiate the Flask instance on the API and register any required blueprints
     flask = Flask("stochss-compute REST API")
-    # delegate_config
     flask.config.update(
         JSONIFY_PRETTYPRINT_REGULAR=True,
         DELEGATE_TYPE=delegate_type,
         DELEGATE_CONFIG=delegate_config,
     )
-    # if kube:
+
+    # Will return None if not being run using the kubernetes manifest where this environment variable is initialized
     kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
+
     if kube_dask_worker_spec is not None:
-        kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=6)
+        kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
+        if debug:
+            print("Dask KubeCluster created:")
+            print(kube_cluster)
         flask.config.update(
             KUBE_CLUSTER=kube_cluster
         )
 
     flask.register_blueprint(v1_api)
 
+    # use_reloader=False (prevents two KubeClusters from being created)
     # Start the REST API.
-    flask.run(host=host, port=port, debug=debug, **kwargs)
+    flask.run(host=host, port=port, debug=debug, use_reloader=False, **kwargs)
