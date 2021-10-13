@@ -37,7 +37,8 @@ class DaskDelegateConfig(DelegateConfig):
     dask_dashboard_address = "localhost"
     dask_dashboard_enabled = False
 
-    dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
+    kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
+    kube_cluster = KubeCluster(pod_template=dask_worker_spec, n_workers=6)
 
 class DaskDelegate(Delegate):
     type: str = "dask"
@@ -53,11 +54,10 @@ class DaskDelegate(Delegate):
         try:
             self.client = get_client()
         except ValueError as _:
-            cluster = KubeCluster(pod_template= self.delegate_config.dask_worker_spec, n_workers = 6)
             # cluster.adapt(minimum=1, maximum=7)
-            self.client = Client(cluster)
+            self.client = Client(delegate_config.kube_cluster)
             
-            print(cluster)
+            print(delegate_config.kube_cluster)
             # self.client = Client(self.cluster_address)
 
         # Setup functions to be run on the schedule.
