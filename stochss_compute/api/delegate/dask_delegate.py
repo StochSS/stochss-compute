@@ -38,7 +38,7 @@ class DaskDelegateConfig(DelegateConfig):
     dask_dashboard_enabled = False
 
     kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
-    kube_cluster = KubeCluster(pod_template=dask_worker_spec, n_workers=6)
+    kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=6)
 
 class DaskDelegate(Delegate):
     type: str = "dask"
