@@ -37,14 +37,14 @@ class DaskDelegateConfig(DelegateConfig):
     dask_dashboard_address = "localhost"
     dask_dashboard_enabled = False
 
-    kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
-    if kube_dask_worker_spec is not None:
-        kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=6)
+    # kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
+    # if kube_dask_worker_spec is not None:
+    #     kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=6)
 
 class DaskDelegate(Delegate):
     type: str = "dask"
 
-    def __init__(self, delegate_config: DaskDelegateConfig):
+    def __init__(self, delegate_config: DaskDelegateConfig, kube_cluster=None):
 
         super()
         self.delegate_config = delegate_config
@@ -56,9 +56,10 @@ class DaskDelegate(Delegate):
             self.client = get_client()
         except ValueError as _:
             # cluster.adapt(minimum=1, maximum=7)
-            self.client = Client(delegate_config.kube_cluster)
+            if kube_cluster is not None:
+                self.client = Client(kube_cluster)
             
-            print(delegate_config.kube_cluster)
+                print(delegate_config.kube_cluster)
             # self.client = Client(self.cluster_address)
 
         # Setup functions to be run on the schedule.
