@@ -6,4 +6,7 @@ pydantic>=1.8.2
 dill
 requests
 
+# Current required to enable client-side plot rendering.
+IPython
+
 gillespy2 @ git+https://github.com/StochSS/GillesPy2@develop
