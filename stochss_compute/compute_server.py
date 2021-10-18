@@ -14,7 +14,7 @@ class Endpoint(Enum):
     GILLESPY2_RESULTS = 4
 
 class ComputeServer():
-    def __init__(self, host, port):
+    def __init__(self, host, port: int = 80):
         self.host = host
         self.port = port
 
