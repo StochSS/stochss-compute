@@ -19,7 +19,7 @@ from .job import StartJobResponse
 v1_memory = Blueprint("V1 Result API Endpoint", __name__, url_prefix="memory/")
 
 @v1_memory.route("/<string:memory_id>/get", methods=["GET"])
-def get_memorys(memory_id: str):
+def get_memory(memory_id: str):
     if not delegate.job_complete(memory_id):
         return ErrorResponse(msg="A memory with this ID does not yet exist.").json(), 404
 
@@ -33,7 +33,7 @@ def get_memorys(memory_id: str):
 
 
 @v1_memory.route("/<string:memory_id>/exists", methods=["GET"])
-def memorys_exist(memory_id: str):
+def memory_exist(memory_id: str):
     if not delegate.job_complete(memory_id):
         return "False", 404
 
