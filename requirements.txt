@@ -8,4 +8,7 @@ requests
 dask_kubernetes
 jupyter
 
+# Current required to enable client-side plot rendering.
+IPython
+
 gillespy2 @ git+https://github.com/StochSS/GillesPy2@develop

@@ -20,6 +20,8 @@ from .remote_utils import unwrap_or_err
 from .api.v1.job import ErrorResponse
 from .api.v1.job import StartJobResponse
 from .api.v1.job import JobStatusResponse
+from .api.v1.gillespy2.results import PlotPlotlyRequest
+from .api.v1.gillespy2.results import AverageEnsembleRequest
 
 class RemoteResults(Results):
     def __init__(self, result_id: str, server: ComputeServer):
@@ -29,17 +31,11 @@ class RemoteResults(Results):
         self.server = server
         self.local_results = None
 
-        # Patch backing Results functions to redirect to remote, if possible.
-        members = [key for key, value in inspect.getmembers(Results) if not key.startswith("_") and value.__module__ == Results.__module__]
-        print(members)
-        for key in members:
-            if not hasattr(self, f"hook_{key}"):
-                setattr(self, key, partial(self.__local_hook, key))
+    def __getattribute__(self, name):
+        if hasattr(RemoteResults, f"hook_{name}"):
+            name = f"hook_{name}"
 
-            else:
-                setattr(self, key, getattr(self, f"hook_{key}"))
-
-        print(self.__class__)
+        return object.__getattribute__(self, name)
 
     def __poll_job_status(self) -> bool:
         # Request the status of a running job.
@@ -61,6 +57,53 @@ class RemoteResults(Results):
             self.local_results = self.resolve()
 
         return getattr(self.local_results, target)(*args, **kwargs)
+
+    def hook_average_ensemble(self, *args, **kwargs):
+        status_response = self.server.get(Endpoint.JOB, f"/{self.result_id}/status")
+        status: JobStatusResponse = unwrap_or_err(JobStatusResponse, status_response)
+
+        if status.has_failed:
+            raise Exception("Something broke, not sure. Oh well.")
+
+        start_request = AverageEnsembleRequest(result_id=self.result_id)
+        start_response: JobStatusResponse = unwrap_or_err(JobStatusResponse, self.server.post(Endpoint.GILLESPY2_RESULTS, "/average_ensemble", request=start_request))
+
+        if start_response.has_failed:
+            raise Exception("Something broke.")
+
+        import copy
+        test = copy.deepcopy(self)
+        test.result_id = start_response.job_id
+        test.data = None
+        print(test)
+
+        return test
+
+    def hook_plot(self, *args, **kwargs):
+        plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plot")
+
+        print(f"Plot size: {sys.getsizeof(plot_response.content)}")
+        plot_image = bz2.decompress(plot_response.content)
+        print(f"Expanded to: {sys.getsizeof(plot_image)}")
+
+        return Image(data=plot_image, format="png")
+
+    def hook_plotplotly(self, *args, **kwargs):
+        plot_request = PlotPlotlyRequest(result_id=self.result_id)
+        plot_response: JobStatusResponse = unwrap_or_err(JobStatusResponse, self.server.post(Endpoint.GILLESPY2_RESULTS, "/plotplotly", request=plot_request))
+        
+        if plot_response.has_failed:
+            raise Exception("Failed to create plotly figure.")
+
+        print(f"Plot size: {sys.getsizeof(plot_response.content)}")
+        plot_json = bz2.decompress(plot_response.content).decode()
+        print(f"Expanded to: {sys.getsizeof(plot_json)}")
+
+        with open("test", "w") as outfile:
+            outfile.write(plot_json)
+
+        plot = plotlyio.from_json(plot_json)
+        plot.show()
 
     def status(self) -> JobStatusResponse:
         """
@@ -111,48 +154,4 @@ class RemoteResults(Results):
 
     def cancel(self):
         stop_response = self.server.post(Endpoint.JOB, f"/{self.result_id}/stop")
-
-    def hook_average_ensemble(self, *args, **kwargs):
-        status_response = self.server.get(Endpoint.JOB, f"/{self.result_id}/status")
-        status: JobStatusResponse = unwrap_or_err(JobStatusResponse, status_response)
-
-        if status.has_failed:
-            raise Exception("Something broke, not sure. Oh well.")
-
-        start_response = self.server.post(Endpoint.RESULT, f"/{self.result_id}/average_ensemble")
-
-        if not start_response.ok:
-            raise Exception("Something broke.")
-
-        start = StartJobResponse.parse_raw(start_response.text)
-
-        import copy
-        test = copy.deepcopy(self)
-        test.result_id = start.job_id
-        test.data = None
-        print(test)
-
-        return test
-
-    def hook_plot(self, *args, **kwargs):
-        plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plot")
-
-        print(f"Plot size: {sys.getsizeof(plot_response.content)}")
-        plot_image = bz2.decompress(plot_response.content)
-        print(f"Expanded to: {sys.getsizeof(plot_image)}")
-
-        return Image(data=plot_image, format="png")
-
-    def hook_plotplotly(self, *args, **kwargs):
-        plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plotplotly")
-        
-        print(f"Plot size: {sys.getsizeof(plot_response.content)}")
-        plot_json = bz2.decompress(plot_response.content).decode()
-        print(f"Expanded to: {sys.getsizeof(plot_json)}")
-
-        with open("test", "w") as outfile:
-            outfile.write(plot_json)
-
-        plot = plotlyio.from_json(plot_json)
-        plot.show()
 
