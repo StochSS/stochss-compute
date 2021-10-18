@@ -12,7 +12,7 @@ class Endpoint(Enum):
     RESULT = 2
 
 class ComputeServer():
-    def __init__(self, host, port):
+    def __init__(self, host, port: int = 80):
         self.host = host
         self.port = port
 

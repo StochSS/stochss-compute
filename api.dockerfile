@@ -1,4 +1,4 @@
-FROM python:3.9-buster
+FROM python:3.8.10-buster
 
 LABEL maintainer="Ethan Green <egreen4@unca.edu>"
 

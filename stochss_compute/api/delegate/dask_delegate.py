@@ -10,6 +10,8 @@ from distributed import Client
 from distributed import get_client
 from distributed.scheduler import TaskState
 
+from dask_kubernetes import KubeCluster
+
 from .delegate import Delegate
 from .delegate import JobState
 from .delegate import JobStatus
@@ -17,7 +19,7 @@ from .delegate import DelegateConfig
 
 class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
-    redis_address = "0.0.0.0"
+    redis_address = os.environ.get("REDIS_ADDRESS")
     redis_db = 0
 
     redis_cache_ttl = 60 * 60
@@ -35,21 +37,31 @@ class DaskDelegateConfig(DelegateConfig):
     dask_dashboard_address = "localhost"
     dask_dashboard_enabled = False
 
+    kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
+    kube_cluster = None
+
+
+    if kube_dask_worker_spec is not None:
+        kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
+
+
 class DaskDelegate(Delegate):
     type: str = "dask"
 
     def __init__(self, delegate_config: DaskDelegateConfig):
+
         super()
-
-        self.cluster_address = f"tcp://{delegate_config.dask_cluster_address}:{delegate_config.dask_cluster_port}"
         self.delegate_config = delegate_config
-
-        # Attempt to load the global Dask client.
+        # # Attempt to load the global mDask client.
         try:
             self.client = get_client()
-
         except ValueError as _:
-            self.client = Client(self.cluster_address)
+            if self.delegate_config.kube_cluster is not None:
+                self.client = Client(self.delegate_config.kube_cluster)
+                print(self.delegate_config.kube_cluster)
+            # TODO what happens if user is not using kubernetes?
+            else:
+                self.client = Client(self.delegate_config.cluster_address)
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
@@ -91,6 +103,11 @@ class DaskDelegate(Delegate):
         if self.job_exists(job_id) or self.job_complete(job_id):
             return False
 
+        # Initialize the Dask client and connect to the specified cluster.
+        # cluster = KubeCluster(self.delegate_config.dask_worker_spec)
+        # cluster.adapt(minimum=1, maximum=3)
+        # self.client = Client(cluster)
+        
         # Parse *args and **kwargs for references to remote data.
         function_args = [(self.client.get_dataset(arg.replace("result://", "")) if isinstance(arg, str) and arg.startswith("result://") else arg) for arg in args]
 
