@@ -52,17 +52,17 @@ def start_api(
         DELEGATE_CONFIG=delegate_config,
     )
 
-    # Will return None if not being run using the kubernetes manifest where this environment variable is initialized
-    kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
+    # # Will return None if not being run using the kubernetes manifest where this environment variable is initialized
+    # kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
 
-    if kube_dask_worker_spec is not None:
-        kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
-        if debug:
-            print("Dask KubeCluster created:")
-            print(kube_cluster)
-        flask.config.update(
-            KUBE_CLUSTER=kube_cluster
-        )
+    # if kube_dask_worker_spec is not None:
+    #     kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
+    #     if debug:
+    #         print("Dask KubeCluster created:")
+    #         print(kube_cluster)
+    #     flask.config.update(
+    #         KUBE_CLUSTER=kube_cluster
+    #     )
 
     flask.register_blueprint(v1_api)
 
