@@ -26,7 +26,7 @@ class DaskDelegateConfig(DelegateConfig):
     redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
-    dask_cluster_address = os.environ.get("DASK_SCHEDULER_ADDRESS")
+    dask_cluster_address = "localhost"
     dask_use_remote_cluster = False
 
     dask_worker_count = 1
@@ -37,11 +37,18 @@ class DaskDelegateConfig(DelegateConfig):
     dask_dashboard_address = "localhost"
     dask_dashboard_enabled = False
 
+    kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
+    kube_cluster = None
+
+
+    if kube_dask_worker_spec is not None:
+        kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
+
 
 class DaskDelegate(Delegate):
     type: str = "dask"
 
-    def __init__(self, delegate_config: DaskDelegateConfig, kube_cluster=None):
+    def __init__(self, delegate_config: DaskDelegateConfig):
 
         super()
         self.delegate_config = delegate_config
@@ -49,10 +56,12 @@ class DaskDelegate(Delegate):
         try:
             self.client = get_client()
         except ValueError as _:
-            if kube_cluster is not None:
-                self.client = Client(kube_cluster)
-                print(kube_cluster)
+            if self.delegate_config.kube_cluster is not None:
+                self.client = Client(self.delegate_config.kube_cluster)
+                print(self.delegate_config.kube_cluster)
             # TODO what happens if user is not using kubernetes?
+            else:
+                self.client = Client(self.delegate_config.cluster_address)
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
