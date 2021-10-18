@@ -23,7 +23,7 @@ class ComputeServer():
         self.job_api = f"{self.address}/job"
         self.memory_api = f"{self.address}/memory"
         self.gillespy2_model_api = f"{self.address}/gillespy2/model"
-        self.gillespy2_memorys_api = f"{self.address}/gillespy2/results"
+        self.gillespy2_results_api = f"{self.address}/gillespy2/results"
 
         self.endpoints = {
             Endpoint.JOB: self.job_api,
