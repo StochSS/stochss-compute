@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from stochss_compute.api.cache import CacheProvider, CacheProviderConfig
 
 class SimpleDiskCacheConfig(CacheProviderConfig):
@@ -9,11 +11,16 @@ class SimpleDiskCache(CacheProvider):
     def __init__(self, config: SimpleDiskCacheConfig):
         self.config = config
 
-    def put(id: str, value):
-        pass
+    def put(self, id: str, value: str):
+        # Write value to a file with the name `id`. If a file already exists, replace it.
+        with open(os.path.join(self.root_dir, id), "w+") as outfile:
+            outfile.write(value)
 
-    def get(id: str):
-        pass
+    def get(self, id: str):
+        # Read the file in as a string, return the contents.
+        with open(os.path.join(self.root_dir, id), "r") as infile:
+            return infile.read()
 
-    def exists(id: str) -> bool:
-        pass
+    def exists(self, id: str) -> bool:
+        # Check to see if the file exists on disk.
+        return os.path.isfile(os.path.join(self.root_dir, id))
