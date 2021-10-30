@@ -77,17 +77,6 @@ class DaskDelegate(Delegate):
         self.scheduler_job_exists = __scheduler_job_exists
         self.scheduler_job_state = __scheduler_job_state
 
-    def __cache_results(self, future: Future):
-        # Save the results in the vault.
-        outpath = Path(self.delegate_config.redis_vault_dir).joinpath(future.key)
-
-        if not outpath.parent.is_dir():
-            outpath.parent.mkdir()
-
-        with outpath.open("w+b") as outfile:
-            result = dill.dumps(future.result())
-            outfile.write(result)
-
     def __job_state(self, job_id: str) -> TaskState:
         return self.client.run_on_scheduler(self.scheduler_job_state, job_id=job_id)
 
@@ -111,9 +100,11 @@ class DaskDelegate(Delegate):
         # In short, this allows for callees to reference an in-progress or remote job without needing direct access.
         function_args = [(self.client.get_dataset(arg.replace("result://", "")) if isinstance(arg, str) and arg.startswith("result://") else arg) for arg in args]
 
-        # Create a job and set a callback to cache the results once complete.
+        # Create a job to run the desired function.
         job_future: Future = self.client.submit(work, *function_args, **kwargs, key=job_id, pure=False)
-        job_future.add_done_callback(self.__cache_results)
+
+        # Start additional cache job which depends on the results of the previous.
+        cache_future: Future = self.client.submit(self.cache_provider.put, job_id, job_future)
 
         # Publish the job as a dataset to maintain state across requests.
         self.client.publish_dataset(job_future, name=job_id, override=True)
@@ -196,17 +187,22 @@ class DaskDelegate(Delegate):
             return result_dataset
 
         # If the results are not in the cache, return from the disk.
-        results_file = Path(self.delegate_config.redis_vault_dir, job_id)
+        # results_file = Path(self.delegate_config.redis_vault_dir, job_id)
 
-        if not results_file.is_file():
-            raise Exception(f"Results file '{results_file} does not exist in the vault.")
+        if not self.cache_provider.exists(job_id):
+            raise Exception(f"Result with ID '{job_id}' does not exist in the cache.")
 
-        print(f"[DEBUG] Getting vaulted results from {results_file}.")
-        return dill.loads(results_file.read_bytes())
+        return self.cache_provider.get(job_id)
+
+        # if not results_file.is_file():
+        #     raise Exception(f"Results file '{results_file} does not exist in the vault.")
+
+        # print(f"[DEBUG] Getting vaulted results from {results_file}.")
+        # return dill.loads(results_file.read_bytes())
 
     def job_complete(self, job_id: str) -> bool:
-        # Finished jobs must exist in the Vault (even if they exist within Redis or as a dataset
-        return Path(self.delegate_config.redis_vault_dir, job_id).is_file()
+        # Finished job results must exist within the cache for it to be considered 'done'.
+        return self.cache_provider.exists(job_id)
 
     def job_exists(self, job_id: str) -> bool:
         # Check if the job exists in the scheduler.
