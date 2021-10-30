@@ -17,6 +17,8 @@ from .delegate import JobState
 from .delegate import JobStatus
 from .delegate import DelegateConfig
 
+from stochss_compute.api.cache import CacheProvider
+
 class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
     redis_address = os.environ.get("REDIS_ADDRESS")
@@ -40,10 +42,10 @@ class DaskDelegateConfig(DelegateConfig):
     kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
     kube_cluster = None
 
+    cache_provider: CacheProvider = None
 
     if kube_dask_worker_spec is not None:
         kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
-
 
 class DaskDelegate(Delegate):
     type: str = "dask"
@@ -52,9 +54,11 @@ class DaskDelegate(Delegate):
 
         super()
         self.delegate_config = delegate_config
-        # # Attempt to load the global mDask client.
+
+        # Attempt to load the global Dask client.
         try:
             self.client = get_client()
+
         except ValueError as _:
             if self.delegate_config.kube_cluster is not None:
                 self.client = Client(self.delegate_config.kube_cluster)
