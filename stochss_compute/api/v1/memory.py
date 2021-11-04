@@ -10,7 +10,6 @@ from flask import make_response
 from matplotlib import pyplot
 
 from gillespy2.core import Results
-from gillespy2.core import Jsonify
 
 from .apiutils import delegate
 
@@ -67,7 +66,7 @@ def make_plot(memory_id: str):
         return "Something broke", 404
 
     # Grab the memory.
-    memory: Results = Jsonify.from_json(delegate.job_results(memory_id))
+    memory: Results = Results.from_json(delegate.job_results(memory_id))
 
     # Swap the pyplot backend so the Results#plot call wont try to write to a GUI.
     pyplot.switch_backend("template")
