@@ -8,8 +8,6 @@ requests
 dask_kubernetes
 jupyter
 blosc
-lz4
-pandas
 
 # Current required to enable client-side plot rendering.
 IPython
