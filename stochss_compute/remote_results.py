@@ -82,6 +82,9 @@ class RemoteResults(Results):
     def hook_plot(self, *args, **kwargs):
         plot_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/plot")
 
+        if plot_response.status_code == 404:
+            raise Exception(plot_response.text)
+
         print(f"Plot size: {sys.getsizeof(plot_response.content)}")
         plot_image = bz2.decompress(plot_response.content)
         print(f"Expanded to: {sys.getsizeof(plot_image)}")
