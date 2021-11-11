@@ -59,9 +59,8 @@ class DaskDelegate(Delegate):
             if self.delegate_config.kube_cluster is not None:
                 self.client = Client(self.delegate_config.kube_cluster)
                 print(self.delegate_config.kube_cluster)
-            # TODO what happens if user is not using kubernetes?
             else:
-                self.client = Client(self.delegate_config.cluster_address)
+                self.client = Client()
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
