@@ -1,5 +1,12 @@
 ## Installation
 
+#### Quick Start
+
+```
+pip install -r requirements.txt
+python3 app.py
+```
+
 #### Docker
 
 The easiest way to get stochss-compute running is with docker. Clone the repository and run the following in the root directory:
@@ -32,52 +39,10 @@ ngrok http $url
 ```
 - use this URL when calling ComputeServer()
 
-#### Manually
-
-Ensure that the following dependencies are installed with your package manager of choice:
-
-- `python-poetry`
-- `redis`
-
-Clone the repository and navigate into the new `stochss-compute` directory. Once inside, execute the following command to install the Python dependencies:
-
-```
-poetry install
-```
-
-And to activate the new virtual environment:
-
-```
-poetry shell
-```
-
-Once complete, both `celery` and `redis` need to be running.
-
-```
-celery -A stochss_compute.api worker -l INFO
-```
-
-`redis` can be run in several ways. If you prefer a `systemd` daemon:
-
-```
-sudo systemctl start redis
-```
-
-Otherwise:
-
-```
-redis-server
-```
-
-Finally, start the stochss-compute server.
-
-```
-poetry run stochss-compute
-```
 
 ## Usage
 
-Simulations are run on stochss-compute via Jupyter notebooks.
+Simulations can be ran using stochss-compute via Jupyter notebooks.
 
 ```python
 import numpy, gillespy2
@@ -118,8 +83,12 @@ class ToggleSwitch(gillespy2.Model):
 # Instantiate a new instance of the model.
 model = ToggleSwitch()
 
-# Run the model on a stochss-compute server instance running on localhost.
+# Run the model on a stochss-compute server instance running on localhost. 
+# The default port is 1234, but will depend on how you choose to set it up.
 results = RemoteSimulation.on(ComputeServer("127.0.0.1", port=1234).with_model(model).run()
+
+# Wait for the simulation to finish.
+results.wait()
 
 # Plot the results.
 results.plot()
