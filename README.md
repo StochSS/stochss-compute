@@ -1,19 +1,27 @@
 ## Installation
 
 #### Quick Start
+?? python venv ??
+?? python version ??
 
 ```
+git clone https://github.com/StochSS/stochss-compute.git
 pip install -r requirements.txt
 python3 app.py
 ```
+Stochss-compute is now running on localhost:1234.
+Check out some example notebooks for more instructions on usage.
 
 #### Docker
 
-The easiest way to get stochss-compute running is with docker. Clone the repository and run the following in the root directory:
+With docker you can use the image on docker hub.
 
-```
-docker-compose up --build
-```
+docker pull mdip226/stochss-compute:latest
+docker run TODO
+
+??compose?? - probably not needed anymore
+?? different docker run commands like setting the port number
+
 #### Minikube
 - first requires `minikube`, `docker`, and `kubectl` to be installed. Then:
 ```
@@ -42,7 +50,7 @@ ngrok http $url
 
 ## Usage
 
-Simulations can be ran using stochss-compute via Jupyter notebooks.
+The easiest way to run stochss-compute simulations is via Jupyter notebooks:
 
 ```python
 import numpy, gillespy2
