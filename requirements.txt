@@ -1,3 +1,5 @@
+wheel
+gillespy2 @ git+https://github.com/StochSS/GillesPy2@develop
 Flask>=2.0.1
 dask>=2021.5.1
 distributed @ git+https://github.com/dask/distributed
@@ -12,4 +14,3 @@ blosc
 # Current required to enable client-side plot rendering.
 IPython
 
-gillespy2 @ git+https://github.com/StochSS/GillesPy2@develop
