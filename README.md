@@ -1,8 +1,13 @@
+# StochSS-Compute
+
+With StochSS-Compute, you can run gillespy2 simulations on your own server. Results are cached and anonymized, so you
+can easily save and recall previous simulations. 
+
 ## Installation
 
 #### Quick Start
-- ?? python venv ??
-- ?? python version ??
+
+- If you would like to set up a virtual environment, follow these [instructions](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first. Otherwise, continue with the next step.
 
 ```
 git clone https://github.com/StochSS/stochss-compute.git
@@ -14,15 +19,14 @@ python3 app.py
 
 #### Docker
 
-With docker you can use the image on docker hub.
+With docker, you can use the image hosted on docker hub.
 
 ```
-docker pull mdip226/stochss-compute:latest
-docker run TODO
+docker run -p 1234:1234 mdip226/stochss-compute:latest
 ```
 
-- ??compose?? - probably not needed anymore
-- ?? different docker run commands like setting the port number
+- Stochss-compute is now running on localhost:1234.
+- Check out some example notebooks for more instructions on usage.
 
 #### Minikube
 - first requires `minikube`, `docker`, and `kubectl` to be installed. Then:
