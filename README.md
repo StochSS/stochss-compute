@@ -11,6 +11,7 @@ can easily save and recall previous simulations.
 
 ```
 git clone https://github.com/StochSS/stochss-compute.git
+cd stochss-compute
 pip install -r requirements.txt
 python3 app.py
 ```
@@ -25,6 +26,7 @@ With docker, you can use the image hosted on docker hub.
 docker run -p 1234:1234 mdip226/stochss-compute:latest
 ```
 
+- the `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
 - Stochss-compute is now running on localhost:1234.
 - Check out some example notebooks for more instructions on usage.
 
@@ -99,7 +101,7 @@ model = ToggleSwitch()
 
 # Run the model on a stochss-compute server instance running on localhost. 
 # The default port is 1234, but will depend on how you choose to set it up.
-results = RemoteSimulation.on(ComputeServer("127.0.0.1", port=1234).with_model(model).run()
+results = RemoteSimulation.on(ComputeServer("127.0.0.1", port=1234)).with_model(model).run()
 
 # Wait for the simulation to finish.
 results.wait()
