@@ -1,13 +1,13 @@
 # StochSS-Compute
 
-With StochSS-Compute, you can run gillespy2 simulations on your own server. Results are cached and anonymized, so you
+With StochSS-Compute, you can run GillesPy2 simulations on your own server. Results are cached and anonymized, so you
 can easily save and recall previous simulations. 
 
 ## Installation
 
 #### Quick Start
 
-- If you would like to set up a virtual environment, follow these [instructions](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first. Otherwise, continue with the next step.
+- If you would like to set up a virtual environment, follow these [instructions](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
 
 ```
 git clone https://github.com/StochSS/stochss-compute.git
