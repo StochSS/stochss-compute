@@ -17,6 +17,7 @@ python3 app.py
 ```
 - Stochss-compute is now running on localhost:1234.
 - Check out some example notebooks for more instructions on usage.
+- Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20).
 
 #### Docker
 
