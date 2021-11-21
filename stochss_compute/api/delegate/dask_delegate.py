@@ -1,6 +1,5 @@
 import os
 
-from pathlib import Path
 from typing import Callable
 
 from distributed import Future
@@ -188,19 +187,11 @@ class DaskDelegate(Delegate):
             print("[DEBUG] Getting results from dataset.")
             return result_dataset
 
-        # If the results are not in the cache, return from the disk.
-        # results_file = Path(self.delegate_config.redis_vault_dir, job_id)
-
+        # If the results are not in the cache, raise an exception.
         if not self.cache_provider.exists(job_id):
             raise Exception(f"Result with ID '{job_id}' does not exist in the cache.")
 
         return self.cache_provider.get(job_id)
-
-        # if not results_file.is_file():
-        #     raise Exception(f"Results file '{results_file} does not exist in the vault.")
-
-        # print(f"[DEBUG] Getting vaulted results from {results_file}.")
-        # return dill.loads(results_file.read_bytes())
 
     def job_complete(self, job_id: str) -> bool:
         # Finished job results must exist within the cache for it to be considered 'done'.
