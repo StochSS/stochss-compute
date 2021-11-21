@@ -13,14 +13,14 @@ class SimpleDiskCache(CacheProvider):
 
     def put(self, id: str, value: str):
         # Write value to a file with the name `id`. If a file already exists, replace it.
-        with open(os.path.join(self.root_dir, id), "w+") as outfile:
+        with open(os.path.join(self.config.root_dir, id), "w+") as outfile:
             outfile.write(value)
 
     def get(self, id: str):
         # Read the file in as a string, return the contents.
-        with open(os.path.join(self.root_dir, id), "r") as infile:
+        with open(os.path.join(self.config.root_dir, id), "r") as infile:
             return infile.read()
 
     def exists(self, id: str) -> bool:
         # Check to see if the file exists on disk.
-        return os.path.isfile(os.path.join(self.root_dir, id))
+        return os.path.isfile(os.path.join(self.config.root_dir, id))
