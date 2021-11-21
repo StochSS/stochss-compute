@@ -26,4 +26,3 @@ class CacheProvider(ABC):
     @abstractmethod
     def exists(id: str) -> bool:
         pass
-    
