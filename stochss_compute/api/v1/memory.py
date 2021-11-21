@@ -63,10 +63,11 @@ def make_average_ensemble(memory_id: str):
 def make_plot(memory_id: str):
     # Make sure we can grab a memory with this ID.
     if not delegate.job_complete(memory_id):
-        return "Something broke", 404
+        status = delegate.job_status(memory_id)
+        return status.status_text, 404
 
     # Grab the memory.
-    memory: Results = delegate.job_results(memory_id)
+    memory: Results = Results.from_json(delegate.job_results(memory_id))
 
     # Swap the pyplot backend so the Results#plot call wont try to write to a GUI.
     pyplot.switch_backend("template")

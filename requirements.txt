@@ -7,6 +7,7 @@ dill
 requests
 dask_kubernetes
 jupyter
+blosc
 
 # Current required to enable client-side plot rendering.
 IPython
