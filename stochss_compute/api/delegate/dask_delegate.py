@@ -28,7 +28,7 @@ class DaskDelegateConfig(DelegateConfig):
     redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
-    dask_cluster_address = "172.21.177.227"
+    dask_cluster_address = "localhost"
     dask_use_remote_cluster = False
 
     dask_worker_count = 1
