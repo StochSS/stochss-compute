@@ -3,8 +3,6 @@ import os
 from pathlib import Path
 from typing import Callable
 
-import dill
-
 from distributed import Future
 from distributed import Client
 from distributed import get_client
@@ -18,6 +16,8 @@ from .delegate import JobStatus
 from .delegate import DelegateConfig
 
 from stochss_compute.api.cache import CacheProvider
+from stochss_compute.api.cache import SimpleDiskCache
+from stochss_compute.api.cache import SimpleDiskCacheConfig
 
 class DaskDelegateConfig(DelegateConfig):
     redis_port = 6379
@@ -28,7 +28,7 @@ class DaskDelegateConfig(DelegateConfig):
     redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
-    dask_cluster_address = "localhost"
+    dask_cluster_address = "172.21.177.227"
     dask_use_remote_cluster = False
 
     dask_worker_count = 1
@@ -42,7 +42,7 @@ class DaskDelegateConfig(DelegateConfig):
     kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
     kube_cluster = None
 
-    cache_provider: CacheProvider = None
+    cache_provider: type[CacheProvider] = SimpleDiskCache(SimpleDiskCacheConfig())
 
     if kube_dask_worker_spec is not None:
         kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
@@ -51,9 +51,10 @@ class DaskDelegate(Delegate):
     type: str = "dask"
 
     def __init__(self, delegate_config: DaskDelegateConfig):
-
         super()
+
         self.delegate_config = delegate_config
+        self.cache_provider = self.delegate_config.cache_provider
 
         # Attempt to load the global Dask client.
         try:
@@ -63,9 +64,9 @@ class DaskDelegate(Delegate):
             if self.delegate_config.kube_cluster is not None:
                 self.client = Client(self.delegate_config.kube_cluster)
                 print(self.delegate_config.kube_cluster)
-            # TODO what happens if user is not using kubernetes?
+
             else:
-                self.client = Client(self.delegate_config.cluster_address)
+                self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
@@ -104,10 +105,11 @@ class DaskDelegate(Delegate):
         job_future: Future = self.client.submit(work, *function_args, **kwargs, key=job_id, pure=False)
 
         # Start additional cache job which depends on the results of the previous.
-        cache_future: Future = self.client.submit(self.cache_provider.put, job_id, job_future)
+        cache_future: Future = self.client.submit(self.cache_provider.put, *[job_id, job_future], pure=False)
 
         # Publish the job as a dataset to maintain state across requests.
         self.client.publish_dataset(job_future, name=job_id, override=True)
+        self.client.publish_dataset(cache_future, override=True)
 
         return True
 
