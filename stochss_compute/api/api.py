@@ -9,6 +9,11 @@ from .delegate import DelegateConfig
 from .delegate.dask_delegate import DaskDelegate
 from .delegate.dask_delegate import DaskDelegateConfig
 
+from .cache import CacheProvider
+from .cache import CacheProviderConfig
+from .cache import SimpleDiskCache
+from .cache import SimpleDiskCacheConfig
+
 from dask_kubernetes import KubeCluster
 import os
 

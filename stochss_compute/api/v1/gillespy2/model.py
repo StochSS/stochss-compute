@@ -1,3 +1,5 @@
+import os
+
 from typing import List
 from typing import Dict
 
@@ -69,6 +71,9 @@ def run():
     # Warning: Here be possible threading issues. Needs investigation.
     dependencies = delegate.client.map(gillespy2.core.Model.run, [model] * number_trajectories, **run_request.kwargs, key=keys)
 
+    cache_dir = delegate.cache_provider.config.root_dir
+    os.makedirs(cache_dir, exist_ok=True)
+
     def join_results(results):
         # Save the dependent trajectories in memory.
         from distributed import get_client
@@ -77,11 +82,19 @@ def run():
 
         data = []
 
-        for result in results:
+        for i, result in enumerate(results):
+            with open(os.path.join(cache_dir, keys[i]), "w+") as outfile:
+                outfile.write(result.to_json())
+
             data = data + result.data
 
         from gillespy2.core import Results
-        return Results(data).to_json()
+        result_json = Results(data).to_json()
+
+        with open(os.path.join(cache_dir, job_id), "w+") as outfile:
+            outfile.write(result_json)
+
+        return result_json
 
     job_id = f"{model_id}-run_{number_trajectories}"
     delegate.start_job(job_id, join_results, dependencies)
