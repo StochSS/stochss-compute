@@ -1,8 +1,8 @@
 import time
 import shutil
-from multiprocessing import Process
+from threading import Thread
 
-from tests.gillespy2_models import Oregonator
+from tests.gillespy2_models import LacOperon
 from tests.gillespy2_models import MichaelisMenten
 
 from stochss_compute import api
@@ -17,7 +17,7 @@ import pytest
 from distributed import Client
 from distributed import Future
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def cluster_client():
     # Set up the Dask client and stochss-compute instance.
     client = Client(heartbeat_interval=200, set_as_default=False)
@@ -29,7 +29,7 @@ def cluster_client():
     if hasattr(delegate_config.cache_provider.config, "root_dir"):
         delegate_config.cache_provider.config.root_dir = "ensemble-test_" + delegate_config.cache_provider.config.root_dir
 
-    api_process = Process(daemon=True, target=api.start_api, kwargs=dict(host="0.0.0.0", port=1234, delegate_config=delegate_config))
+    api_process = Thread(daemon=True, target=api.start_api, kwargs=dict(host="0.0.0.0", port=1234, delegate_config=delegate_config))
     api_process.start()
 
     time.sleep(1)
@@ -37,9 +37,7 @@ def cluster_client():
     yield client
 
     # Cleanup on closure, ensuring cache directory and dask-worker-space are removed.
-    api_process.kill()
     client.close()
-
     shutil.rmtree(delegate_config.cache_provider.config.root_dir)
 
 @pytest.fixture()
@@ -65,7 +63,8 @@ def test_job_endpoint_fast_model(cluster_client: Client, compute_server: Compute
     job_results = job.resolve()
 
 def test_job_endpoint_slow_model(cluster_client: Client, compute_server: ComputeServer):
-    job = RemoteSimulation.on(compute_server).with_model(Oregonator()).run()
+    job = RemoteSimulation.on(compute_server).with_model(LacOperon()).run()
+    test = Future(job.result_id)
 
     # Wait for dependencies to arrive in memory, with timeout.
     for step in range(10):
@@ -73,13 +72,13 @@ def test_job_endpoint_slow_model(cluster_client: Client, compute_server: Compute
             break
 
         if step == 9:
-            assert(False)
+            assert(job.status().status_id == JobState.RUNNING)
 
-        time.sleep(1)
+        time.sleep(0.5)
 
     # Assert that the job is currently running.
     assert(job.status().status_id == JobState.RUNNING)
 
-    # Wait a couple of seconds, test again.
-    time.sleep(5)
-    assert(job.status().status_id == JobState.RUNNING)
+    job.wait()
+
+    assert(job.status().status_id == JobState.DONE)
