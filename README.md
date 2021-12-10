@@ -4,7 +4,7 @@ With StochSS-Compute, you can run GillesPy2 simulations on your own server. Resu
 can easily save and recall previous simulations. 
 
 ## Example Quick Start
-- First, clone the repository.
+First, clone the repository.
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
@@ -40,7 +40,8 @@ source venv/bin/activate
 jupyter notebook --port=9999
 ```
 - Jupyter should then launch automatically, where you can then navigate to the examples directory and open up StartHere.ipynb.
-- If not, copy and paste the following URL into your web browser: `http://localhost:9999/notebooks/examples/StartHere.ipynb`
+- If not, copy and paste the following URL into your web browser:  
+`http://localhost:9999/notebooks/examples/StartHere.ipynb`
 #### Docker
 
 With docker, you can use the image hosted on docker hub.
