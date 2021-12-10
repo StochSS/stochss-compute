@@ -53,9 +53,9 @@ docker run -p 1234:1234 mdip226/stochss-compute:latest
 
 - the `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
 - Stochss-compute is now running on localhost:1234.
-- Check out some example notebooks for more instructions on usage.
+<!-- - Check out some example notebooks for more instructions on usage. -->
 
-#### Minikube
+<!-- #### Minikube
 - first requires `minikube`, `docker`, and `kubectl` to be installed. Then:
 ```
 minikube start
@@ -65,9 +65,9 @@ minikube dashboard
 ```
 - Now, wait for the stochss-compute container to be created.
 
-- From here, there are two ways to access the cluster.
+- From here, there are two ways to access the cluster. -->
 
-##### To set up local access:
+<!-- ##### To set up local access:
 `minikube service --url stochss-compute-service`
 - exposes external IP (on EKS or otherwise this is handled by your cloud provider)
 - use this host and IP when calling ComputeServer()
@@ -78,10 +78,10 @@ minikube dashboard
 url=$(minikube service --url stochss-compute-service)
 ngrok http $url
 ```
-- use this URL when calling ComputeServer()
+- use this URL when calling ComputeServer() -->
 
 
-## Usage
+<!-- ## Usage
 
 - The easiest way to run stochss-compute simulations is via Jupyter notebooks:
 
@@ -133,4 +133,4 @@ results.wait()
 
 # Plot the results.
 results.plot()
-```
+``` -->
