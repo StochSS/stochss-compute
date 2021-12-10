@@ -44,13 +44,13 @@ jupyter notebook --port=9999
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
 #### Docker
 
-With docker, you can use the image hosted on docker hub.
+With docker, you can use the image hosted on Docker Hub.
 
 ```
 docker run -p 1234:1234 mdip226/stochss-compute:latest
 ```
 
-- the `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
+- The `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
 - Stochss-compute is now running on localhost:1234.
 <!-- - Check out some example notebooks for more instructions on usage. -->
 
