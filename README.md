@@ -3,9 +3,7 @@
 With StochSS-Compute, you can run GillesPy2 simulations on your own server. Results are cached and anonymized, so you
 can easily save and recall previous simulations. 
 
-## Installation
-
-#### Example Quick Start
+## Example Quick Start
 - First, clone the repository.
 ```
 git clone https://github.com/StochSS/stochss-compute.git
@@ -13,7 +11,7 @@ cd stochss-compute
 ```
 - If you are unfamiliar with python virtual environments, read this [documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
 - Note that you will have to activate your venv every time you run stochSS-compute, as well as for your dask scheduler and each of its workers.
-- The following will set up the `dask-scheduler`, a `dask-worker`, the backend api server, and launch an example `jupyter` notebook.
+- The following will set up the `dask-scheduler`, one `dask-worker`, the backend api server, and launch an example `jupyter` notebook.
 - Each of these must be run in separate terminal windows in the main `stochss-compute` directory.
 - Just copy and paste!
 ```
@@ -34,7 +32,7 @@ source venv/bin/activate
 python3 app.py
 ```
 - Stochss-compute is now running on localhost:1234.
-- Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20).
+<!-- - Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20). -->
 
 ```
 # Terminal 4
