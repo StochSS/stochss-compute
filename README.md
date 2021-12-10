@@ -15,6 +15,7 @@ cd stochss-compute
 - Note that you will have to activate your venv every time you run stochSS-compute, as well as for your dask scheduler and each of its workers.
 - The following will set up the `dask-scheduler`, a `dask-worker`, the backend api server, and launch an example `jupyter` notebook.
 - Each of these must be run in separate terminal windows in the main `stochss-compute` directory.
+- Just copy and paste!
 ```
 # Terminal 1
 python3 -m venv venv
@@ -32,15 +33,16 @@ dask-worker localhost:8786
 source venv/bin/activate
 python3 app.py
 ```
+- Stochss-compute is now running on localhost:1234.
+- Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20).
+
 ```
 # Terminal 4
 source venv/bin/activate
 jupyter notebook --port=9999
 ```
-- Stochss-compute is now running on localhost:1234.
-- Check out some example notebooks for more instructions on usage.
-- Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20).
-
+- Jupyter should then launch automatically, where you can then navigate to the examples directory and open up StartHere.ipynb.
+- If not, copy and paste the following URL into your web browser: `http://localhost:9999/notebooks/examples/StartHere.ipynb`
 #### Docker
 
 With docker, you can use the image hosted on docker hub.
