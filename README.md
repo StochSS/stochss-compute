@@ -5,17 +5,18 @@ can easily save and recall previous simulations.
 
 ## Installation
 
-#### Quick Start
-
-
+#### Example Quick Start
 
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
 ```
-- If you would like to set up a virtual environment, follow these [instructions](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
+- If you are unfamiliar with python virtual environments, read this [documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
 - Note that you will have to activate your venv every time you run stochSS-compute, as well as for your dask scheduler and each of its workers.
+- The following will set up the `dask-scheduler`, a `dask-worker`, the backend api server, and launch an example `jupyter` notebook.
+- Each of these must be run in separate terminal windows in the main `stochss-compute` directory.
 ```
+# Terminal \#1
 pip install -r requirements.txt
 ```
 - In separate terminal windows, run each of these, in this order.
