@@ -6,7 +6,7 @@ can easily save and recall previous simulations.
 ## Installation
 
 #### Example Quick Start
-
+- First, clone the repository.
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
@@ -16,18 +16,26 @@ cd stochss-compute
 - The following will set up the `dask-scheduler`, a `dask-worker`, the backend api server, and launch an example `jupyter` notebook.
 - Each of these must be run in separate terminal windows in the main `stochss-compute` directory.
 ```
-# Terminal \#1
-pip install -r requirements.txt
-```
-- In separate terminal windows, run each of these, in this order.
-```
+# Terminal 1
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
 dask-scheduler
 ```
 ```
+# Terminal 2
+source venv/bin/activate
 dask-worker localhost:8786
 ```
 ```
+# Terminal 3
+source venv/bin/activate
 python3 app.py
+```
+```
+# Terminal 4
+source venv/bin/activate
+jupyter notebook --port=9999
 ```
 - Stochss-compute is now running on localhost:1234.
 - Check out some example notebooks for more instructions on usage.
