@@ -39,12 +39,14 @@ python3 app.py
 source venv/bin/activate
 jupyter notebook --port=9999
 ```
+- This notebook will show you how to use StochSS-compute.
 - Jupyter should then launch automatically, where you can then navigate to the examples directory and open up StartHere.ipynb.
 - If not, copy and paste the following URL into your web browser:  
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
 #### Docker
 
-With docker, you can use the image hosted on Docker Hub.
+An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following line.
+
 
 ```
 docker run -p 1234:1234 mdip226/stochss-compute:latest
@@ -52,10 +54,10 @@ docker run -p 1234:1234 mdip226/stochss-compute:latest
 
 - The `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
 - Stochss-compute is now running on localhost:1234.
-<!-- - Check out some example notebooks for more instructions on usage. -->
 
 <!-- #### Minikube
-- first requires `minikube`, `docker`, and `kubectl` to be installed. Then:
+- A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).
+- Requires `minikube`, `docker`, and `kubectl` to be installed. Then:
 ```
 minikube start
 cd into kubernetes directory
