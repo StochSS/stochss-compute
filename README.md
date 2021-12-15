@@ -3,50 +3,61 @@
 With StochSS-Compute, you can run GillesPy2 simulations on your own server. Results are cached and anonymized, so you
 can easily save and recall previous simulations. 
 
-## Quick Start
-
+## Example Quick Start
+First, clone the repository.
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
 ```
-- If you would like to set up a virtual environment, follow these [instructions](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
+- If you are unfamiliar with python virtual environments, read this [documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
 - Note that you will have to activate your venv every time you run stochSS-compute, as well as for your dask scheduler and each of its workers.
+- The following will set up the `dask-scheduler`, one `dask-worker`, the backend api server, and launch an example `jupyter` notebook.
+- Each of these must be run in separate terminal windows in the main `stochss-compute` directory.
+- Just copy and paste!
 ```
-pip install -r requirements.txt
-```
-- In separate terminal windows, run each of these, in this order.
-```
+# Terminal 1
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
 dask-scheduler
 ```
 ```
+# Terminal 2
+source venv/bin/activate
 dask-worker localhost:8786
 ```
 ```
+# Terminal 3
+source venv/bin/activate
 python3 app.py
 ```
 - Stochss-compute is now running on localhost:1234.
-- Check out some example notebooks for more instructions on usage.
-- Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20).
+<!-- - Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20). -->
 
-This notebook will show you how to use StochSS-compute.
+```
+# Terminal 4
+source venv/bin/activate
+jupyter notebook --port=9999
+```
+- This notebook will show you how to use StochSS-compute.
+- Jupyter should then launch automatically, where you can then navigate to the examples directory and open up StartHere.ipynb.
+- If not, copy and paste the following URL into your web browser:  
+`http://localhost:9999/notebooks/examples/StartHere.ipynb`
+#### Docker
 
-## Docker
+An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following line.
 
-An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following comment
 
 ```
 docker run -p 1234:1234 mdip226/stochss-compute:latest
 ```
 
-- the `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
+- The `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
 - Stochss-compute is now running on localhost:1234.
-- Check out some example notebooks for more instructions on usage.
 
-## Minikube
-
-A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).
-
-- first requires `minikube`, `docker`, and `kubectl` to be installed. Then:
+<!-- #### Minikube
+- A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).
+- Requires `minikube`, `docker`, and `kubectl` to be installed. Then:
 ```
 minikube start
 cd into kubernetes directory
@@ -55,9 +66,9 @@ minikube dashboard
 ```
 - Now, wait for the stochss-compute container to be created.
 
-- From here, there are two ways to access the cluster.
+- From here, there are two ways to access the cluster. -->
 
-##### To set up local access:
+<!-- ##### To set up local access:
 `minikube service --url stochss-compute-service`
 - exposes external IP (on EKS or otherwise this is handled by your cloud provider)
 - use this host and IP when calling ComputeServer()
@@ -68,10 +79,10 @@ minikube dashboard
 url=$(minikube service --url stochss-compute-service)
 ngrok http $url
 ```
-- use this URL when calling ComputeServer()
+- use this URL when calling ComputeServer() -->
 
 
-## Usage
+<!-- ## Usage
 
 - The easiest way to run stochss-compute simulations is via Jupyter notebooks:
 
@@ -123,4 +134,4 @@ results.wait()
 
 # Plot the results.
 results.plot()
-```
+``` -->
