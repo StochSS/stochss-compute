@@ -3,11 +3,7 @@
 With StochSS-Compute, you can run GillesPy2 simulations on your own server. Results are cached and anonymized, so you
 can easily save and recall previous simulations. 
 
-## Installation
-
-#### Quick Start
-
-
+## Quick Start
 
 ```
 git clone https://github.com/StochSS/stochss-compute.git
@@ -32,9 +28,11 @@ python3 app.py
 - Check out some example notebooks for more instructions on usage.
 - Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20).
 
-#### Docker
+This notebook will show you how to use StochSS-compute.
 
-With docker, you can use the image hosted on docker hub.
+## Docker
+
+An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following comment
 
 ```
 docker run -p 1234:1234 mdip226/stochss-compute:latest
@@ -44,7 +42,10 @@ docker run -p 1234:1234 mdip226/stochss-compute:latest
 - Stochss-compute is now running on localhost:1234.
 - Check out some example notebooks for more instructions on usage.
 
-#### Minikube
+## Minikube
+
+A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).
+
 - first requires `minikube`, `docker`, and `kubectl` to be installed. Then:
 ```
 minikube start
