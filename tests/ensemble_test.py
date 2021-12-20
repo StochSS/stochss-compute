@@ -1,8 +1,8 @@
 import time
-import socket
-import shutil
+import unittest
+import tempfile
 
-from multiprocessing import Process
+from threading import Thread
 
 from tests.gillespy2_models import LacOperon
 from tests.gillespy2_models import MichaelisMenten
@@ -14,41 +14,50 @@ from stochss_compute import RemoteSimulation
 from stochss_compute.api.delegate import JobState
 from stochss_compute.api.delegate import DaskDelegateConfig
 
-import unittest
-
 from distributed import Client
 from distributed import Future
+from distributed import LocalCluster
 
 class EnsembleTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        cls.cache_dir = tempfile.TemporaryDirectory(suffix="stochss-compute_")
+        cls.worker_dir = tempfile.TemporaryDirectory(suffix="stochss-compute_")
+
         # Set up the Dask client and stochss-compute instance.
-        cls.client = Client()
+        cls.cluster = LocalCluster("127.0.0.1:9797", local_directory=cls.worker_dir.name)
+        cls.client = Client(address=cls.cluster.scheduler_address, set_as_default=False)
+
         host, port = cls.client.scheduler.address.replace("tcp://", "").split(":")
 
         delegate_config = DaskDelegateConfig(dask_cluster_address=host, dask_cluster_port=port)
 
         # If set, change cache root_dir to minimize conflicts.
         if hasattr(delegate_config.cache_provider.config, "root_dir"):
-            delegate_config.cache_provider.config.root_dir = "ensemble-test_" + delegate_config.cache_provider.config.root_dir
+            delegate_config.cache_provider.config.root_dir = cls.cache_dir.name
 
-        cls.api_process = Process(daemon=True, target=api.start_api, kwargs=dict(host="127.0.0.1", port=1234, delegate_config=delegate_config))
+        cls.api_process = Thread(daemon=False, target=api.start_api, kwargs=dict(host="127.0.0.1", port=1234, delegate_config=delegate_config))
         cls.api_process.start()
 
         cls.compute_server = ComputeServer(host="127.0.0.1", port=1234)
 
-        unittest.addModuleCleanup(cls.cleanupClass)
-
         time.sleep(3)
 
-    def cleanupClass(self):
-        self.client.close()
-        self.api_process.terminate()
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.cluster.close()
+        cls.client.close()
 
-    def test_job_endpoint_fast_model(self):
-        """ Battery of several API endpoints with a quick-to-compute model. """
+        cls.cache_dir.cleanup()
+        cls.worker_dir.cleanup()
 
-        job = RemoteSimulation.on(self.compute_server).with_model(MichaelisMenten()).run()
+    def test_run_model_consistency(self):
+        """ Test to ensure the API and Cluster return consistent job statuses. """
+        
+        model = MichaelisMenten()
+        model.name = "test_run_model_consistency_MichaelisMenten"
+
+        job = RemoteSimulation.on(self.compute_server).with_model(model).run()
 
         # Assert that the job hasn't failed yet, and that it does exist on the scheduler.
         assert(job.status().status_id != JobState.FAILED)
@@ -58,28 +67,39 @@ class EnsembleTest(unittest.TestCase):
 
         # Assert that the API reports status_id as JobState.DONE.
         assert(job.status().status_id == JobState.DONE)
-        assert(Future(job.result_id).done)
 
-        # Ensure that the results can be retrieved from the API.
-        job_results = job.resolve()
+        # Assert that results can be retrieved from the API. This will raise an exception if the request fails.
+        Future(job.result_id, client=self.client).result(timeout=5)
 
-    def test_job_endpoint_slow_model(self):
+    @unittest.skip("Currently broken due to invalid job stop behavior. See issue #61 for more details.")
+    def test_job_stop(self):
+        """ Test to ensure that running jobs can be stopped. """
+
         job = RemoteSimulation.on(self.compute_server).with_model(LacOperon()).run()
-        test = Future(job.result_id)
+        time.sleep(5)
 
-        # Wait for dependencies to arrive in memory, with timeout.
-        for step in range(10):
-            if job.status().status_id == JobState.RUNNING:
-                break
+        # Stop the job and assert that the API and Cluster report it as removed.
+        job.cancel()
 
-            if step == 9:
-                assert(job.status().status_id == JobState.RUNNING)
+        # Assert that the stopped job can no longer be resolved.
+        self.assertRaises(Exception, job.resolve())
 
-            time.sleep(0.5)
+    @unittest.skip("Broken due to invalid internal result resolution behavior. See issue #62 for more details.")
+    def test_job_cache(self):
+        """ Test the cache behavior for completed jobs. """
 
-        # Assert that the job is currently running.
-        assert(job.status().status_id == JobState.RUNNING)
+        model = MichaelisMenten()
+        model.namee = "test_job_cache_MichaelisMenten"
 
-        job.wait()
+        job = RemoteSimulation.on(self.compute_server).with_model(model).run()
 
-        assert(job.status().status_id == JobState.DONE)
+        # Wait for the job to complete and get the results.
+        results = job.resolve().to_json()
+
+        # Assert that results can still be resolved even if the job was cancelled.
+        Future(job.result_id, client=self.client).cancel()
+        assert(results == job.resolve().to_json())
+
+        # Assert that job results can be resolved from the cache.
+        self.client.unpublish_dataset(job.result_id)
+        assert(results == job.resolve().to_json())
