@@ -183,11 +183,9 @@ class DaskDelegate(Delegate):
 
     def job_results(self, job_id: str):
         # The results of this job may exist on the client dataset.
-        result_dataset = self.client.get_dataset(name=job_id).result()
-
-        if result_dataset is not None:
+        if job_id in self.client.datasets:
             print("[DEBUG] Getting results from dataset.")
-            return result_dataset
+            return self.client.get_dataset(name=job_id).result()
 
         # If the results are not in the cache, raise an exception.
         if not self.cache_provider.exists(job_id):
