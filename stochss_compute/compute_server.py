@@ -1,9 +1,11 @@
+from time import sleep
 import requests
 
 from enum import Enum
 
-from urllib.parse import urljoin
-from urllib.parse import urlparse
+from urllib3.exceptions import NewConnectionError, MaxRetryError
+# from urllib.parse import urljoin
+# from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
@@ -38,10 +40,21 @@ class ComputeServer():
 
     def post(self, endpoint: Endpoint, sub: str, request: BaseModel = None) -> requests.Response:
         url = f"{self.endpoints[endpoint]}{sub}"
-        print(url)
+        print(f"[POST] {url}")
+        retry = 0
+        sec = 7
+        while retry < 3:
+            try:
+                if request is None:
+                    return requests.post(url)
+                print(f"{type(request)}")
+                return requests.post(url, json=request.json())
 
-        if request is None:
-            return requests.post(url)
-
-        return requests.post(url, json=request.json())
+            # except (ConnectionError, ConnectionRefusedError, NewConnectionError, MaxRetryError) as e:
+            except Exception as e:
+                print(type(e).__name__)
+                print(f"Connection refused by server. Retrying in {sec} seconds.")
+                sleep(sec)
+                sec *= 2
+                retry += 1
 
