@@ -1,9 +1,9 @@
-from time import sleep
 import requests
 
 from enum import Enum
 
 from requests.exceptions import ConnectionError
+from time import sleep
 
 from pydantic import BaseModel
 
@@ -51,6 +51,12 @@ class ComputeServer():
 
             except ConnectionError:
                 print(f"Connection refused by server. Retrying in {sec} seconds....")
+                sleep(sec)
+                retry += 1
+                sec *= retry
+            
+            except Exception as e:
+                print(f"Unknown error: {e}. Retrying in {sec} seconds....")
                 sleep(sec)
                 retry += 1
                 sec *= retry
