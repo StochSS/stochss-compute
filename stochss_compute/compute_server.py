@@ -33,7 +33,8 @@ class ComputeServer():
         }
 
     def get(self, endpoint: Endpoint, sub: str) -> requests.Response:
-        print(f"{self.endpoints[endpoint]}{sub}")
+        url = f"{self.endpoints[endpoint]}{sub}"
+        print(f"[GET] {url}")
         return requests.get(f"{self.endpoints[endpoint]}{sub}")
 
     def post(self, endpoint: Endpoint, sub: str, request: BaseModel = None) -> requests.Response:
