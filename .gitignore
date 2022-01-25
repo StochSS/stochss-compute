@@ -156,3 +156,5 @@ Thumbs.db #thumbnail cache on Windows
 # matt
 .gitignore
 TODO
+rebuild.sh
+launch.sh
