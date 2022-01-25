@@ -24,7 +24,7 @@ spec:
             cpu: "1"
         env:
           - name: WORKER_SPEC_PATH
-            value: "dask_worker_spec.yaml"
+            value: "kubernetes/dask_worker_spec.yaml"
           # - name: REDIS_ADDRESS
           #   value: "redis-service.default"
         ports:
