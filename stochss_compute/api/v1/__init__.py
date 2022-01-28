@@ -1,9 +1,20 @@
 from flask import Blueprint
-from flask_restx import Api
 
-from .job import api as job_api
+from .job import JobStopResponse
+from .job import JobStatusResponse
 
-blueprint = Blueprint("api", __name__, url_prefix="/v1")
-api = Api(blueprint, title="V1 API Endpoints", version="0.1")
+from .gillespy2.model import ModelRunRequest
+from .gillespy2.results import PlotPlotlyRequest
+from .gillespy2.results import AverageEnsembleRequest
 
-api.add_namespace(job_api)
+from .job import v1_job
+from .memory import v1_memory
+from .gillespy2 import v1_gillespy2
+
+v1_api = Blueprint("stochss-compute API V1", __name__, url_prefix="/api/v1")
+
+v1_api.register_blueprint(v1_job)
+v1_api.register_blueprint(v1_memory)
+v1_api.register_blueprint(v1_gillespy2)
+
+print("V1 API has been initialized.")

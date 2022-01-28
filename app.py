@@ -1,7 +1,7 @@
-from stochss_compute.api import base
+from stochss_compute import api
 
 def server_start():
-    base.flask.run(host="0.0.0.0", port=1234)
+    api.start_api(host="0.0.0.0", port=1234, debug=True)
 
 if __name__ == "__main__":
     server_start()

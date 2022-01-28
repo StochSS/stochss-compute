@@ -1,0 +1,53 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: dask
+# spec:
+#   selector:
+#     matchLabels:
+#       app: dask
+#   template:
+#     metadata:
+#       labels:
+#         app: dask
+#     spec:
+#       containers:
+#       - name: dask-scheduler
+#         image: daskdev/dask
+#         imagePullPolicy: IfNotPresent
+#         args: [dask-scheduler]
+#         ports:
+#         - containerPort: 8786
+#         resources:
+#           limits:
+#             cpu: "1"
+#             memory: 1G
+#           requests:
+#             cpu: "1"
+#             memory: 1G
+#       - name: dask-worker
+#         image: daskdev/dask
+#         imagePullPolicy: IfNotPresent
+#         args: [dask-worker, dask-service.default:8786]
+        
+#         ports:
+#         - containerPort: 8786
+#         resources:
+#           limits:
+#             cpu: "1"
+#             memory: 1G
+#           requests:
+#             cpu: "1"
+#             memory: 1G
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: dask-service
+# spec:
+#   selector:
+#     app: dask
+#   ports:
+#   - port: 8786
+#     targetPort: 8786
+
