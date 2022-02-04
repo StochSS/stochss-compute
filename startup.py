@@ -1,13 +1,7 @@
-
-
 from distributed import Client
 
 from stochss_compute.api import start_api
 from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
-# from stochss_compute import RemoteSimulation, ComputeServer
-# import numpy
-# import gillespy2
-# import subprocess         # used to run the api server in the background
 
 
 if __name__ == "__main__":
@@ -20,7 +14,7 @@ if __name__ == "__main__":
     flask_attempt_port = 1234
     while True:
         try:
-            start_api(host="0.0.0.0", port=1234, debug=True, delegate_config=delegate_config)
+            start_api(host="0.0.0.0", port=1234, debug=False, delegate_config=delegate_config)
             break
         except OSError as e:
             if e.errno == 98:
