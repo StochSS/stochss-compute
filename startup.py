@@ -24,5 +24,5 @@ if __name__ == "__main__":
             break
         except OSError as e:
             if e.errno == 98:
-                print(f"Port {flask_attempt_port} in use. Trying {flask_attempt_port+1}.")
+                print(f"Port {flask_attempt_port} in use. Trying {flask_attempt_port + 1}.")
                 flask_attempt_port += 1
