@@ -1,0 +1,9 @@
+[Scheduler]
+host = 
+port = 
+[Workers]
+number of workers = 
+threads per worker = 
+[Options]
+# Whether to use processes (True) or threads (False). Defaults to True, unless worker_class=Worker, in which case it defaults to False.
+processes = 
