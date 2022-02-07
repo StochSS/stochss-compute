@@ -1,9 +1,26 @@
 [Scheduler]
-host = 
-port = 
+# Host address on which the scheduler will listen, defaults to localhost
+host=
+# Port of the scheduler.  8786 by default, use 0 to choose a random port.
+scheduler_port=
+
 [Workers]
-number of workers = 
-threads per worker = 
+# Number of workers to start
+n_workers=
+# Threads per worker
+threads_per_worker=
+
 [Options]
-# Whether to use processes (True) or threads (False). Defaults to True, unless worker_class=Worker, in which case it defaults to False.
-processes = 
+# Whether to use processes (True) or threads (False).
+# Defaults to True, unless worker_class=Worker, in which case it defaults to False.
+processes=
+# Level of logs to print out to stdout. logging.WARN by default. Use a falsey value like False or None for no change.
+# possible values: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+silence_logs=
+# Address on which to listen for the Bokeh diagnostics server like ‘localhost:8787’ or ‘0.0.0.0:8787’. Defaults to ‘:8787’. Set to None to disable the dashboard. Use ‘:0’ for a random port.
+dashboard_address=
+# Address on which to listen for the Bokeh worker diagnostics server like 'localhost:8787' or '0.0.0.0:8787'.  Defaults to None which disables the dashboard. Use ':0' for a random port.
+worker_dashboard_address=
+# Set to True if using this cluster within async/await functions or within Tornado gen.coroutines. This should remain False for normal use.
+asynchronous=
+
