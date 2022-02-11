@@ -40,7 +40,7 @@ class ComputeServer():
     def post(self, endpoint: Endpoint, sub: str, request: BaseModel = None) -> requests.Response:
         url = f"{self.endpoints[endpoint]}{sub}"
         retry = 1
-        sec = 7
+        sec = 3
         while retry <= 3:
             try:
                 if request is None:
