@@ -1,8 +1,7 @@
-from typing import Dict
-from distributed import Client, LocalCluster
+# from distributed import Client, LocalCluster
 
-from stochss_compute.api import start_api
-from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
+# from stochss_compute.api import start_api
+# from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 from argparse import ArgumentParser
 from configparser import ConfigParser, NoSectionError
 
@@ -26,8 +25,8 @@ if __name__ == "__main__":
         flask_host = args.host
     if args.daskconfig is not None:
         config = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
-        args = Dict()
         config.read(args.daskconfig)
+        dask_args = dict()
         if len(config.sections()) == 0:
             print("Could not read dask config file. Using default values.")
             config = None
@@ -40,6 +39,9 @@ if __name__ == "__main__":
                     continue
                 for item in config.items(section):
                     print(item)
+                    # TODO cast each to the right type
+                    if item[1] != "None":
+                        
     # dask_cluster = LocalCluster()
 
     # client = Client()
