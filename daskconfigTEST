@@ -1,0 +1,55 @@
+[Scheduler]
+# Host address on which the scheduler will listen, defaults to localhost
+# str
+host="localhost"
+# Port of the scheduler.  8786 by default, use 0 to choose a random port.
+# int
+scheduler_port=0
+
+[Workers]
+# Number of workers to start
+# int
+n_workers=3
+# Threads per worker
+# int
+threads_per_worker=2
+
+[Options] 
+# Whether to use processes (True) or threads (False).
+# Defaults to True, unless worker_class=Worker, in which case it defaults to False.
+# bool
+processes=True
+# Level of logs to print out to stdout. logging.WARNING by default. Use a falsey value like False or None for no change.
+# possible values: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+# logging level
+silence_logs=logging.WARNING
+# Address on which to listen for the Bokeh diagnostics server like ‘localhost:8787’ or ‘0.0.0.0:8787’. Defaults to ‘:8787’. Set to None to disable the dashboard. Use ‘:0’ for a random port.
+# str
+dashboard_address=":8787"
+# Address on which to listen for the Bokeh worker diagnostics server like 'localhost:8787' or '0.0.0.0:8787'.  Defaults to None which disables the dashboard. Use ':0' for a random port.
+# str
+worker_dashboard_address="localhost:8787"
+# Set to True if using this cluster within async/await functions or within Tornado gen.coroutines. This should remain False for normal use.
+# bool
+asynchronous=False
+# A list of strings specifying a blocklist of handlers to disallow on the Scheduler, like ['feed', 'run_function']
+# List[str]
+blocked_handlers=None
+# Extra keywords to hand to the running services.
+# Dict[str, Dict]
+service_kwargs=None
+# Configures communication security in this cluster. Can be a security object, or True. If True, temporary self-signed credentials will be created automatically.
+# Security or bool (optional)
+security=None
+# Protocol to use like tcp://, tls://, inproc:// This defaults to sensible choice given other keyword arguments like processes and security
+# str (optional)
+protocol=None
+# Network interface to use. Defaults to lo/localhost
+# str (optional)
+interface=None
+# Worker class used to instantiate workers from. Defaults to Worker if processes=False and Nanny if processes=True or omitted.
+# Worker
+worker_class=Nanny
+# Dict[str, Dict]
+# Extra worker arguments. Any additional keyword arguments will be passed to the Worker class constructor.
+worker_kwargs=None
