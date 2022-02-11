@@ -1,9 +1,10 @@
+from typing import Dict
 from distributed import Client, LocalCluster
 
 from stochss_compute.api import start_api
 from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 from argparse import ArgumentParser
-from configparser import ConfigParser
+from configparser import ConfigParser, NoSectionError
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -24,22 +25,34 @@ if __name__ == "__main__":
     if args.host is not None:
         flask_host = args.host
     if args.daskconfig is not None:
-        config = ConfigParser()
-        try:
-            config.read(args.daskconfig)
-    dask_cluster = LocalCluster()
+        config = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
+        args = Dict()
+        config.read(args.daskconfig)
+        if len(config.sections()) == 0:
+            print("Could not read dask config file. Using default values.")
+            config = None
+        else:
+            for section in config.sections():
+                try:
+                    items = config.items(section)
+                except NoSectionError:
+                    print(f"Could not read dask config file: Key: {section}. Ignoring.")
+                    continue
+                for item in config.items(section):
+                    print(item)
+    # dask_cluster = LocalCluster()
 
-    client = Client()
-    print(client)
-    dask_port = client.scheduler.addr.split(":")[2]
-    print(dask_port)
-    delegate_config = DaskDelegateConfig()
-    delegate_config.dask_cluster_port = dask_port
-    while True:
-        try:
-            start_api(host="0.0.0.0", port=1234, debug=False, delegate_config=delegate_config)
-            break
-        except OSError as e:
-            if e.errno == 98:
-                print(f"Port {flask_attempt_port} in use. Trying {flask_attempt_port + 1}.")
-                flask_attempt_port += 1
+    # client = Client()
+    # print(client)
+    # dask_port = client.scheduler.addr.split(":")[2]
+    # print(dask_port)
+    # delegate_config = DaskDelegateConfig()
+    # delegate_config.dask_cluster_port = dask_port
+    # while True:
+    #     try:
+    #         start_api(host="0.0.0.0", port=1234, debug=False, delegate_config=delegate_config)
+    #         break
+    #     except OSError as e:
+    #         if e.errno == 98:
+    #             print(f"Port {flask_attempt_port} in use. Trying {flask_attempt_port + 1}.")
+    #             flask_attempt_port += 1
