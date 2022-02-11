@@ -103,14 +103,18 @@ class DaskDelegate(Delegate):
         if not self.job_exists(job_id):
             return False
 
-        # Iterate through the dependencies of this job.
-        dependencies = self.client.run_on_scheduler(lambda dask_scheduler: [(state.key) for state in dask_scheduler.tasks[id].dependencies])
+        try:
+            # Iterate through the dependencies of this job.
+            dependencies = self.client.run_on_scheduler(lambda dask_scheduler: [(state.key) for state in dask_scheduler.tasks[id].dependencies])
 
-        # Filter out any weak depenencies. Strong dependencies are suffixed with "/" and the name of the job.
-        dependencies = [(dependency) for dependency in dependencies if dependency.replace(id, "").startswith("/")]
+            # Filter out any weak depenencies. Strong dependencies are suffixed with "/" and the name of the job.
+            dependencies = [(dependency) for dependency in dependencies if dependency.replace(id, "").startswith("/")]
 
-        futures = [(Future(key)) for key in dependencies]
-        futures.append(Future(job_id))
+            futures = [(Future(key)) for key in dependencies]
+            futures.append(Future(job_id))
+        except KeyError:
+            # do nothing if no dependencies
+            pass
 
         self.client.cancel(Future(job_id))
         self.client.unpublish_dataset(job_id)
