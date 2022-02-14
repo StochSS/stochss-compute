@@ -1,11 +1,11 @@
-# from distributed import Client, LocalCluster
+from distributed import Client, LocalCluster
 
 # from stochss_compute.api import start_api
 # from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 from argparse import ArgumentParser
 from configparser import ConfigParser, NoSectionError
 
-if __name__ == "__main__":
+def main():
     parser = ArgumentParser()
     parser.add_argument("-p", "--port", type=int, required=False,
                         help="The port to use for the flask server. Defaults to 1234.")
@@ -37,14 +37,28 @@ if __name__ == "__main__":
                 except NoSectionError:
                     print(f"Could not read dask config file: Key: {section}. Ignoring.")
                     continue
-                for item in config.items(section):
-                    print(item)
+                for item in items:
+                    # print(item)
                     # TODO cast each to the right type
-                    if item[1] != "None":
-                        
-    # dask_cluster = LocalCluster()
+                    if item[1] == "None":
+                        continue
+                    if item[0] in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
+                        print(item[0])
+                        _get = config.get
+                    if item[0] in ["scheduler_port", "n_workers", "threads_per_worker", ""]:
+                        _get = config.getint
+                    if item[0] in ["processes", "asynchronous"]:
+                        _get = config.getboolean
+                    else:
+                        _get = config.get
+                    dask_args[item[0]] = _get(section, item[0])
+            # print(dask_args)
+    dask_cluster = LocalCluster(dask_args)
+    client = Client(dask_cluster)
+    print(client)
 
-    # client = Client()
+    client.close()
+
     # print(client)
     # dask_port = client.scheduler.addr.split(":")[2]
     # print(dask_port)
@@ -58,3 +72,7 @@ if __name__ == "__main__":
     #         if e.errno == 98:
     #             print(f"Port {flask_attempt_port} in use. Trying {flask_attempt_port + 1}.")
     #             flask_attempt_port += 1
+
+
+if __name__ == "__main__":
+    main()
