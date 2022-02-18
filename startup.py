@@ -1,9 +1,10 @@
+import logging
 from distributed import Client, LocalCluster
 
 # from stochss_compute.api import start_api
 # from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 from argparse import ArgumentParser
-from configparser import ConfigParser, NoSectionError
+from configparser import ConfigParser, NoOptionError, NoSectionError
 
 def main():
     parser = ArgumentParser()
@@ -38,25 +39,52 @@ def main():
                     print(f"Could not read dask config file: Key: {section}. Ignoring.")
                     continue
                 for item in items:
-                    # print(item)
-                    # TODO cast each to the right type
-                    if item[1] == "None":
+                    try:
+                        key = item[0]
+                        val = item[1]
+                        # print(item)
+                        if val == "None":
+                            continue
+                        elif key in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
+                            # print(key)
+                            dask_args[key] = config.get(section, key).strip('"\'')
+                        elif key in ["scheduler_port", "n_workers", "threads_per_worker", ""]:
+                            dask_args[key] = config.getint(section, key)
+                        elif key in ["processes", "asynchronous"]:
+                            dask_args[key] = config.getboolean(section, key)
+                        elif key == "silence_logs":
+                            if "WARN" in val:
+                                val = logging.WARNING
+                            if "CRITICAL" in val:
+                                val = logging.CRITICAL
+                            if "ERROR" in val:
+                                val = logging.ERROR
+                            if "INFO" in val:
+                                val = logging.INFO
+                            if "NOTSET" in val:
+                                val = logging.NOTSET
+                            if "DEBUG" in val:
+                                val = logging.DEBUG
+                            dask_args[key] = val
+                    except (NoSectionError, NoOptionError):
+                        print(
+                            f"Could not read dask config file: Key: {key}. Value: {val}. Ignoring.")
                         continue
-                    if item[0] in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
-                        print(item[0])
-                        _get = config.get
-                    if item[0] in ["scheduler_port", "n_workers", "threads_per_worker", ""]:
-                        _get = config.getint
-                    if item[0] in ["processes", "asynchronous"]:
-                        _get = config.getboolean
-                    else:
-                        _get = config.get
-                    dask_args[item[0]] = _get(section, item[0])
-            # print(dask_args)
-    dask_cluster = LocalCluster(dask_args)
+    else:
+        while True:
+            inp = input("Use default settings? y/n")
+            if inp in ["y", "Y"]:
+                break
+            elif inp in ["n", "N"]:
+                # do stuff
+                break     
+            else:    
+                continue       
+    print(dask_args)
+    dask_cluster = LocalCluster(**dask_args)
     client = Client(dask_cluster)
-    print(client)
-
+    print(dask_cluster)
+    input("Press any key to quit")
     client.close()
 
     # print(client)
