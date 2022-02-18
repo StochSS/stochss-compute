@@ -97,12 +97,14 @@ def main():
 
     # print(client)
     dask_port = client.scheduler.addr.split(":")[2]
+    dask_host = client.scheduler.addr.split(":")[1]
     # print(dask_port)
     delegate_config = DaskDelegateConfig()
     delegate_config.dask_cluster_port = dask_port
+    delegate_config.dask_cluster_address = dask_host
     while True:
         try:
-            start_api(host="0.0.0.0", port=1234, debug=False, delegate_config=delegate_config)
+            start_api(host=flask_host, port=1234, debug=False, delegate_config=delegate_config)
             break
         except OSError as e:
             if e.errno == 98:
