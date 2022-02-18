@@ -13,8 +13,10 @@ def main():
                         help="The port to use for the flask server. Defaults to 1234.")
     parser.add_argument("--host", required=False,
                         help="The host to use for the flask server. Defaults to localhost.")
-    # parser.add_argument("-P", "--daskport", type=int, required=False,
-                        # help="The port to use for the dask scheduler. Defaults to 8786.")
+    parser.add_argument("-P", "--dask_port", type=int, required=False,
+                        help="The port to use for the dask scheduler. Defaults to 8786.")
+    parser.add_argument("-H", "--dask_host", type=int, required=False,
+                        help="The port to use for the dask scheduler. Defaults to localhost.")
     parser.add_argument("-D","--daskconfig", required=False,
                         help="The host to use for the dask scheduler. Defaults to localhost.")
     args = parser.parse_args()
