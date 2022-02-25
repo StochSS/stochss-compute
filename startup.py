@@ -89,10 +89,23 @@ def main():
                 client = Client()
                 break
             elif inp in ["n", "N"]:
-                # do stuff
+                dask_args = dict()
+                host = input("Scheduler address? Defaults to localhost. Enter an address or press enter to use default address.\n")
+                if host != "":
+                    dask_args["host"] = host
+                scheduler_port = input("Scheduler port? Defaults to 8786. Enter a port or press enter to use default port.\n")
+                if scheduler_port != "":
+                    dask_args["scheduler_port"] = int(scheduler_port)
+                n_workers = input("Number of workers? Defaults to one worker per core. Enter an integer or press enter to use default setting.\n")
+                if n_workers != "":
+                    dask_args["n_workers"] = int(n_workers)
+                threads_per_worker = input("Threads per worker? Defaults to 2. Enter an integer or press enter to use default setting.\n")
+                if threads_per_worker != "":
+                    dask_args["threads_per_worker"] = int(threads_per_worker)
                 break     
             else:    
-                continue       
+                continue
+    print(f"Dash dashboard at {client.dashboard_link}. Opening in browser...")
     open_new(client.dashboard_link)
     # input("Press any key to quit")
     # client.close()
@@ -106,7 +119,7 @@ def main():
     delegate_config.dask_cluster_address = dask_host
     while True:
         try:
-            start_api(host=flask_host, port=1234, debug=False, delegate_config=delegate_config)
+            start_api(host=flask_host, port=flask_attempt_port, debug=False, delegate_config=delegate_config)
             break
         except OSError as e:
             if e.errno == 98:
