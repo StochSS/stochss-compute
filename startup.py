@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 from distributed import Client, LocalCluster, Worker, Nanny
 from webbrowser import open_new
 
@@ -33,56 +34,9 @@ def main():
 
     dask_args = dict()
     if args.daskconfig is not None:
-        config = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
-        config.read(args.daskconfig)
-        if len(config.sections()) == 0:
-            print("Could not read dask config file. Using default values.")
-            config = None
-        else:
-            for section in config.sections():
-                try:
-                    items = config.items(section)
-                except NoSectionError:
-                    print(f"Could not read dask config file: Key: {section}. Ignoring.")
-                    continue
-                for item in items:
-                    try:
-                        key = item[0]
-                        val = item[1]
-                        if val == "None":
-                            continue
-                        elif key in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
-                            dask_args[key] = config.get(section, key).strip('"\'')
-                        elif key in ["scheduler_port", "n_workers", "threads_per_worker", ""]:
-                            dask_args[key] = config.getint(section, key)
-                        elif key in ["processes", "asynchronous"]:
-                            dask_args[key] = config.getboolean(section, key)
-                        elif key == "silence_logs":
-                            if "WARN" in val:
-                                val = logging.WARNING
-                            if "CRITICAL" in val:
-                                val = logging.CRITICAL
-                            if "ERROR" in val:
-                                val = logging.ERROR
-                            if "INFO" in val:
-                                val = logging.INFO
-                            if "NOTSET" in val:
-                                val = logging.NOTSET
-                            if "DEBUG" in val:
-                                val = logging.DEBUG
-                            dask_args[key] = val
-                        elif key == "worker_class":
-                            if "Nanny" in val:
-                                dask_args[key] = Nanny
-                            if "Worker" in val:
-                                dask_args[key] = Worker
-                    except (NoSectionError, NoOptionError):
-                        print(
-                            f"Could not read dask config file: Key: {key}. Value: {val}. Ignoring.")
-                        continue
+        dask_args = parse_config(args.daskconfig)
         dask_cluster = LocalCluster(**dask_args)
         client = Client(dask_cluster)
-        print(client)
     else:
         while True:
             inp = input("Use default dask settings? y/n\n")
@@ -139,6 +93,54 @@ def main():
                 print(f"Port {flask_attempt_port} in use. Trying {flask_attempt_port + 1}.")
                 flask_attempt_port += 1
 
-
+def parse_config(path_to_config: str) -> dict:
+    config = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
+    config.read(path_to_config)
+    dask_args = dict()
+    if len(config.sections()) == 0:
+        print("Could not read dask config file. Using default values.")
+    else:
+        for section in config.sections():
+            try:
+                items = config.items(section)
+            except NoSectionError:
+                print(f"Could not read dask config file: Key: {section}. Ignoring.")
+                continue
+            for item in items:
+                try:
+                    key = item[0]
+                    val = item[1]
+                    if val == "None":
+                        continue
+                    elif key in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
+                        dask_args[key] = config.get(section, key).strip('"\'')
+                    elif key in ["scheduler_port", "n_workers", "threads_per_worker", ""]:
+                        dask_args[key] = config.getint(section, key)
+                    elif key in ["processes", "asynchronous"]:
+                        dask_args[key] = config.getboolean(section, key)
+                    elif key == "silence_logs":
+                        if "WARN" in val:
+                            val = logging.WARNING
+                        if "CRITICAL" in val:
+                            val = logging.CRITICAL
+                        if "ERROR" in val:
+                            val = logging.ERROR
+                        if "INFO" in val:
+                            val = logging.INFO
+                        if "NOTSET" in val:
+                            val = logging.NOTSET
+                        if "DEBUG" in val:
+                            val = logging.DEBUG
+                        dask_args[key] = val
+                    elif key == "worker_class":
+                        if "Nanny" in val:
+                            dask_args[key] = Nanny
+                        if "Worker" in val:
+                            dask_args[key] = Worker
+                except (NoSectionError, NoOptionError):
+                    print(
+                        f"Could not read dask config file: Key: {key}. Value: {val}. Ignoring.")
+                    continue
+    
 if __name__ == "__main__":
     main()
