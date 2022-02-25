@@ -28,11 +28,15 @@ def main():
 
     dask_cluster = LocalCluster(**dask_args)
     client = Client(dask_cluster)
-    print(client)
-    print(f"Dash dashboard at {client.dashboard_link}")
+    print(f"\nDask scheduler at <{dask_cluster.scheduler_address}>")
+    print(f"{len(dask_cluster.workers)} Workers")
+    print(f"{dask_cluster._threads_per_worker()} threads per Worker")
+    
+    print(f"Dask dashboard at <{client.dashboard_link}>")
     if not args.nodashboard: 
         print(f"Opening in browser...")
         open_new(client.dashboard_link)
+    print()
 
     dask_port = client.scheduler.addr.split(":")[2]
     dask_host = client.scheduler.addr.split(":")[1]
@@ -51,18 +55,18 @@ def main():
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("-p", "--port", type=int, required=False,
-                        help="The port to use for the flask server. Defaults to 3737.")
     parser.add_argument("--host", required=False,
                         help="The host to use for the flask server. Defaults to localhost.")
+    parser.add_argument("-p", "--port", type=int, required=False,
+                        help="The port to use for the flask server. Defaults to 3737.")
+    parser.add_argument("-H", "--dask_host", type=int, required=False,
+                        help="The host to use for the dask scheduler. Defaults to localhost.")
     parser.add_argument("-P", "--dask_port", type=int, required=False,
                         help="The port to use for the dask scheduler. Defaults to 8786.")
-    parser.add_argument("-H", "--dask_host", type=int, required=False,
-                        help="The port to use for the dask scheduler. Defaults to localhost.")
     parser.add_argument("-D", "--daskconfig", required=False,
-                        help="The host to use for the dask scheduler. Defaults to localhost.")
+                        help="Path to a config file.")
     parser.add_argument("--nodashboard", action='store_true', required=False,
-                        help="Starts without opening dask dashboard.")
+                        help="Start without opening dask dashboard.")
     return parser.parse_args()
 
 def parse_config(path_to_config: str) -> dict:
