@@ -10,7 +10,7 @@ from configparser import ConfigParser, NoOptionError, NoSectionError
 def main():
     parser = ArgumentParser()
     parser.add_argument("-p", "--port", type=int, required=False,
-                        help="The port to use for the flask server. Defaults to 1234.")
+                        help="The port to use for the flask server. Defaults to 3737.")
     parser.add_argument("--host", required=False,
                         help="The host to use for the flask server. Defaults to localhost.")
     parser.add_argument("-P", "--dask_port", type=int, required=False,
@@ -19,18 +19,22 @@ def main():
                         help="The port to use for the dask scheduler. Defaults to localhost.")
     parser.add_argument("-D","--daskconfig", required=False,
                         help="The host to use for the dask scheduler. Defaults to localhost.")
+    parser.add_argument("--nodashboard", action='store_true', required=False,
+                        help="Starts without opening dask dashboard.")
     args = parser.parse_args()
     
-    flask_attempt_port = 1234
-    if args.port is not None:
-        flask_attempt_port = args.port
     flask_host = "localhost"
     if args.host is not None:
         flask_host = args.host
+
+    flask_attempt_port = 3737
+    if args.port is not None:
+        flask_attempt_port = int(args.port)
+
+    dask_args = dict()
     if args.daskconfig is not None:
         config = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
         config.read(args.daskconfig)
-        dask_args = dict()
         if len(config.sections()) == 0:
             print("Could not read dask config file. Using default values.")
             config = None
@@ -45,11 +49,9 @@ def main():
                     try:
                         key = item[0]
                         val = item[1]
-                        # print(item)
                         if val == "None":
                             continue
                         elif key in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
-                            # print(key)
                             dask_args[key] = config.get(section, key).strip('"\'')
                         elif key in ["scheduler_port", "n_workers", "threads_per_worker", ""]:
                             dask_args[key] = config.getint(section, key)
@@ -78,22 +80,31 @@ def main():
                         print(
                             f"Could not read dask config file: Key: {key}. Value: {val}. Ignoring.")
                         continue
-        print(dask_args)
         dask_cluster = LocalCluster(**dask_args)
-        print(dask_cluster)
         client = Client(dask_cluster)
+        print(client)
     else:
         while True:
-            inp = input("Use default settings? y/n\n")
+            inp = input("Use default dask settings? y/n\n")
             if inp in ["y", "Y"]:
-                client = Client()
+                if args.dask_host is not None:
+                    dask_args["host"] = args.dask_host
+                if args.dask_port is not None:
+                    dask_args["scheduler_port"] = args.dask_host
+                dask_cluster = LocalCluster(**dask_args)
+                client = Client(dask_cluster)
                 break
             elif inp in ["n", "N"]:
-                dask_args = dict()
-                host = input("Scheduler address? Defaults to localhost. Enter an address or press enter to use default address.\n")
+                if args.dask_host is None:
+                    host = input("Scheduler address? Defaults to localhost. Enter an address or press enter to use default address.\n")
+                else:
+                    host = args.dask_host
                 if host != "":
                     dask_args["host"] = host
-                scheduler_port = input("Scheduler port? Defaults to 8786. Enter a port or press enter to use default port.\n")
+                if args.dask_port is None:
+                    scheduler_port = input("Scheduler port? Defaults to 8786. Enter a port or press enter to use default port.\n")
+                else:
+                    scheduler_port = int(args.dask_port)
                 if scheduler_port != "":
                     dask_args["scheduler_port"] = int(scheduler_port)
                 n_workers = input("Number of workers? Defaults to one worker per core. Enter an integer or press enter to use default setting.\n")
@@ -102,24 +113,26 @@ def main():
                 threads_per_worker = input("Threads per worker? Defaults to 2. Enter an integer or press enter to use default setting.\n")
                 if threads_per_worker != "":
                     dask_args["threads_per_worker"] = int(threads_per_worker)
+                dask_cluster = LocalCluster(**dask_args)
+                client = Client(dask_cluster)
                 break     
             else:    
                 continue
-    print(f"Dash dashboard at {client.dashboard_link}. Opening in browser...")
-    open_new(client.dashboard_link)
-    # input("Press any key to quit")
-    # client.close()
+    print(client)
+    print(f"Dash dashboard at {client.dashboard_link}")
+    if not args.nodashboard: 
+        print(f"Opening in browser...")
+        open_new(client.dashboard_link)
 
-    # print(client)
     dask_port = client.scheduler.addr.split(":")[2]
     dask_host = client.scheduler.addr.split(":")[1]
-    # print(dask_port)
     delegate_config = DaskDelegateConfig()
     delegate_config.dask_cluster_port = dask_port
     delegate_config.dask_cluster_address = dask_host
     while True:
         try:
             start_api(host=flask_host, port=flask_attempt_port, debug=False, delegate_config=delegate_config)
+            client.close()
             break
         except OSError as e:
             if e.errno == 98:
