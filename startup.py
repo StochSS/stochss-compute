@@ -17,7 +17,7 @@ def main():
         flask_host = args.host
 
     if args.port is None:
-        flask_attempt_port = 3737
+        flask_attempt_port = 29681
     else:
         flask_attempt_port = int(args.port)
 
