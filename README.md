@@ -49,11 +49,11 @@ An alternative installation to the above method is to use docker. We host an ima
 
 
 ```
-docker run -p 1234:1234 mdip226/stochss-compute:latest
+docker run -p 29681:29681 mdip226/stochss-compute:latest
 ```
 
 - The `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
-- Stochss-compute is now running on localhost:1234.
+- Stochss-compute is now running on localhost:29681.
 
 <!-- #### Minikube
 - A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).
