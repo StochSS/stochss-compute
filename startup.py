@@ -58,7 +58,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--host", required=False,
                         help="The host to use for the flask server. Defaults to localhost.")
     parser.add_argument("-p", "--port", type=int, required=False,
-                        help="The port to use for the flask server. Defaults to 3737.")
+                        help="The port to use for the flask server. Defaults to 29681.")
     parser.add_argument("-H", "--dask_host", type=int, required=False,
                         help="The host to use for the dask scheduler. Defaults to localhost.")
     parser.add_argument("-P", "--dask_port", type=int, required=False,
