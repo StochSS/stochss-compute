@@ -31,11 +31,11 @@ pip3 install -r requirements.txt
 ```
 python3 startup.py
 ```
-Configure your compute setup by editing the file `DASKCONFIG` and passing arguments to `startup.py`:
+#### Configure your compute setup by editing the file `DASKCONFIG` and passing arguments to `startup.py`:
 ```
 python3 startup.py --host localhost --port 29681 --daskconfig DASKCONFIG
 ```
-### 3. Stochss-compute is now running. To see an example, see the jupyter notebooks in `examples`:
+### 3. Stochss-compute is now running. For an example, see the jupyter notebooks in `examples`:
 ```
 # New Terminal 
 # source venv/bin/activate # Uncomment if using a virtual environment
