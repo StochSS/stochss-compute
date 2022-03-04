@@ -10,7 +10,7 @@ can easily save and recall previous simulations.
 pip3 install stochss_compute
 ```
 #### OR  
-#### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
+#### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment))
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
@@ -19,7 +19,7 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 #### OR  
-#### Global install of dependencies:
+#### Global install of dependencies
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
@@ -27,15 +27,15 @@ pip3 install -r requirements.txt
 ```
 
 ### 2. Start up the server and compute backend:
-#### Using the startup script:
+#### Using the startup script
 ```
 python3 startup.py
 ```
-#### Configure your compute setup by editing the file `DASKCONFIG` and passing arguments to `startup.py`:
+#### Configure your compute setup by editing the file `DASKCONFIG` and passing arguments to `startup.py`
 ```
 python3 startup.py --host localhost --port 29681 --daskconfig DASKCONFIG
 ```
-### 3. Stochss-compute is now running. For an example, see the jupyter notebooks in `examples`:
+### 3. Stochss-compute is now running. For an example, see the jupyter notebook `StartHere.ipynb`:
 ```
 # New Terminal 
 # source venv/bin/activate # Uncomment if using a virtual environment
