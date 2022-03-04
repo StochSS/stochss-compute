@@ -33,7 +33,7 @@ python3 startup.py
 ```
 #### Configure your compute setup by editing the file `DASKCONFIG` and passing arguments to `startup.py`
 ```
-python3 startup.py --host localhost --port 29681 --daskconfig DASKCONFIG
+python3 startup.py --host localhost --port 29681 --daskconfig daskconfig.ini
 ```
 ### 3. Stochss-compute is now running. For an example, see the jupyter notebook `StartHere.ipynb`:
 ```
