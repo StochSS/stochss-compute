@@ -9,8 +9,8 @@ can easily save and recall previous simulations.
 ```
 pip3 install stochss_compute
 ```
-OR 
-Using a python virtual environment [documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)
+OR  
+Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
