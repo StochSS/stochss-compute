@@ -4,47 +4,46 @@ With StochSS-Compute, you can run GillesPy2 simulations on your own server. Resu
 can easily save and recall previous simulations. 
 
 ## Example Quick Start
-First, clone the repository.
+
+1. Install stochss_compute:
+```
+pip3 install stochss_compute
+```
+OR 
+Using a python virtual environment [documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
-```
-- If you are unfamiliar with python virtual environments, read this [documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
-- Note that you will have to activate your venv every time you run stochSS-compute, as well as for your dask scheduler and each of its workers.
-- The following will set up the `dask-scheduler`, one `dask-worker`, the backend api server, and launch an example `jupyter` notebook.
-- Each of these must be run in separate terminal windows in the main `stochss-compute` directory.
-- Just copy and paste!
-```
-# Terminal 1
-python3 -m venv venv
+python3 -m venv venv 
 source venv/bin/activate
 pip3 install -r requirements.txt
-dask-scheduler
 ```
+OR
 ```
-# Terminal 2
-source venv/bin/activate
-dask-worker localhost:8786
+git clone https://github.com/StochSS/stochss-compute.git
+cd stochss-compute
+pip3 install -r requirements.txt
 ```
-```
-# Terminal 3
-source venv/bin/activate
-python3 app.py
-```
-- Stochss-compute is now running on localhost:1234.
-<!-- - Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20). -->
 
+2. Start up the server and compute backend:
+- Using the startup script:
 ```
-# Terminal 4
-source venv/bin/activate
-jupyter notebook --port=9999
+python3 startup.py
 ```
-- This notebook will show you how to use StochSS-compute.
-- Jupyter should then launch automatically, where you can then navigate to the examples directory and open up StartHere.ipynb.
-- If not, copy and paste the following URL into your web browser:  
+Configure your compute setup by editing the file `DASKCONFIG` and passing arguments to `startup.py`:
+```
+python3 startup.py --host localhost --port 29681 --daskconfig DASKCONFIG
+```
+3. Stochss-compute is now running. To see an example, see the jupyter notebooks in `examples`:
+```
+# New Terminal 
+# source venv/bin/activate # Uncomment if using a virtual environment
+jupyter notebook examples/StartHere.ipynb
+```
+- Jupyter should launch automatically. If not, copy and paste the following URL into your web browser:  
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
-#### Docker
 
+#### Docker
 An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following line.
 
 
