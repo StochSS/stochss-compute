@@ -5,12 +5,12 @@ can easily save and recall previous simulations.
 
 ## Example Quick Start
 
-1. Install stochss_compute:
+### 1. Install stochss_compute:
 ```
 pip3 install stochss_compute
 ```
-OR  
-Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
+#### OR  
+#### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
@@ -18,15 +18,16 @@ python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
-OR
+#### OR  
+#### Global install of dependencies:
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
 pip3 install -r requirements.txt
 ```
 
-2. Start up the server and compute backend:
-- Using the startup script:
+### 2. Start up the server and compute backend:
+#### Using the startup script:
 ```
 python3 startup.py
 ```
@@ -34,7 +35,7 @@ Configure your compute setup by editing the file `DASKCONFIG` and passing argume
 ```
 python3 startup.py --host localhost --port 29681 --daskconfig DASKCONFIG
 ```
-3. Stochss-compute is now running. To see an example, see the jupyter notebooks in `examples`:
+### 3. Stochss-compute is now running. To see an example, see the jupyter notebooks in `examples`:
 ```
 # New Terminal 
 # source venv/bin/activate # Uncomment if using a virtual environment
@@ -43,7 +44,7 @@ jupyter notebook examples/StartHere.ipynb
 - Jupyter should launch automatically. If not, copy and paste the following URL into your web browser:  
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
 
-#### Docker
+### Docker
 An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following line.
 
 
