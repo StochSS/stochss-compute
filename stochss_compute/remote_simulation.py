@@ -63,7 +63,6 @@ class RemoteSimulation():
     
         if "solver" in params:
             params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
-            print(params["solver"])
 
         start_request = ModelRunRequest(model=self.model, kwargs=params)
         start_response = unwrap_or_err(JobStatusResponse, self.server.post(Endpoint.GILLESPY2_MODEL, sub="/run", request=start_request))
