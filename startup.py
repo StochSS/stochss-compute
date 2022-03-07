@@ -17,9 +17,9 @@ def main():
         flask_host = args.host
 
     if args.port is None:
-        flask_attempt_port = 29681
+        flask_port = 29681
     else:
-        flask_attempt_port = int(args.port)
+        flask_port = int(args.port)
 
     if args.daskconfig is not None:
         dask_args = parse_config(args.daskconfig)
@@ -33,7 +33,7 @@ def main():
     print(f"{dask_cluster._threads_per_worker()} threads per Worker")
     
     print(f"Dask dashboard at <{client.dashboard_link}>")
-    if not args.nodashboard: 
+    if args.dashboard: 
         print(f"Opening in browser...")
         open_new(client.dashboard_link)
     print()
@@ -43,15 +43,14 @@ def main():
     delegate_config = DaskDelegateConfig()
     delegate_config.dask_cluster_port = dask_port
     delegate_config.dask_cluster_address = dask_host
-    while True:
-        try:
-            start_api(host=flask_host, port=flask_attempt_port, debug=False, delegate_config=delegate_config)
+    try:
+        start_api(host=flask_host, port=flask_port, debug=False, delegate_config=delegate_config)
+        client.close()
+    except OSError as e:
+        if e.errno == 98:
+            print(f"Port {flask_port} in use. Exiting.")
             client.close()
-            break
-        except OSError as e:
-            if e.errno == 98:
-                print(f"Port {flask_attempt_port} in use. Trying {flask_attempt_port + 1}.")
-                flask_attempt_port += 1
+            exit(1)
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
@@ -65,8 +64,8 @@ def parse_args() -> Namespace:
                         help="The port to use for the dask scheduler. Defaults to 8786.")
     parser.add_argument("-D", "--daskconfig", required=False,
                         help="Path to a config file.")
-    parser.add_argument("--nodashboard", action='store_true', required=False,
-                        help="Start without opening dask dashboard.")
+    parser.add_argument("--dashboard", action='store_true', required=False,
+                        help="Open dask dashboard on start.")
     return parser.parse_args()
 
 def parse_config(path_to_config: str) -> dict:
