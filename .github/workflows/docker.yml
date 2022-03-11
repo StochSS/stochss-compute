@@ -1,5 +1,4 @@
 name: Stochss-Compute Docker container build & push
-author: mdip226
 on:
   push:
     branches:
@@ -8,8 +7,7 @@ on:
       # - "dev"
       - "mdip/feature/46-use-github-actions-to-automate-docker-images-pushes"
 jobs:
-  Explore-GitHub-Actions:
-
+  build-push:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
