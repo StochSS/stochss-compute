@@ -27,7 +27,6 @@ jobs:
         with:
           username: mdip226
           password: 0e16ac20-5fd5-4ba6-ad76-b035f2fb8c1a
-          
       -
         name: Build and push
         uses: docker/build-push-action@v2
