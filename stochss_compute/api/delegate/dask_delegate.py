@@ -150,8 +150,8 @@ class DaskDelegate(Delegate):
 
         status_mapping = {
             "released": (JobState.STOPPED, "The job is known but not actively computing or in memory."),
-            "waiting": (JobState.WAITING, "The job is on track to be computed, waiting for dependencies to arrive in worker memory."),
-            "no-worker": (JobState.WAITING, "The job is ready to be computed, waiting for a worker to become available."),
+            "waiting": (JobState.WAITING, "The job is ready to be computed but is waiting for dependencies to arrive in worker memory."),
+            "no-worker": (JobState.WAITING, "The job is ready to be computed but is waiting for a worker to become available."),
             "processing": (JobState.RUNNING, "The job is running."),
             "memory": (JobState.DONE, "The job is done and is being held in memory."),
             "erred": (JobState.FAILED, "The job has failed."),
