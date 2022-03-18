@@ -33,6 +33,6 @@ jobs:
         with:
           push: true
           file: ./api.dockerfile
-          tags: mdip226/stochss-compute:latest
+          tags: stochss/stochss-compute:latest
       - run: echo "🍏 This job's status is ${{ job.status }}."
       # - run: echo "🖥️ Workflow."
