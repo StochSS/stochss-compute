@@ -6,6 +6,7 @@ on:
       # - "main"
       # - "dev"
       - "mdip/feature/46-use-github-actions-to-automate-docker-images-pushes"
+
 jobs:
 # QEMU?
   build-push:
@@ -25,14 +26,14 @@ jobs:
         name: Login to DockerHub
         uses: docker/login-action@v1 
         with:
-          username: ${{ secrets.MD_DOCKERHUB_USERNAME }}"
-          password: ${{ secrets.MD_DOCKERHUB_TOKEN }}"
+          username: "${{ secrets.MD_DOCKERHUB_USERNAME }}"
+          password: "${{ secrets.MD_DOCKERHUB_TOKEN }}"
       -
         name: Build and push
         uses: docker/build-push-action@v2
         with:
           push: true
           file: ./api.dockerfile
-          tags: stochss/stochss-compute:latest
+          tags: mdip226/stochss-compute:latest
       - run: echo "🍏 This job's status is ${{ job.status }}."
       # - run: echo "🖥️ Workflow."
