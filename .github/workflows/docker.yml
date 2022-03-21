@@ -21,7 +21,7 @@ jobs:
       - run: echo "🐧 This job is now running on ${{ runner.os }}"
       - name: checkout
         uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner.."
       -
         name: Login to DockerHub
         uses: docker/login-action@v1 
