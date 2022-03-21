@@ -34,6 +34,6 @@ jobs:
         with:
           push: true
           file: ./api.dockerfile
-          tags: orgs/stochss/stochss-compute:latest
+          tags: stochss/stochss-compute
       - run: echo "🍏 This job's status is ${{ job.status }}."
       # - run: echo "🖥️ Workflow."
