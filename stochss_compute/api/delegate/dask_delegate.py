@@ -21,24 +21,9 @@ from stochss_compute.api.cache import SimpleDiskCache
 from stochss_compute.api.cache import SimpleDiskCacheConfig
 
 class DaskDelegateConfig(DelegateConfig):
-    redis_port = 6379
-    redis_address = os.environ.get("REDIS_ADDRESS")
-    redis_db = 0
-
-    redis_cache_ttl = 60 * 60
-    redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
     dask_cluster_address = "localhost"
-    dask_use_remote_cluster = False
-
-    dask_worker_count = 1
-    dask_worker_threads = 2
-    dask_worker_memory_limit = "4GB"
-
-    dask_dashboard_port = 8788
-    dask_dashboard_address = "localhost"
-    dask_dashboard_enabled = False
 
     kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
     kube_cluster = None
@@ -165,8 +150,8 @@ class DaskDelegate(Delegate):
 
         status_mapping = {
             "released": (JobState.STOPPED, "The job is known but not actively computing or in memory."),
-            "waiting": (JobState.WAITING, "The job is waiting for dependencies to arrive in memory."),
-            "no-worker": (JobState.WAITING, "The job is waiting for a worker to become available."),
+            "waiting": (JobState.WAITING, "The job is ready to be computed but is waiting for dependencies to arrive in worker memory."),
+            "no-worker": (JobState.WAITING, "The job is ready to be computed but is waiting for a worker to become available."),
             "processing": (JobState.RUNNING, "The job is running."),
             "memory": (JobState.DONE, "The job is done and is being held in memory."),
             "erred": (JobState.FAILED, "The job has failed."),
