@@ -36,10 +36,10 @@ class EnsembleTest(unittest.TestCase):
         if hasattr(delegate_config.cache_provider.config, "root_dir"):
             delegate_config.cache_provider.config.root_dir = cls.cache_dir.name
 
-        cls.api_process = Thread(daemon=False, target=api.start_api, kwargs=dict(host="127.0.0.1", port=1234, delegate_config=delegate_config))
+        cls.api_process = Thread(daemon=False, target=api.start_api, kwargs=dict(host="127.0.0.1", port=29681, delegate_config=delegate_config))
         cls.api_process.start()
 
-        cls.compute_server = ComputeServer(host="127.0.0.1", port=1234)
+        cls.compute_server = ComputeServer(host="127.0.0.1", port=29681)
 
         time.sleep(3)
 

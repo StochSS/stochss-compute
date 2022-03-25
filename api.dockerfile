@@ -22,6 +22,6 @@ ARG FLASK_ENV="production"
 ENV FLASK_ENV="${FLASK_ENV}" \
     PYTHONUNBUFFERED="true"
 
-EXPOSE 1234
+EXPOSE 29681
 
 CMD [ "python", "app.py" ]
