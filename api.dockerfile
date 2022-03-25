@@ -1,6 +1,6 @@
 FROM python:3.8.10-buster
 
-LABEL maintainer="Ethan Green <egreen4@unca.edu>"
+LABEL authors="Ethan Green <egreen4@unca.edu>, Matthew Dippel <mdip226@gmail.com>"
 
 # set up virtual environment inside container
 ENV VIRTUAL_ENV=/opt/venv
