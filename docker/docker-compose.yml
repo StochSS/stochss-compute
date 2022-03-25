@@ -3,7 +3,7 @@ version: "3.4"
 services:
   redis:
     env_file:
-      - ".env"
+      - "docker/.env"
     image: "redis"
     restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
     stop_grace_period: "${DOCKER_STOP_GRACE_PERIOD:-3s}"
@@ -18,7 +18,7 @@ services:
     depends_on:
       - "redis"
     env_file:
-      - ".env"
+      - "docker/.env"
     healthcheck:
       test: "${DOCKER_HEALTHCHECK_TEST:-curl localhost:8000/healthy}"
       interval: "60s"
