@@ -30,7 +30,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          file: ./docker/api.dockerfile
-          context: .
+          file: api.dockerfile
           tags: stochss/stochss-compute
       - run: echo "🍏 This job's status is ${{ job.status }}."
