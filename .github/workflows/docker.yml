@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - "main"
+      - "mdip/feature/46-use-github-actions-to-automate-docker-images-pushes"
 
 jobs:
   build-push:
@@ -29,6 +30,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          file: ./api.dockerfile
+          file: ./docker/api.dockerfile
+          context: .
           tags: stochss/stochss-compute
       - run: echo "🍏 This job's status is ${{ job.status }}."
