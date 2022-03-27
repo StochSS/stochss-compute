@@ -1,1 +1,4 @@
-from .api import start_api
+try:
+    from .api import start_api
+except ImportError:
+    pass
