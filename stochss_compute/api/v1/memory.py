@@ -1,3 +1,4 @@
+from msilib.schema import Error
 import os
 import bz2
 import tempfile
@@ -11,10 +12,12 @@ from matplotlib import pyplot
 
 from gillespy2.core import Results
 
-from .apiutils import delegate
+from stochss_compute.api.dataclass import (
+    ErrorResponse,
+    StartJobResponse
+)
 
-from .job import ErrorResponse
-from .job import StartJobResponse
+from .apiutils import delegate
 
 v1_memory = Blueprint("V1 Result API Endpoint", __name__, url_prefix="memory/")
 

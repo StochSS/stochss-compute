@@ -14,14 +14,10 @@ from .compute_server import ComputeServer
 
 from .remote_results import RemoteResults
 
-from .api.v1.gillespy2.model import ModelRunRequest
-
-from .api.v1.job import (
-    StartJobRequest,
-    StartJobResponse,
-    JobStatusResponse,
-    JobStopResponse,
-    ErrorResponse
+from stochss_compute.api.dataclass import (
+    ErrorResponse,
+    ModelRunRequest,
+    JobStatusResponse
 )
 
 class RemoteSimulation():

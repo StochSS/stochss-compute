@@ -17,11 +17,13 @@ from .compute_server import ComputeServer
 
 from .remote_utils import unwrap_or_err
 
-from .api.v1.job import ErrorResponse
-from .api.v1.job import StartJobResponse
-from .api.v1.job import JobStatusResponse
-from .api.v1.gillespy2.results import PlotPlotlyRequest
-from .api.v1.gillespy2.results import AverageEnsembleRequest
+from stochss_compute.api.dataclass import (
+    ErrorResponse,
+    StartJobResponse,
+    JobStatusResponse,
+    PlotPlotlyRequest,
+    AverageEnsembleRequest
+)
 
 class RemoteResults(Results):
     def __init__(self, result_id: str, server: ComputeServer):

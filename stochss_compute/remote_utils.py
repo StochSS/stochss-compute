@@ -3,7 +3,7 @@ from __future__ import annotations
 from requests import Response
 from pydantic import BaseModel
 
-from .api.v1.job import ErrorResponse
+from stochss_compute.api.dataclass import ErrorResponse
 
 def unwrap_or_err(response_model: type[BaseModel], response: Response):
     if not response.ok:
