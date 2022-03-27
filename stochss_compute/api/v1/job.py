@@ -1,38 +1,19 @@
 import json
 
 from gillespy2.core import Model
-from pydantic import BaseModel
 
 from flask import request
 from flask import Blueprint
 
+from stochss_compute.api.dataclass import (
+    ErrorResponse,
+    StartJobRequest,
+    StartJobResponse,
+    JobStatusResponse,
+    JobStopResponse
+)
+
 from .apiutils import delegate
-
-class StartJobRequest(BaseModel):
-    job_id: str
-    model: str
-    args: str
-    kwargs: str
-
-class StartJobResponse(BaseModel):
-    job_id: str
-    msg: str
-    status: str
-
-class JobStatusResponse(BaseModel):
-    job_id: str
-    status_id: int
-    status_msg: str
-    is_complete: bool
-    has_failed: bool
-
-class JobStopResponse(BaseModel):
-    job_id: str
-    msg: str
-    success: bool
-
-class ErrorResponse(BaseModel):
-    msg: str
 
 v1_job = Blueprint("V1 Job API Endpoint", __name__, url_prefix="/job")
 

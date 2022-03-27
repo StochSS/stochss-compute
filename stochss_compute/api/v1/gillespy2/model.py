@@ -1,45 +1,21 @@
 import os
 
-from typing import List
-from typing import Dict
+from stochss_compute.api.dataclass import (
+    ErrorResponse,
+    ModelRunRequest,
+    JobStatusResponse
+)
 
 from ..apiutils import delegate
-from ..job import JobStatusResponse
-from ..dataclass import ErrorResponse
 
 import gillespy2.core
 
 from flask import request
 from flask import Blueprint
 
-from pydantic import BaseModel
 from pydantic import ValidationError
 
 model_endpoint = Blueprint("V1 GillesPy2 Model API Endpoint", __name__, url_prefix="/model")
-
-class Model(gillespy2.core.Model):
-    @classmethod
-    def __serialize__(cls, value: "Model") -> str:
-        return value.to_json()
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value) -> "Model":
-        if isinstance(value, str):
-            return cls(Model.from_json(value))
-
-        return value
-
-class ModelRunRequest(BaseModel):
-    model: Model
-    args: List = []
-    kwargs: Dict = {}
-
-    class Config:
-        json_encoders = {gillespy2.core.Model: lambda model: Model.__serialize__(model)}
 
 @model_endpoint.route("/run", methods=["POST"])
 def run():

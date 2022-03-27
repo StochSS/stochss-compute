@@ -1,28 +1,20 @@
-from typing import Any
-from typing import List
-from typing import Dict
-
+from msilib.schema import Error
 from ..apiutils import delegate
-from ..job import JobStatusResponse
-from ..dataclass import ErrorResponse
+from stochss_compute.api.dataclass import (
+    ErrorResponse,
+    PlotPlotlyRequest,
+    JobStatusResponse,
+    AverageEnsembleRequest
+)
 
 from gillespy2.core import Results
 
 from flask import request
 from flask import Blueprint
 
-from pydantic import BaseModel
 from pydantic import ValidationError
 
 results_endpoint = Blueprint("V1 GillesPy2 Results API Endpoint", __name__, url_prefix="/results")
-
-class PlotPlotlyRequest(BaseModel):
-    result_id: str
-    args: List[str] = []
-    kwargs: Dict[str, Any] = {}
-
-class AverageEnsembleRequest(BaseModel):
-    result_id: str
 
 @results_endpoint.route("/plotplotly", methods=["POST"])
 def plotplotly():
