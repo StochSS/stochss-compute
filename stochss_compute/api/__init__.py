@@ -1,4 +1,6 @@
 try:
-    from .api import start_api
+    import flask
 except ImportError:
     pass
+else:
+    from .api import start_api
