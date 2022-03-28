@@ -5,7 +5,7 @@ from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 
 def server_start(host, port, debug=True, delegate_config=None):
     if host is None:
-        host = "0.0.0.0"
+        host = "localhost"
     if port is None:
         port = 29681
     api.start_api(host=host, port=port, debug=debug, delegate_config=delegate_config)
