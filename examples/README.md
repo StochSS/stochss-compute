@@ -5,4 +5,4 @@ The files in this directory are runnable Python examples of using [GillesPy2](ht
 
 * [Start Here](StartHere.ipynb) &ndash; a [Jupyter Notebook](https://jupyter-notebook.readthedocs.io/en/stable/) demonstrating the use of StochSS-Compute and GillesPy2 on a simple Michaelis-Menten model
 
-* [Tutorial 0](Tutorial0.ipynb) &ndash; a [Jupyter Notebook](https://jupyter-notebook.readthedocs.io/en/stable/) which offers a more thorough explaination of the StochSS-Compute client, server, and Dask.
+* [Tutorial 0](Tutorial0.ipynb) &ndash; a [Jupyter Notebook](https://jupyter-notebook.readthedocs.io/en/stable/) which offers a more thorough explanation of the StochSS-Compute client, server, and Dask.
