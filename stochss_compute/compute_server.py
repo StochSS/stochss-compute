@@ -50,7 +50,7 @@ class ComputeServer():
                 return requests.post(url, json=request.json())
 
             except ConnectionError as ce:
-                print(ce)
+                print(ce.strerror)
                 print(f"Connection refused by server. Retrying in {sec} seconds....")
                 sleep(sec)
                 retry += 1
