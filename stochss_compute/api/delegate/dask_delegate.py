@@ -53,8 +53,9 @@ class DaskDelegate(Delegate):
                 print(self.delegate_config.kube_cluster)
 
             else:
-                print(f"self.client = Client({self.delegate_config.dask_cluster_address}: {self.delegate_config.dask_cluster_port})")
+                print(f"self.client = Client({self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port})")
                 self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
+                print(self.client)
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
