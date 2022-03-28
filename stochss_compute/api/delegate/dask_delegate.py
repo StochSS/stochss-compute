@@ -44,6 +44,7 @@ class DaskDelegate(Delegate):
 
         # Attempt to load the global Dask client.
         try:
+            print("self.client = get_client()")
             self.client = get_client()
 
         except ValueError as _:
@@ -52,6 +53,7 @@ class DaskDelegate(Delegate):
                 print(self.delegate_config.kube_cluster)
 
             else:
+                print(f"self.client = Client({self.delegate_config.dask_cluster_address}: {self.delegate_config.dask_cluster_port})")
                 self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
 
         # Setup functions to be run on the schedule.
