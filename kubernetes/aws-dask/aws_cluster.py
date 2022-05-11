@@ -90,38 +90,68 @@ def create_nodegroup():
     eks_client = boto3.client('eks')
     cng_response = eks_client.create_nodegroup(**create_nodegroup_args)
 
-
-def clean_up():
+def clean_up_vpc():
     CFclient = boto3.client("cloudformation")
     CFclient.delete_stack(StackName="stochss-compute-vpc")
 
-    IAMclient = boto3.client("iam")
+def clean_up_roles():
+    noSuchEntity = boto3.client("iam").exceptions.NoSuchEntityException
     iam = boto3.resource('iam')
-    eksClusterRole = iam.Role('eksClusterRole')
     try:
-        eksClusterRole.detach_policy(
-            PolicyArn='arn:aws:iam::aws:policy/AmazonEKSClusterPolicy')
+        eksClusterRole = iam.Role('eksClusterRole')
+        while len(list(eksClusterRole.attached_policies.all())) != 0:
+            eksClusterRole.detach_policy(
+                PolicyArn='arn:aws:iam::aws:policy/AmazonEKSClusterPolicy')
+            sleep(1)
         eksClusterRole.delete()
-    except IAMclient.exceptions.NoSuchEntityException as error:
-        print("eksClusterRole already deleted.")
-        pass
-    else:
+    except noSuchEntity as error:
         print(error)
-        pass
+        print("eksClusterRole already deleted.")
+    except BaseException as error:
+        print("Unexpected error. eksClusterRole deletion unsuccessful.")
+        print(error)
+    else:
+        print("eksClusterRole successfully deleted.")
+
     try:
         eksNodeRole = iam.Role('eksNodeRole')
-        for policy in eksNodeRole.attached_policies.all():
-            policy.detach_role(RoleName='eksNodeRole')
-        # add check to make sure all policies are detached by checking length of attached policies == 0
+        attached_policies = list(eksNodeRole.attached_policies.all())
+        while len(attached_policies) != 0:
+            for policy in attached_policies:
+                try:
+                    policy.detach_role(RoleName='eksNodeRole')
+                except noSuchEntity:
+                    print(f"{policy.policy_name} already detached.")
+                    continue
+            sleep(1)
+            attached_policies = list(eksNodeRole.attached_policies.all())
         eksNodeRole.delete()
-    except IAMclient.exceptions.NoSuchEntityException as error:
-        print("eksNodeRole already deleted.")
-        pass
-    else:
+    except noSuchEntity as error:
         print(error)
-        pass
+        print("eksNodeRole already deleted.")
+    except BaseException as error:
+        print("Unexpected error. eksClusterRole deletion unsuccessful.")
+        print(error)
+    else:
+        print("eksNodeRole successfully deleted.")
 
+def clean_up_nodegroup():
     EKSclient = boto3.client('eks')
-    EKSclient.delete_nodegroup(clusterName=create_nodegroup_args['clusterName'], nodegroupName=create_nodegroup_args['nodegroupName'])
-    # this will take some time so check to make sure it has completed
+    resourceNotFound = EKSclient.exceptions.ResourceNotFoundException
+    clusterName = create_nodegroup_args['clusterName']
+    nodegroupName = create_nodegroup_args['nodegroupName']
+    EKSclient.delete_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)
+    while True:
+        try:
+            EKSclient.describe_nodegroup(clusterName=clusterName,nodegroupName=nodegroupName)
+            sleep(10)
+            continue
+        except resourceNotFound:
+            break
+    
+
+def clean_up():
+    clean_up_vpc()
+    clean_up_roles()
+    EKSclient = boto3.client('eks')
     EKSclient.delete_cluster(name=create_cluster_args['name'])
