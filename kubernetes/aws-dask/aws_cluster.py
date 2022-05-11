@@ -16,7 +16,7 @@ def init_vpc():
     while vpc_stack.stack_status != 'CREATE_COMPLETE':
         sleep(10)
         vpc_stack = cloudformation.Stack('stochss-compute-vpc')
-    print(f'CloudFormation VPC stack {vpc_stack.name} successfully created.')
+    print(f'CloudFormation VPC stack "{vpc_stack.name}" successfully created.')
     vpc_id = vpc_stack.Resource('VPC').physical_resource_id
     sg_id = vpc_stack.Resource('ControlPlaneSecurityGroup').physical_resource_id
     ec2 = boto3.resource('ec2')
@@ -91,8 +91,8 @@ def init_cluster():
     while cluster_status != 'ACTIVE':
         sleep(30)
         cluster_status = eks_client.describe_cluster(name=clusterName)['cluster']['status']
-        print(f'Cluster {clusterName} status is {cluster_status}.')
-    print(f'Cluster {clusterName} successfully created.')
+        print(f'Cluster "{clusterName}" status is "{cluster_status}".')
+    print(f'Cluster "{clusterName}" successfully created.')
 
 def init_nodegroup():
     print("Creating Nodegroup with args:")
@@ -105,28 +105,28 @@ def init_nodegroup():
     while nodegroup_status != 'ACTIVE':
         sleep(30)
         nodegroup_status = eks_client.describe_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)['nodegroup']['status']
-        print(f'Nodegroup {nodegroupName} status is {nodegroup_status}.')
-    print(f'Nodegroup {nodegroupName} successfully created.')
+        print(f'Nodegroup "{nodegroupName}" status is "{nodegroup_status}".')
+    print(f'Nodegroup "{nodegroupName}" successfully created.')
 
 def tear_down_vpc():
     stackName = 'stochss-compute-vpc'
     StackId = vpc_stack_attributes['stackId']
-    print(f"Deleting CloudFormation VPC stack {stackName}.")
+    print(f'Deleting CloudFormation VPC stack "{stackName}".')
     CFclient = boto3.client("cloudformation")
     
     CFclient.delete_stack(StackName=stackName)
     stack_status = CFclient.describe_stacks(StackName=StackId)['Stacks'][0]['StackStatus']
     while stack_status != 'DELETE_COMPLETE':
         if stack_status == 'DELETE_FAILED':
-            raise Exception("Unknown error. CloudFormation VPC stack deletion failed.")
+            raise Exception('Unknown error. CloudFormation VPC stack deletion failed.')
         sleep(10)
         stack_status = CFclient.describe_stacks(StackName=StackId)['Stacks'][0]['StackStatus']
         continue
-    print(f"CloudFormation VPC stack {stackName}successfully deleted.")
+    print(f'CloudFormation VPC stack "{stackName}" successfully deleted.')
 
 def tear_down_roles():
     clusterRoleName = 'eksClusterRole'
-    print(f"Deleting Role {clusterRoleName}")
+    print(f'Deleting Role "{clusterRoleName}".')
     
     noSuchEntity = boto3.client("iam").exceptions.NoSuchEntityException
     iam = boto3.resource('iam')
@@ -138,20 +138,20 @@ def tear_down_roles():
                 eksClusterRole.detach_policy(
                     PolicyArn='arn:aws:iam::aws:policy/AmazonEKSClusterPolicy')
             except noSuchEntity:
-                print(f"AmazonEKSClusterPolicy already detached.")
+                print(f'AmazonEKSClusterPolicy already detached.')
             sleep(1)
             attached_policies = list(eksClusterRole.attached_policies.all())
         eksClusterRole.delete()
     except noSuchEntity as error:
-        print("eksClusterRole already deleted.")
+        print(f'"{clusterRoleName}" already deleted.')
     except BaseException as error:
-        print("Unexpected error. eksClusterRole deletion unsuccessful.")
+        print(f'Unexpected error. "{clusterRoleName}" deletion unsuccessful.')
         print(error)
     else:
-        print("eksClusterRole successfully deleted.")
+        print(f'"{clusterRoleName}" successfully deleted.')
 
     nodeRoleName = 'eksNodeRole'
-    print(f"Deleting Role {nodeRoleName}.")
+    print(f'Deleting Role "{nodeRoleName}".')
     try:
         eksNodeRole = iam.Role(nodeRoleName)
         attached_policies = list(eksNodeRole.attached_policies.all())
@@ -165,12 +165,12 @@ def tear_down_roles():
             attached_policies = list(eksNodeRole.attached_policies.all())
         eksNodeRole.delete()
     except noSuchEntity as error:
-        print("eksNodeRole already deleted.")
+        print(f'"{nodeRoleName}" already deleted.')
     except BaseException as error:
-        print("Unexpected error. eksNodeRole deletion unsuccessful.")
+        print(f'Unexpected error. "{nodeRoleName}" deletion unsuccessful.')
         print(error)
     else:
-        print("eksNodeRole successfully deleted.")
+        print(f'"{nodeRoleName}" successfully deleted.')
 
 def tear_down_nodegroup():
     clusterName = create_nodegroup_args['clusterName']
