@@ -92,14 +92,20 @@ def init_nodegroup():
     # check for nodegroup status
 
 def tear_down_vpc():
+    stackName = 'stochss-compute-vpc'
+    print(f"Deleting CloudFormation vpc stack {stackName}")
     CFclient = boto3.client("cloudformation")
-    CFclient.delete_stack(StackName="stochss-compute-vpc")
+    
+    CFclient.delete_stack(StackName=stackName)
 
 def tear_down_roles():
+    clusterRoleName = 'eksClusterRole'
+    print(f"Deleting Role {clusterRoleName}")
+    
     noSuchEntity = boto3.client("iam").exceptions.NoSuchEntityException
     iam = boto3.resource('iam')
     try:
-        eksClusterRole = iam.Role('eksClusterRole')
+        eksClusterRole = iam.Role(clusterRoleName)
         attached_policies = list(eksClusterRole.attached_policies.all())
         while len(attached_policies) != 0:
             try:
@@ -118,13 +124,15 @@ def tear_down_roles():
     else:
         print("eksClusterRole successfully deleted.")
 
+    nodeRoleName = 'eksNodeRole'
+    print(f"Deleting Role {nodeRoleName}")
     try:
-        eksNodeRole = iam.Role('eksNodeRole')
+        eksNodeRole = iam.Role(nodeRoleName)
         attached_policies = list(eksNodeRole.attached_policies.all())
         while len(attached_policies) != 0:
             for policy in attached_policies:
                 try:
-                    policy.detach_role(RoleName='eksNodeRole')
+                    policy.detach_role(RoleName=nodeRoleName)
                 except noSuchEntity:
                     print(f"{policy.policy_name} already detached.")
             sleep(1)
@@ -133,16 +141,17 @@ def tear_down_roles():
     except noSuchEntity as error:
         print("eksNodeRole already deleted.")
     except BaseException as error:
-        print("Unexpected error. eksClusterRole deletion unsuccessful.")
+        print("Unexpected error. eksNodeRole deletion unsuccessful.")
         print(error)
     else:
         print("eksNodeRole successfully deleted.")
 
 def tear_down_nodegroup():
-    EKSclient = boto3.client('eks')
-    resourceNotFound = EKSclient.exceptions.ResourceNotFoundException
     clusterName = create_nodegroup_args['clusterName']
     nodegroupName = create_nodegroup_args['nodegroupName']
+    print(f"Deleting Nodegroup {nodegroupName}")
+    EKSclient = boto3.client('eks')
+    resourceNotFound = EKSclient.exceptions.ResourceNotFoundException
     try:
         EKSclient.delete_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)
     except resourceNotFound:
@@ -158,9 +167,10 @@ def tear_down_nodegroup():
         print(f"Nodegroup {nodegroupName} successfully deleted.")
     
 def tear_down_cluster():
+    name = create_cluster_args['name']
+    print(f"Deleting Cluster {name}")
     EKSclient = boto3.client('eks')
     resourceNotFound = EKSclient.exceptions.ResourceNotFoundException
-    name = create_cluster_args['name']
     try:
         EKSclient.delete_cluster(name=name)
     except resourceNotFound:
@@ -184,6 +194,6 @@ def create_cluster():
 
 def tear_down():
     tear_down_vpc()
-    tear_down_roles()
     tear_down_nodegroup()
     tear_down_cluster()
+    tear_down_roles()
