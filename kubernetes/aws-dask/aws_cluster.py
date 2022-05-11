@@ -13,6 +13,7 @@ def init_vpc():
     cloudformation = boto3.resource('cloudformation')
     vpc_stack = cloudformation.Stack('stochss-compute-vpc')
     while vpc_stack.stack_status != 'CREATE_COMPLETE':
+        print(f'CloudFormation VPC stack status is "{vpc_stack.stack_status}"')
         sleep(30)
         vpc_stack = cloudformation.Stack('stochss-compute-vpc')
     print(f'CloudFormation VPC stack "{vpc_stack.stack_id}" successfully created.')
