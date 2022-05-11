@@ -15,7 +15,7 @@ def init_vpc():
     while vpc_stack.stack_status != 'CREATE_COMPLETE':
         sleep(30)
         vpc_stack = cloudformation.Stack('stochss-compute-vpc')
-    print(f'CloudFormation VPC stack "{vpc_stack.name}" successfully created.')
+    print(f'CloudFormation VPC stack "{vpc_stack.stack_id}" successfully created.')
     vpc_id = vpc_stack.Resource('VPC').physical_resource_id
     sg_id = vpc_stack.Resource('ControlPlaneSecurityGroup').physical_resource_id
     ec2 = boto3.resource('ec2')
