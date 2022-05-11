@@ -109,10 +109,13 @@ def init_nodegroup():
     print(f'Nodegroup "{nodegroupName}" successfully created.')
 
 def tear_down_vpc():
-    stackName = 'stochss-compute-vpc'
-    StackId = vpc_stack_attributes['stackId']
-    print(f'Deleting CloudFormation VPC stack "{stackName}".......')
     CFclient = boto3.client("cloudformation")
+    cloudformation = boto3.resource('cloudformation')
+
+    stackName = 'stochss-compute-vpc'
+    vpc_stack = cloudformation.Stack(stackName)
+    StackId = vpc_stack.stack_id
+    print(f'Deleting CloudFormation VPC stack "{stackName}".......')
     
     CFclient.delete_stack(StackName=stackName)
     stack_status = CFclient.describe_stacks(StackName=StackId)['Stacks'][0]['StackStatus']
