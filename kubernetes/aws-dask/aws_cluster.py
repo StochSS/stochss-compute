@@ -1,6 +1,5 @@
 import json
 import boto3
-import botocore.exceptions
 from time import sleep
 
 create_cluster_args = { 'name':'stochss-compute-dask' }
