@@ -99,10 +99,15 @@ def clean_up_roles():
     iam = boto3.resource('iam')
     try:
         eksClusterRole = iam.Role('eksClusterRole')
-        while len(list(eksClusterRole.attached_policies.all())) != 0:
-            eksClusterRole.detach_policy(
-                PolicyArn='arn:aws:iam::aws:policy/AmazonEKSClusterPolicy')
+        attached_policies = list(eksClusterRole.attached_policies.all())
+        while len(attached_policies) != 0:
+            try:
+                eksClusterRole.detach_policy(
+                    PolicyArn='arn:aws:iam::aws:policy/AmazonEKSClusterPolicy')
+            except noSuchEntity:
+                print(f"AmazonEKSClusterPolicy already detached.")
             sleep(1)
+            attached_policies = list(eksClusterRole.attached_policies.all())
         eksClusterRole.delete()
     except noSuchEntity as error:
         print(error)
@@ -122,7 +127,6 @@ def clean_up_roles():
                     policy.detach_role(RoleName='eksNodeRole')
                 except noSuchEntity:
                     print(f"{policy.policy_name} already detached.")
-                    continue
             sleep(1)
             attached_policies = list(eksNodeRole.attached_policies.all())
         eksNodeRole.delete()
