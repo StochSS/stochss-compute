@@ -5,28 +5,30 @@ from time import sleep
 
 create_cluster_args = { 'name':'stochss-compute-dask' }
 create_nodegroup_args = { 'clusterName':'stochss-compute-dask', 'nodegroupName': 'dask-0', 'scalingConfig': {'minSize': 2, 'maxSize': 5, 'desiredSize': 3}, 'instanceTypes': ['t3.micro'] }         
-
+vpc_stack_attributes = {}
 def init_vpc():
+    print("Creating CloudFormation VPC stack.")
     CFclient = boto3.client('cloudformation')
     vpc_response = CFclient.create_stack(TemplateURL='https://s3.us-west-2.amazonaws.com/amazon-eks/cloudformation/2020-10-29/amazon-eks-vpc-private-subnets.yaml', StackName='stochss-compute-vpc')
-    # stack_id = vpc_response['StackId']
-    # vpc_resources = CFclient.describe_stack_resources(StackName=stack_id)
+    vpc_stack_attributes['stackId'] = vpc_response['StackId']
     cloudformation = boto3.resource('cloudformation')
     vpc_stack = cloudformation.Stack('stochss-compute-vpc')
     while vpc_stack.stack_status != 'CREATE_COMPLETE':
         sleep(10)
         vpc_stack = cloudformation.Stack('stochss-compute-vpc')
+    print(f'CloudFormation VPC stack {vpc_stack.name} successfully created:')
+    print(json.dumps(vpc_stack.description,indent=4))
     vpc_id = vpc_stack.Resource('VPC').physical_resource_id
     sg_id = vpc_stack.Resource('ControlPlaneSecurityGroup').physical_resource_id
-    print(vpc_id)
     ec2 = boto3.resource('ec2')
     subnet_ids = [subnet.id for subnet in ec2.Vpc(vpc_id).subnets.all()]
     create_cluster_args['resourcesVpcConfig'] = {'subnetIds':subnet_ids,'securityGroupIds':[sg_id]}
     create_nodegroup_args['subnets'] = subnet_ids
-    print(create_cluster_args)
 
 
 def init_cluster_role():
+    roleName = 'eksClusterRole'
+    print(f'Creating Cluster Role "{roleName}".')
     cluster_role_trust_policy = {
         "Version": "2012-10-17",
         "Statement": [
@@ -39,20 +41,22 @@ def init_cluster_role():
             }
         ]
     }
-    IAMclient = boto3.client("iam")
+    IAMclient = boto3.client('iam')
+    iam = boto3.resource('iam')
     IAM_cr_response = IAMclient.create_role(RoleName='eksClusterRole', AssumeRolePolicyDocument=json.dumps(cluster_role_trust_policy))
-    print(IAM_cr_response)
     create_cluster_args['roleArn'] = IAM_cr_response['Role']['Arn']
     try:
         IAM_ar_response =  IAMclient.attach_role_policy(
             RoleName='eksClusterRole', PolicyArn='arn:aws:iam::aws:policy/AmazonEKSClusterPolicy')
     except Exception as error :
         print(error)
-
-    print(IAM_ar_response)
-
+    role_description = iam.Role(roleName).description
+    print("Cluster Role successfully created:")
+    print(json.dumps(role_description, indent=4))
 
 def init_node_role():
+    roleName = 'eksNodeRole'
+    print(f'Creating Node Role "{roleName}".')
     node_role_trust_policy = {
         "Version": "2012-10-17",
         "Statement": [
@@ -66,9 +70,9 @@ def init_node_role():
         ]
     }
     IAMclient = boto3.client("iam")
+    iam = boto3.resource('iam')
     IAM_cr_response = IAMclient.create_role(
         RoleName='eksNodeRole', AssumeRolePolicyDocument=json.dumps(node_role_trust_policy))
-    print(IAM_cr_response)
     create_nodegroup_args['nodeRole'] = IAM_cr_response['Role']['Arn']
     try:
         IAMclient.attach_role_policy(RoleName='eksNodeRole', PolicyArn='arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy')
@@ -76,27 +80,52 @@ def init_node_role():
         IAMclient.attach_role_policy(RoleName='eksNodeRole', PolicyArn='arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy')
     except Exception as error:
         print(error)
+    role_description = iam.Role(roleName).description
+    print("Cluster Role successfully created:")
+    print(json.dumps(role_description, indent=4))
 
 def init_cluster():
+    print("Creating EKS Cluster with args:")
+    print(json.dumps(create_cluster_args, indent=4))
     eks_client = boto3.client('eks')
+    clusterName = create_cluster_args['name']
     cc_response = eks_client.create_cluster(**create_cluster_args)
-    cluster_status = eks_client.describe_cluster(name=create_cluster_args['name'])['cluster']['status']
+    cluster_status = eks_client.describe_cluster(name=clusterName)['cluster']['status']
     while cluster_status != 'ACTIVE':
         sleep(30)
-        cluster_status = eks_client.describe_cluster(name=create_cluster_args['name'])['cluster']['status']
-    print(f'Cluster Status is {cluster_status}')
+        cluster_status = eks_client.describe_cluster(name=clusterName)['cluster']['status']
+        print(f'Cluster {clusterName} status is {cluster_status}.')
+    print(f'Cluster {clusterName} successfully created.')
 
 def init_nodegroup():
+    print("Creating Nodegroup with args:")
+    print(json.dumps(create_nodegroup_args, indent=4))
     eks_client = boto3.client('eks')
     cng_response = eks_client.create_nodegroup(**create_nodegroup_args)
-    # check for nodegroup status
+    clusterName = create_nodegroup_args['clusterName']
+    nodegroupName = create_nodegroup_args['nodegroupName']
+    nodegroup_status = eks_client.describe_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)['nodegroup']['status']
+    while nodegroup_status != 'ACTIVE':
+        sleep(30)
+        nodegroup_status = eks_client.describe_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)['nodegroup']['status']
+        print(f'Nodegroup {nodegroupName} status is {nodegroup_status}.')
+    print(f'Nodegroup {nodegroupName} successfully created.')
 
 def tear_down_vpc():
     stackName = 'stochss-compute-vpc'
-    print(f"Deleting CloudFormation vpc stack {stackName}")
+    StackId = vpc_stack_attributes['stackId']
+    print(f"Deleting CloudFormation VPC stack {stackName}.")
     CFclient = boto3.client("cloudformation")
     
     CFclient.delete_stack(StackName=stackName)
+    stack_status = CFclient.describe_stacks(StackName=StackId)['Stacks'][0]['StackStatus']
+    while stack_status != 'DELETE_COMPLETE':
+        if stack_status == 'DELETE_FAILED':
+            raise Exception("Unknown error. CloudFormation VPC stack deletion failed.")
+        sleep(10)
+        stack_status = CFclient.describe_stacks(StackName=StackId)['Stacks'][0]['StackStatus']
+        continue
+    print(f"CloudFormation VPC stack {stackName}successfully deleted.")
 
 def tear_down_roles():
     clusterRoleName = 'eksClusterRole'
@@ -125,7 +154,7 @@ def tear_down_roles():
         print("eksClusterRole successfully deleted.")
 
     nodeRoleName = 'eksNodeRole'
-    print(f"Deleting Role {nodeRoleName}")
+    print(f"Deleting Role {nodeRoleName}.")
     try:
         eksNodeRole = iam.Role(nodeRoleName)
         attached_policies = list(eksNodeRole.attached_policies.all())
@@ -193,7 +222,7 @@ def create_cluster():
     init_nodegroup()
 
 def tear_down():
-    tear_down_vpc()
     tear_down_nodegroup()
     tear_down_cluster()
+    tear_down_vpc()
     tear_down_roles()
