@@ -16,8 +16,7 @@ def init_vpc():
     while vpc_stack.stack_status != 'CREATE_COMPLETE':
         sleep(10)
         vpc_stack = cloudformation.Stack('stochss-compute-vpc')
-    print(f'CloudFormation VPC stack {vpc_stack.name} successfully created:')
-    print(json.dumps(vpc_stack.description,indent=4))
+    print(f'CloudFormation VPC stack {vpc_stack.name} successfully created.')
     vpc_id = vpc_stack.Resource('VPC').physical_resource_id
     sg_id = vpc_stack.Resource('ControlPlaneSecurityGroup').physical_resource_id
     ec2 = boto3.resource('ec2')
@@ -50,9 +49,8 @@ def init_cluster_role():
             RoleName='eksClusterRole', PolicyArn='arn:aws:iam::aws:policy/AmazonEKSClusterPolicy')
     except Exception as error :
         print(error)
-    role_description = iam.Role(roleName).description
-    print("Cluster Role successfully created:")
-    print(json.dumps(role_description, indent=4))
+    role_arn = iam.Role(roleName).arn
+    print(f'Cluster Role "{role_arn}" successfully created.')
 
 def init_node_role():
     roleName = 'eksNodeRole'
@@ -80,9 +78,8 @@ def init_node_role():
         IAMclient.attach_role_policy(RoleName='eksNodeRole', PolicyArn='arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy')
     except Exception as error:
         print(error)
-    role_description = iam.Role(roleName).description
-    print("Cluster Role successfully created:")
-    print(json.dumps(role_description, indent=4))
+    role_arn = iam.Role(roleName).arn
+    print(f'Cluster Role "{role_arn}" successfully created.')
 
 def init_cluster():
     print("Creating EKS Cluster with args:")
