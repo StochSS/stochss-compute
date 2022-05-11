@@ -13,7 +13,7 @@ def init_vpc():
     cloudformation = boto3.resource('cloudformation')
     vpc_stack = cloudformation.Stack('stochss-compute-vpc')
     while vpc_stack.stack_status != 'CREATE_COMPLETE':
-        sleep(10)
+        sleep(30)
         vpc_stack = cloudformation.Stack('stochss-compute-vpc')
     print(f'CloudFormation VPC stack "{vpc_stack.name}" successfully created.')
     vpc_id = vpc_stack.Resource('VPC').physical_resource_id
@@ -88,7 +88,7 @@ def init_cluster():
     cc_response = eks_client.create_cluster(**create_cluster_args)
     cluster_status = eks_client.describe_cluster(name=clusterName)['cluster']['status']
     while cluster_status != 'ACTIVE':
-        sleep(30)
+        sleep(60)
         cluster_status = eks_client.describe_cluster(name=clusterName)['cluster']['status']
         print(f'Cluster "{clusterName}" status is "{cluster_status}".')
     print(f'Cluster "{clusterName}" successfully created.')
@@ -102,7 +102,7 @@ def init_nodegroup():
     nodegroupName = create_nodegroup_args['nodegroupName']
     nodegroup_status = eks_client.describe_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)['nodegroup']['status']
     while nodegroup_status != 'ACTIVE':
-        sleep(30)
+        sleep(60)
         nodegroup_status = eks_client.describe_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)['nodegroup']['status']
         print(f'Nodegroup "{nodegroupName}" status is "{nodegroup_status}".')
     print(f'Nodegroup "{nodegroupName}" successfully created.')
@@ -118,7 +118,7 @@ def tear_down_vpc():
     while stack_status != 'DELETE_COMPLETE':
         if stack_status == 'DELETE_FAILED':
             raise Exception('Unknown error. CloudFormation VPC stack deletion failed.')
-        sleep(10)
+        sleep(30)
         stack_status = CFclient.describe_stacks(StackName=StackId)['Stacks'][0]['StackStatus']
         continue
     print(f'CloudFormation VPC stack "{stackName}" successfully deleted.')
@@ -185,7 +185,7 @@ def tear_down_nodegroup():
         while True:
             try:
                 EKSclient.describe_nodegroup(clusterName=clusterName,nodegroupName=nodegroupName)
-                sleep(10)
+                sleep(30)
                 continue
             except resourceNotFound:
                 break
@@ -204,7 +204,7 @@ def tear_down_cluster():
         while True:
             try:
                 EKSclient.describe_cluster(name=name)
-                sleep(10)
+                sleep(30)
                 continue
             except resourceNotFound:
                 break
