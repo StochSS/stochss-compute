@@ -8,12 +8,13 @@ vpc_stack_attributes = {}
 def init_vpc():
     print("Creating CloudFormation VPC stack.")
     CFclient = boto3.client('cloudformation')
-    vpc_response = CFclient.create_stack(TemplateURL='https://s3.us-west-2.amazonaws.com/amazon-eks/cloudformation/2020-10-29/amazon-eks-vpc-private-subnets.yaml', StackName='stochss-compute-vpc')
+    vpc_response = CFclient.create_stack(
+        TemplateURL='https://s3.us-west-2.amazonaws.com/amazon-eks/cloudformation/2020-10-29/amazon-eks-vpc-sample.yaml', StackName='stochss-compute-vpc')
     vpc_stack_attributes['stackId'] = vpc_response['StackId']
     cloudformation = boto3.resource('cloudformation')
     vpc_stack = cloudformation.Stack('stochss-compute-vpc')
     while vpc_stack.stack_status != 'CREATE_COMPLETE':
-        print(f'CloudFormation VPC stack "{vpc_stack.name}" status is "{vpc_stack.stack_status}"')
+        print(f'CloudFormation VPC stack "{vpc_stack.name}" status is "{vpc_stack.stack_status}".')
         sleep(30)
         vpc_stack = cloudformation.Stack('stochss-compute-vpc')
     print(f'CloudFormation VPC stack "{vpc_stack.stack_id}" successfully created.')
@@ -82,30 +83,32 @@ def init_node_role():
     print(f'Cluster Role "{role_arn}" successfully created.')
 
 def init_cluster():
-    print("Creating EKS Cluster with args:")
+    print('Creating EKS Cluster with args:')
     print(json.dumps(create_cluster_args, indent=4))
+    print('.......')
     eks_client = boto3.client('eks')
     clusterName = create_cluster_args['name']
     cc_response = eks_client.create_cluster(**create_cluster_args)
     cluster_status = eks_client.describe_cluster(name=clusterName)['cluster']['status']
     while cluster_status != 'ACTIVE':
+        print(f'Cluster "{clusterName}" status is "{cluster_status}".......')
         sleep(60)
         cluster_status = eks_client.describe_cluster(name=clusterName)['cluster']['status']
-        print(f'Cluster "{clusterName}" status is "{cluster_status}".')
     print(f'Cluster "{clusterName}" successfully created.')
 
 def init_nodegroup():
-    print("Creating Nodegroup with args:")
+    print('Creating Nodegroup with args:')
     print(json.dumps(create_nodegroup_args, indent=4))
+    print('.......')
     eks_client = boto3.client('eks')
     cng_response = eks_client.create_nodegroup(**create_nodegroup_args)
     clusterName = create_nodegroup_args['clusterName']
     nodegroupName = create_nodegroup_args['nodegroupName']
     nodegroup_status = eks_client.describe_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)['nodegroup']['status']
     while nodegroup_status != 'ACTIVE':
+        print(f'Nodegroup "{nodegroupName}" status is "{nodegroup_status}".......')
         sleep(60)
         nodegroup_status = eks_client.describe_nodegroup(clusterName=clusterName, nodegroupName=nodegroupName)['nodegroup']['status']
-        print(f'Nodegroup "{nodegroupName}" status is "{nodegroup_status}".')
     print(f'Nodegroup "{nodegroupName}" successfully created.')
 
 def tear_down_vpc():
