@@ -53,6 +53,7 @@ class DaskDelegate(Delegate):
 
             else:
                 self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
+                print(f"Automatically instantiated dask cluster:\n{self.client}")
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
