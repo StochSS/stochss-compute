@@ -1,4 +1,3 @@
-from curses import keyname
 import boto3
 import os
 
