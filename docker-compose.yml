@@ -2,13 +2,21 @@ version: "3.1"
 
 services:
   stochss-compute:
+    depends_on:
+      - "scheduler"
+      - "worker"
     image: stochss/stochss-compute
+    volumes:
+      - "./sd-cache/:/sd-cache/"
     ports:
       - "29681:29681"
-      
+    command: ["python", "app.py", "--host", "0.0.0.0", "--daskhost", "scheduler"]
+
   scheduler:
     image: ghcr.io/dask/dask:latest
-    # hostname: scheduler
+    hostname: scheduler
+    volumes:
+      - "./sd-cache/:/sd-cache/"
     ports:
       - "8786:8786"
       - "8787:8787"
@@ -16,8 +24,15 @@ services:
 
   worker:
     image: ghcr.io/dask/dask:latest
+    environment:
+      - EXTRA_PIP_PACKAGES=gillespy2
+    volumes:
+      - "./sd-cache/:/sd-cache/"
     command: ["dask-worker", "tcp://scheduler:8786"]
     # For Docker swarm you can specify multiple workers, this is ignored by `docker-compose up`
     deploy:
       replicas: 2
+
+volumes: 
+  sd-cache: {}
 
