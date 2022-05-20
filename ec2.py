@@ -68,4 +68,28 @@ def terminate_instance():
     print(instance_ids)
     client.terminate_instances(InstanceIds=instance_ids)
 
+def _get_running_instances():
+    kwargs = {
+        'Filters':[
+            {
+                'Name':'instance-state-name',
+                'Values':[
+                    'running'
+                ]
+            }
+        ]
+    }
+    client = boto3.client('ec2')
+    running_instances = client.describe_instances(**kwargs)
+    instance_ids = []
+    for reservation in running_instances['Reservations']:
+        for instance in reservation['Instances']:
+            instance_ids.append(instance['InstanceId'])
+    return instance_ids
+
+def _get_public_DNS(instance_id):
+    resource = boto3.resource('ec2')
+    instance = resource.instance(instance_id)
+    return instance.public_dns_name
+
     
