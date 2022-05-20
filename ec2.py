@@ -12,10 +12,10 @@ p = pprint.PrettyPrinter(indent=1)
 
 def create_key_pair():
     returns['key'] = client.create_key_pair(KeyName=keyName, KeyType='ed25519',KeyFormat='pem')
-    key = open('key.pem', 'w')
+    key = open(f'{keyName}.pem', 'w')
     key.write(returns['key']['KeyMaterial'])
     key.close()
-    os.chmod('key.pem', 400)
+    os.chmod(f'{keyName}.pem', 400)
 
 def delete_key_pair():
     client.delete_key_pair(KeyName=keyName)
@@ -68,7 +68,7 @@ def terminate_instance():
     print(instance_ids)
     client.terminate_instances(InstanceIds=instance_ids)
 
-def _get_running_instances():
+def get_running_instances():
     kwargs = {
         'Filters':[
             {
@@ -87,9 +87,9 @@ def _get_running_instances():
             instance_ids.append(instance['InstanceId'])
     return instance_ids
 
-def _get_public_DNS(instance_id):
+def get_public_DNS(instance_id):
     resource = boto3.resource('ec2')
-    instance = resource.instance(instance_id)
+    instance = resource.Instance(instance_id)
     return instance.public_dns_name
 
     
