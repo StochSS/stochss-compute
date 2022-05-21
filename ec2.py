@@ -55,6 +55,7 @@ class SSSCAWS:
         response = self.client.run_instances(**kwargs)
         self.returns['launch'] = response
         p.pprint(response)
+        self.security_group = response['Instances'][0]['SecurityGroups'][0]['GroupId']
         instance_ids = []
         for instance in response['Instances']:
             instance_ids.append(instance['InstanceId'])
@@ -68,7 +69,7 @@ class SSSCAWS:
             print(f'Instance {id} is {state}.')
         return instance_ids
 
-    def terminate_instance(self) -> None:
+    def terminate_instances(self) -> None:
         describe_instances = self.client.describe_instances()
         instance_ids = []
         for reservation in describe_instances['Reservations']:
@@ -98,7 +99,7 @@ class SSSCAWS:
 
     def get_public_DNS(self, instance_id) -> str:
         self.resources = boto3.resource('ec2')
-        instance = self.resource.Instance(instance_id)
+        instance = self.resources.Instance(instance_id)
         return instance.public_dns_name
 
         
