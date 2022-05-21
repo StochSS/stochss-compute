@@ -7,25 +7,42 @@ import pprint
 p = pprint.PrettyPrinter(indent=1)
 
 class SSSCAWS:
+    class SSHKey:
+        def __init__(self, name) -> None:
+            self.name = name
 
-    def __init__(self) -> None:
+
+    def __init__(self, ) -> None:
         self.client = boto3.client('ec2')
         self.resources = boto3.resource('ec2')
         self.returns = {}
-        self.keyName = 'stochss-compute-root'
+        self.rootKey = self.SSHKey('sssc-root')
         
 
-    def create_key_pair(self, path='./') -> str:
-        self.returns['key'] = self.client.create_key_pair(KeyName=self.keyName, KeyType='ed25519',KeyFormat='pem')
-        key = open(f'{path}{self.keyName}.pem', 'w')
-        key.write(self.returns['key']['KeyMaterial'])
-        key.close()
-        os.chmod(f'{path}{self.keyName}.pem', 400)
-        return f'{path}{self.keyName}.pem'
+    def create_root_key(self, savePath='./', keyType='ed25519', keyFormat='pem') -> SSHKey:
+        valid_formats = {'pem', 'ppk'}
+        if keyFormat not in valid_formats:
+            raise ValueError(f'keyFormat must be one of {valid_formats}.')
+        valid_types = {'ed25519', 'rsa'}
+        if keyType not in valid_types:
+            raise ValueError(f'keyType must be one of {valid_types}.')
 
-    def delete_key_pair(self) -> None:
-        keyName = 'stochss-compute-root'
-        self.client.delete_key_pair(KeyName=keyName)
+        key_path = f'{savePath}{self.rootKey.name}.{keyFormat}'
+        key = open(key_path, 'x')
+        response = self.client.create_key_pair(KeyName=self.rootKey.name, KeyType=keyType, KeyFormat=keyFormat)
+        key.write(response['KeyMaterial'])
+        key.close()
+        os.chmod(key_path, 0o400)
+
+        self.rootKey.fingerprint = response['KeyFingerprint']
+        self.rootKey.id = response['KeyPairId']
+        self.rootKey.path = key_path
+        self.rootKey.type = keyType
+        self.rootKey.format = keyFormat
+        return self.rootKey
+
+    def delete_root_key(self) -> None:
+        self.client.delete_key_pair(KeyName=self.rootKey.name)
     """
     [EC2-VPC] If you don't specify a subnet ID, we choose a default subnet from your default VPC for you.
     If you don't have a default VPC, you must specify a subnet ID in the request.
