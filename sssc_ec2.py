@@ -12,7 +12,9 @@ class SSSCEC2:
             self.name = name
             
     class Instance:
-        # find out best way to make boto3 objects 'private' (do not need to be accessible)
+        # TODO
+        # find out best way to make boto3 objects 'private' (do not need to be accessible) PY OH PY
+        # find out where & how to associate this class within library
         def __init__(self, id) -> None:
             resource = boto3.resource('ec2')
             self._remote = resource.Instance(id)
@@ -36,7 +38,21 @@ class SSSCEC2:
             self._remote.terminate()
             self._remote.wait_until_terminated()
 
+        def authorize_SSH(self, groupName='default', cidrIp='0.0.0.0/0'):
+            sgargs = {
+                'CidrIp': cidrIp,
+                'FromPort': 22,
+                'ToPort': 22,
+                'GroupName': groupName,
+                'IpProtocol': 'tcp',
+            }
+            resource = boto3.resource('ec2')
+            sg = resource.SecurityGroup(self.security_group_id)
+            # deal with return
+            return sg.authorize_ingress(**sgargs)
+
         # TODO come back to this because it will be easier when we use our own custom security group & vpc (shouldn't be too hard)
+        # note: might need different rules for dask, etc.
 
         # for now, only one rule per instance (I think that will still work) (downside is it only accepts port ranges)
         # def edit_ingress_rule(self, ipProtocol='tcp', fromPort=22, toPort=22, cidrIpv4='0.0.0.0/0', description='Inbound SSH'):
@@ -88,8 +104,29 @@ class SSSCEC2:
         self.rootKey.format = keyFormat
         return self.rootKey
 
+    # TODO
+    def load_root_key():
+        pass
+
     def delete_root_key(self) -> None:
         self.client.delete_key_pair(KeyName=self.rootKey.name)
+
+    def launch_commands(self) -> str:
+        # These aren't right, just a draft
+        # The return gets passed to run_instances as 'UserData'
+        docker = {
+            'docker0': 'yum install docker',
+            'docker1': 'docker start',
+            'docker2': 'docker pull stochss/stochss-compute',
+            'docker3': 'docker run -it stochss/stochss-compute'
+        }
+        dask = {
+            'dask0': 'yum install distributed',
+            'dask1': 'scheduler',
+            'dask2': 'dask-worker ...'
+        }
+        print('\n'.join(list(docker.values()))+'\n')
+        print('\n'.join(list(dask.values()))+'\n')
 
     def launch_instances(self, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[str], str]:
         valid_types = {'stochss-compute', 'scheduler', 'worker'}
@@ -121,7 +158,7 @@ class SSSCEC2:
             else:
                 _instance.name = name
 
-            # TODO find out how to best refactor this
+            # TODO find out how to best refactor this (probably just the obvious)
             _instance.architechture = instance.architecture
             _instance.cores = instance.cpu_options['CoreCount']
             _instance.threads_per_core = instance.cpu_options['ThreadsPerCore']
