@@ -12,6 +12,7 @@ class SSSCEC2:
             self.name = name
             
     class Instance:
+        # find out best way to make boto3 objects 'private' (do not need to be accessible)
         def __init__(self, id) -> None:
             resource = boto3.resource('ec2')
             self._remote = resource.Instance(id)
@@ -34,6 +35,28 @@ class SSSCEC2:
         def terminate(self) -> None:
             self._remote.terminate()
             self._remote.wait_until_terminated()
+
+        # TODO come back to this because it will be easier when we use our own custom security group & vpc (shouldn't be too hard)
+
+        # for now, only one rule per instance (I think that will still work) (downside is it only accepts port ranges)
+        # def edit_ingress_rule(self, ipProtocol='tcp', fromPort=22, toPort=22, cidrIpv4='0.0.0.0/0', description='Inbound SSH'):
+        #     client = boto3.client('ec2')
+        #     resource = boto3.resource('ec2')
+        #     sg = resource.SecurityGroup(self.security_group_id)
+        #     sg_rule_id = client.describe_security_group_rules()['SecurityGroupRules'][0]['SecurityGroupRuleId']
+        #     new_rule = [{
+        #         'SecurityGroupRuleId': sg_rule_id,
+        #         'SecurityGroupRule': {
+        #             'IpProtocol': ipProtocol,
+        #             'FromPort': fromPort,
+        #             'ToPort': toPort,
+        #             'CidrIpv4': cidrIpv4,
+        #             'Description': description
+        #         }
+                
+        #     }]
+        #     return client.modify_security_group_rules(GroupId=self.security_group_id, SecurityGroupRules=new_rule)
+
 
     def __init__(self) -> None:
         self.client = boto3.client('ec2')
@@ -79,9 +102,9 @@ class SSSCEC2:
             'MinCount': minCount, 
             'MaxCount': maxCount,
             }
+
         response = self.client.run_instances(**kwargs)
-        self.returns['launch'] = response
-        self.security_group = response['Instances'][0]['SecurityGroups'][0]['GroupId']
+        self.returns['launch'] = response # just for debug or keep? (if keeping make a list)
         instance_ids = []
         for instance in response['Instances']:
             instance_ids.append(instance['InstanceId'])
@@ -90,14 +113,15 @@ class SSSCEC2:
             instance = self.resources.Instance(id)
             instance.wait_until_running()
             print(f'Instance "{id}" is now ready.')
-            # TODO find out how to best refactor this
-            _instance = self.Instance(id)
+            _instance = self.Instance(id) #consider changing name due to similarity with boto3 class name
             if name =='worker':
                 _instance.name = f'sssc-{name}-{i}'
             elif name == 'scheduler':
                 _instance.name = f'sssc-{name}'
             else:
                 _instance.name = name
+
+            # TODO find out how to best refactor this
             _instance.architechture = instance.architecture
             _instance.cores = instance.cpu_options['CoreCount']
             _instance.threads_per_core = instance.cpu_options['ThreadsPerCore']
@@ -113,7 +137,8 @@ class SSSCEC2:
             _instance.public_ip_address = instance.public_ip_address
             _instance.root_device_name = instance.root_device_name
             _instance.root_device_type = instance.root_device_type
-            # keep it simple, only allow one security group (not sure how it would work with multiple)
+            # keep it simple, only allow one security group (not sure how it would work with multiple, seems unnecessary for this application)
+            # however, in case the user already uses the default security group and vpc for other things, will need to create one specifically for sssc
             _instance.security_group_name = instance.security_groups[0]['GroupName']
             _instance.security_group_id = instance.security_groups[0]['GroupId']
             _instance.subnet_id = instance.subnet_id
@@ -128,7 +153,7 @@ class SSSCEC2:
         if len(instances) > 1:
             return instances
 
-    def terminate_instances(self) -> None:
+    def terminate_all(self) -> None:
         describe_instances = self.client.describe_instances()
         instance_ids = []
         for reservation in describe_instances['Reservations']:
@@ -137,7 +162,7 @@ class SSSCEC2:
         print(instance_ids)
         self.client.terminate_instances(InstanceIds=instance_ids)
 
-    def get_running_instances() -> List[str]:
+    def _get_running(self) -> List[str]:
         kwargs = {
             'Filters':[
                 {
@@ -156,9 +181,9 @@ class SSSCEC2:
                 instance_ids.append(instance['InstanceId'])
         return instance_ids
 
-    def get_public_DNS(self, instance_id) -> str:
-        self.resources = boto3.resource('ec2')
-        instance = self.resources.Instance(instance_id)
-        return instance.public_dns_name
+    # def get_public_DNS(self, instance_id) -> str:
+    #     self.resources = boto3.resource('ec2')
+    #     instance = self.resources.Instance(instance_id)
+    #     return instance.public_dns_name
 
         
