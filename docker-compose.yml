@@ -5,9 +5,10 @@ services:
     depends_on:
       - "scheduler"
       - "worker"
-    image: stochss/stochss-compute
+    # image: stochss/stochss-compute
+    image: sssc
     volumes:
-      - "./sd-cache/:/sd-cache/"
+      - "./sd-cache/:/usr/src/app/sd-cache/"
     ports:
       - "29681:29681"
     command: ["python", "app.py", "--host", "0.0.0.0", "--daskhost", "scheduler"]
@@ -25,7 +26,7 @@ services:
   worker:
     image: ghcr.io/dask/dask:latest
     environment:
-      - EXTRA_PIP_PACKAGES=gillespy2
+      - EXTRA_PIP_PACKAGES=stochss_compute
     volumes:
       - "./sd-cache/:/sd-cache/"
     command: ["dask-worker", "tcp://scheduler:8786"]
