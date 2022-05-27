@@ -35,25 +35,26 @@ python3 startup.py
 ```
 python3 startup.py --host localhost --port 29681 --daskconfig daskconfig.ini
 ```
-### 3. Stochss-compute is now running. For an example, see the jupyter notebook `StartHere.ipynb`:
+### 3. An example is contained in `./examples/StartHere.ipynb`:
 ```
 # New Terminal 
 # source venv/bin/activate # Uncomment if using a virtual environment
-jupyter notebook examples/StartHere.ipynb
+jupyter notebook --port 9999 examples/StartHere.ipynb
 ```
 - Jupyter should launch automatically. If not, copy and paste the following URL into your web browser:  
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
 
 ### Docker
-An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following line.
-
 
 ```
-docker run -p 29681:29681 mdip226/stochss-compute:latest
+docker run -it --rm --network host -p 29681:29681 stochss/stochss-compute:latest
 ```
 
-- The `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
 - Stochss-compute is now running on localhost:29681.
+- The cache defaults to the current working directory under `sd-cache`. To set a new path for the cache, you can pass one to `docker run`:
+```
+docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
+```
 
 <!-- #### Minikube
 - A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).
