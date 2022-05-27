@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - "main"
+      - "md-docker-compose-dask"
 jobs:
   build-push:
     runs-on: ubuntu-latest
