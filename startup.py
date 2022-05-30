@@ -21,36 +21,38 @@ def main():
     else:
         flask_port = int(args.port)
 
-    if args.daskconfig is not None:
-        dask_args = parse_config(args.daskconfig)
+    delegate_config = DaskDelegateConfig()
+    if args.dask_config is not None:
+        dask_args = parse_config(args.dask_config)
     else:
         dask_args = config_dialogue(args)
+        delegate_config.dask_kwargs = dask_args
 
-    dask_cluster = LocalCluster(**dask_args)
-    client = Client(dask_cluster)
-    print(f"\nDask scheduler at <{dask_cluster.scheduler_address}>")
-    print(f"{len(dask_cluster.workers)} Workers")
-    print(f"{dask_cluster._threads_per_worker()} threads per Worker")
+    # dask_cluster = LocalCluster(**dask_args)
+    # client = Client(dask_cluster)
+    # print(f"\nDask scheduler at <{dask_cluster.scheduler_address}>")
+    # print(f"{len(dask_cluster.workers)} Workers")
+    # print(f"{dask_cluster._threads_per_worker()} threads per Worker")
     
-    print(f"Dask dashboard at <{client.dashboard_link}>")
-    if args.dashboard: 
-        print(f"Opening in browser...")
-        open_new(client.dashboard_link)
-    print()
+    # print(f"Dask dashboard at <{client.dashboard_link}>")
+    # if args.dashboard: 
+    #     print(f"Opening in browser...")
+    #     open_new(client.dashboard_link)
+    # print()
 
-    dask_port = client.scheduler.addr.split(":")[2]
-    dask_host = client.scheduler.addr.split(":")[1]
-    delegate_config = DaskDelegateConfig()
-    delegate_config.dask_cluster_port = dask_port
-    delegate_config.dask_cluster_address = dask_host
-    try:
-        start_api(host=flask_host, port=flask_port, debug=False, delegate_config=delegate_config)
-        client.close()
-    except OSError as e:
-        if e.errno == 98:
-            print(f"Port {flask_port} in use. Exiting.")
-            client.close()
-            exit(1)
+    # dask_port = client.scheduler.addr.split(":")[2]
+    # dask_host = client.scheduler.addr.split(":")[1]
+    delegate_config.dask_cluster_port = args.dask_port
+    delegate_config.dask_cluster_address = args.dask_host
+
+    # try:
+    start_api(host=flask_host, port=flask_port, debug=False, delegate_config=delegate_config)
+    #     client.close()
+    # except OSError as e:
+    #     if e.errno == 98:
+    #         print(f"Port {flask_port} in use. Exiting.")
+    #         client.close()
+    #         exit(1)
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
@@ -62,10 +64,10 @@ def parse_args() -> Namespace:
                         help="The host to use for the dask scheduler. Defaults to localhost.")
     parser.add_argument("-P", "--dask_port", type=int, required=False,
                         help="The port to use for the dask scheduler. Defaults to 8786.")
-    parser.add_argument("-D", "--daskconfig", required=False,
+    parser.add_argument("-D", "--dask_config", required=False,
                         help="Path to a config file.")
-    parser.add_argument("--dashboard", action='store_true', required=False,
-                        help="Open dask dashboard on start.")
+    # parser.add_argument("--dashboard", action='store_true', required=False,
+    #                     help="Open dask dashboard on start.")
     return parser.parse_args()
 
 def parse_config(path_to_config: str) -> dict:
@@ -88,11 +90,11 @@ def parse_config(path_to_config: str) -> dict:
                     if val == "None":
                         continue
                     elif key in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
-                        dask_args[key] = config.get(section, key).strip('"\'')
-                    elif key in ["scheduler_port", "n_workers", "threads_per_worker", ""]:
-                        dask_args[key] = config.getint(section, key)
+                        dask_args[key] = config.get(section, val).strip('"\'')
+                    elif key in ["scheduler_port", "n_workers", "threads_per_worker"]:
+                        dask_args[key] = config.getint(section, val)
                     elif key in ["processes", "asynchronous"]:
-                        dask_args[key] = config.getboolean(section, key)
+                        dask_args[key] = config.getboolean(section, val)
                     elif key == "silence_logs":
                         if "WARN" in val:
                             val = logging.WARNING
@@ -112,7 +114,8 @@ def parse_config(path_to_config: str) -> dict:
                             dask_args[key] = Nanny
                         if "Worker" in val:
                             dask_args[key] = Worker
-                except (NoSectionError, NoOptionError):
+                except (NoSectionError, NoOptionError) as e:
+                    print(e)
                     print(
                         f"Could not read dask config file: Key: {key}. Value: {val}. Ignoring.")
                     continue
