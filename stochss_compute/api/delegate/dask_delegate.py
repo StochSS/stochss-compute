@@ -55,10 +55,13 @@ class DaskDelegate(Delegate):
 
             # else:
             if self.delegate_config.dask_kwargs is not None:
+                print("...........1")
                 dask_cluster = LocalCluster(**self.delegate_config.dask_kwargs)
                 self.client = Client(dask_cluster)
             else:
+                print("...........2")
                 self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
+                print(self.client)
             print(f"Automatically instantiated dask cluster:\n{self.client}")
 
         # Setup functions to be run on the schedule.
