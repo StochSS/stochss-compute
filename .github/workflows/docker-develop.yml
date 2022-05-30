@@ -2,8 +2,7 @@ name: Stochss-Compute Docker container build & push
 on:
   push:
     branches:
-      - "main"
-      - "md-docker-compose-dask" # remember to delete
+      - "develop"
 jobs:
   build-push:
     runs-on: ubuntu-latest
@@ -30,5 +29,5 @@ jobs:
         with:
           push: true
           file: api.dockerfile
-          tags: stochss/stochss-compute:latest
+          tags: stochss/stochss-compute:dev
       - run: echo "🍏 This job's status is ${{ job.status }}."
