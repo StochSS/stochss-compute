@@ -58,7 +58,7 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 def parse_config(path_to_config: str) -> Dict:
-    config = ConfigParser(allow_no_value=True, empty_lines_in_values=False)
+    config = ConfigParser(allow_no_value=False, empty_lines_in_values=False)
     config.read(path_to_config)
     dask_args = dict()
     if len(config.sections()) == 0:
