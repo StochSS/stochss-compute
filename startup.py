@@ -26,7 +26,12 @@ def main():
         dask_args = parse_config(args.dask_config)
     else:
         dask_args = config_dialogue(args)
-        delegate_config.dask_kwargs = dask_args
+    delegate_config.dask_kwargs = dask_args
+
+    if args.dask_host is not None:
+        delegate_config.dask_kwargs = args.dask_host
+    if args.dask_port is not None:
+        delegate_config.dask_kwargs = args.dask_port
 
     # dask_cluster = LocalCluster(**dask_args)
     # client = Client(dask_cluster)
@@ -42,8 +47,6 @@ def main():
 
     # dask_port = client.scheduler.addr.split(":")[2]
     # dask_host = client.scheduler.addr.split(":")[1]
-    delegate_config.dask_cluster_port = args.dask_port
-    delegate_config.dask_cluster_address = args.dask_host
 
     # try:
     start_api(host=flask_host, port=flask_port, debug=False, delegate_config=delegate_config)
@@ -87,14 +90,14 @@ def parse_config(path_to_config: str) -> dict:
                 try:
                     key = item[0]
                     val = item[1]
-                    if val == "None":
+                    if val == "":
                         continue
                     elif key in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
-                        dask_args[key] = config.get(section, val).strip('"\'')
+                        dask_args[key] = config.get(section, key).strip('"\'')
                     elif key in ["scheduler_port", "n_workers", "threads_per_worker"]:
-                        dask_args[key] = config.getint(section, val)
+                        dask_args[key] = config.getint(section, key)
                     elif key in ["processes", "asynchronous"]:
-                        dask_args[key] = config.getboolean(section, val)
+                        dask_args[key] = config.getboolean(section, key)
                     elif key == "silence_logs":
                         if "WARN" in val:
                             val = logging.WARNING
