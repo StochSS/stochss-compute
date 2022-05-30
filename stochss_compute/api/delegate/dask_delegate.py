@@ -9,7 +9,6 @@ from distributed import Client
 from distributed import get_client
 from distributed.scheduler import TaskState
 
-# from dask_kubernetes import KubeCluster
 
 from .delegate import Delegate
 from .delegate import JobState
@@ -27,13 +26,8 @@ class DaskDelegateConfig(DelegateConfig):
 
     dask_kwargs = None
 
-    # kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
-    # kube_cluster = None
-
     cache_provider: type[CacheProvider] = SimpleDiskCache(SimpleDiskCacheConfig())
 
-    # if kube_dask_worker_spec is not None:
-    #     kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
 
 class DaskDelegate(Delegate):
     type: str = "dask"
@@ -49,20 +43,14 @@ class DaskDelegate(Delegate):
             self.client = get_client()
 
         except ValueError as _:
-            # if self.delegate_config.kube_cluster is not None:
-            #     self.client = Client(self.delegate_config.kube_cluster)
-            #     print(self.delegate_config.kube_cluster)
 
-            # else:
             if self.delegate_config.dask_kwargs is not None:
-                print("...........1")
                 dask_cluster = LocalCluster(**self.delegate_config.dask_kwargs)
                 self.client = Client(dask_cluster)
             else:
-                print("...........2")
                 self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
-                print(self.client)
-            print(f"Automatically instantiated dask cluster:\n{self.client}")
+            
+        print(f"Connected to Dask Scheduler:\n{self.client}")
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
