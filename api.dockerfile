@@ -1,6 +1,6 @@
 FROM python:3.8.10-buster
 
-LABEL maintainer="Ethan Green <egreen4@unca.edu>"
+LABEL authors="Ethan Green <egreen4@unca.edu>, Matthew Dippel <mdip226@gmail.com>"
 
 # set up virtual environment inside container
 ENV VIRTUAL_ENV=/opt/venv
@@ -22,6 +22,6 @@ ARG FLASK_ENV="production"
 ENV FLASK_ENV="${FLASK_ENV}" \
     PYTHONUNBUFFERED="true"
 
-EXPOSE 1234
+EXPOSE 29681
 
-CMD [ "python", "app.py" ]
+CMD [ "python", "startup.py", "--host", "0.0.0.0"]

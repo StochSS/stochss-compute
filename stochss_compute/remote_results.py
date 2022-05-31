@@ -159,6 +159,5 @@ class RemoteResults(Results):
         """
         Cancels the remote job.
         """
-# TODO
         stop_response = self.server.post(Endpoint.JOB, f"/{self.result_id}/stop")
 

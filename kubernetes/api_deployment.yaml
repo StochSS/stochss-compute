@@ -24,11 +24,11 @@ spec:
             cpu: "1"
         env:
           - name: WORKER_SPEC_PATH
-            value: "dask_worker_spec.yaml"
+            value: "kubernetes/dask_worker_spec.yaml"
           # - name: REDIS_ADDRESS
           #   value: "redis-service.default"
         ports:
-        - containerPort: 1234
+        - containerPort: 29681
 ---
 apiVersion: v1
 kind: Service
@@ -40,8 +40,8 @@ spec:
   type: LoadBalancer
   ports:
   - protocol: 'TCP'
-    port: 1234
-    targetPort: 1234
+    port: 29681
+    targetPort: 29681
 # ---
 # apiVersion: v1
 # kind: ServiceAccount

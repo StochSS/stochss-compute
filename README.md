@@ -1,59 +1,64 @@
 # StochSS-Compute
 
-With StochSS-Compute, you can run GillesPy2 simulations on your own server. Results are cached and anonymized, so you
-can easily save and recall previous simulations. 
+StochSS-Compute is a compute delegation server for the [StochSS](https://github.com/StochSS) family of stochastic simulation software. StochSS-Compute allows for one to run StochSS or GillesPy2 simulations on distributed cloud compute resources.
+
+<table><tr><td><b>
+<img width="20%" align="right" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/stochss-logo.png">
+<a href="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform">PLEASE REGISTER AS A USER</a>, so that we can prove StochSS-Compute has many users when we seek funding to support development. StochSS-Compute is part of the <a href="http://www.stochss.org">StochSS</a> project.
+</td></tr></table>
 
 ## Example Quick Start
-First, clone the repository.
+
+### 1. Installing dependencies & `stochss_compute`
+#### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
-```
-- If you are unfamiliar with python virtual environments, read this [documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) first.
-- Note that you will have to activate your venv every time you run stochSS-compute, as well as for your dask scheduler and each of its workers.
-- The following will set up the `dask-scheduler`, one `dask-worker`, the backend api server, and launch an example `jupyter` notebook.
-- Each of these must be run in separate terminal windows in the main `stochss-compute` directory.
-- Just copy and paste!
-```
-# Terminal 1
-python3 -m venv venv
+python3 -m venv venv 
 source venv/bin/activate
 pip3 install -r requirements.txt
-dask-scheduler
 ```
+### OR
+#### Global install of dependencies:
 ```
-# Terminal 2
-source venv/bin/activate
-dask-worker localhost:8786
+git clone https://github.com/StochSS/stochss-compute.git
+cd stochss-compute
+pip3 install -r requirements.txt
 ```
+### PyPI:
 ```
-# Terminal 3
-source venv/bin/activate
-python3 app.py
+pip3 install stochss_compute
 ```
-- Stochss-compute is now running on localhost:1234.
-<!-- - Dask compute cluster configuration parameters can be passed to `app.py`, see the [documentation](https://github.com/StochSS/stochss-compute/blob/dev/stochss_compute/api/delegate/dask_delegate.py#L20). -->
 
+### 2. Start up the server and compute backend
+#### Using the startup script dialogue:
 ```
-# Terminal 4
-source venv/bin/activate
-jupyter notebook --port=9999
+python3 startup.py
 ```
-- This notebook will show you how to use StochSS-compute.
-- Jupyter should then launch automatically, where you can then navigate to the examples directory and open up StartHere.ipynb.
-- If not, copy and paste the following URL into your web browser:  
+<!-- #### Configure your compute setup by editing the file `daskconfig.ini` or passing arguments to `startup.py`:
+```
+python3 startup.py --daskconfig daskconfig.ini
+``` -->
+### 3. An example is contained in `./examples/StartHere.ipynb`:
+```
+# source venv/bin/activate # Uncomment if using a virtual environment
+jupyter notebook --port 9999 examples/StartHere.ipynb
+```
+- Jupyter should launch automatically. If not, copy and paste the following URL into your web browser:  
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
-#### Docker
-
-An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following line.
-
+***
+## Docker
+- As an alternative to the above steps, you can use Docker.
 
 ```
-docker run -p 1234:1234 mdip226/stochss-compute:latest
+docker run -it --rm --network host stochss/stochss-compute:latest
 ```
 
-- The `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
-- Stochss-compute is now running on localhost:1234.
+- Stochss-compute is now running on localhost:29681.
+- The cache defaults to the current working directory under `sd-cache`. To set a new path for the cache, you can pass one to `docker run`:
+```
+docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
+```
 
 <!-- #### Minikube
 - A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).
@@ -135,3 +140,38 @@ results.wait()
 # Plot the results.
 results.plot()
 ``` -->
+
+License
+-------
+
+StochSS-Compute is licensed under the GNU General Public License version 3.  Please see the file [LICENSE](https://github.com/StochSS/stochss-compute/blob/main/LICENSE.md) for more information.
+
+Acknowledgments
+---------------
+
+This work has been funded by National Institutes of Health (NIH) NIBIB Award No. 2R01EB014877-04A1.
+
+StochSS-Compute uses numerous open-source packages, without which it would have been effectively impossible to develop this software with the resources we had.  We want to acknowledge this debt.  In alphabetical order, the packages are:
+
+* [Jupyter](https://jupyter.org) &ndash; web application for creating documents containing code, visualizations and narrative text
+* [Dask.Distributed](https://distributed.dask.org) &ndash; a library for distributed computation
+
+Finally, we are grateful for institutional resources made available by the [University of North Carolina at Asheville](https://www.unca.edu), the [University of California at Santa Barbara](https://ucsb.edu), and [Uppsala University](https://www.it.uu.se).
+
+<div align="center">
+  <a href="https://www.nigms.nih.gov">
+    <img width="100" height="100" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/US-NIH-NIGMS-Logo.png">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://www.unca.edu">
+    <img height="102" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/UNCASEAL_blue.png">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://www.ucsb.edu">
+    <img height="108" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/ucsb-seal-navy.jpg">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://www.it.uu.se">
+    <img height="115" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/uppsala-universitet-logo-svg-vector.png">
+  </a>
+</div>

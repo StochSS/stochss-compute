@@ -35,8 +35,8 @@ class Model(gillespy2.core.Model):
 
 class ModelRunRequest(BaseModel):
     model: Model
-    args: List[str] = []
-    kwargs: Dict[str, str] = {}
+    args: List = []
+    kwargs: Dict = {}
 
     class Config:
         json_encoders = {gillespy2.core.Model: lambda model: Model.__serialize__(model)}

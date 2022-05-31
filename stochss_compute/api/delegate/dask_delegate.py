@@ -4,12 +4,11 @@ import os
 
 from typing import Callable
 
-from distributed import Future
+from distributed import Future, LocalCluster
 from distributed import Client
 from distributed import get_client
 from distributed.scheduler import TaskState
 
-from dask_kubernetes import KubeCluster
 
 from .delegate import Delegate
 from .delegate import JobState
@@ -21,32 +20,14 @@ from stochss_compute.api.cache import SimpleDiskCache
 from stochss_compute.api.cache import SimpleDiskCacheConfig
 
 class DaskDelegateConfig(DelegateConfig):
-    redis_port = 6379
-    redis_address = os.environ.get("REDIS_ADDRESS")
-    redis_db = 0
-
-    redis_cache_ttl = 60 * 60
-    redis_vault_dir = "vault"
 
     dask_cluster_port = 8786
     dask_cluster_address = "localhost"
-    dask_use_remote_cluster = False
 
-    dask_worker_count = 1
-    dask_worker_threads = 2
-    dask_worker_memory_limit = "4GB"
-
-    dask_dashboard_port = 8788
-    dask_dashboard_address = "localhost"
-    dask_dashboard_enabled = False
-
-    kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
-    kube_cluster = None
+    dask_kwargs = None
 
     cache_provider: type[CacheProvider] = SimpleDiskCache(SimpleDiskCacheConfig())
 
-    if kube_dask_worker_spec is not None:
-        kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
 
 class DaskDelegate(Delegate):
     type: str = "dask"
@@ -62,12 +43,14 @@ class DaskDelegate(Delegate):
             self.client = get_client()
 
         except ValueError as _:
-            if self.delegate_config.kube_cluster is not None:
-                self.client = Client(self.delegate_config.kube_cluster)
-                print(self.delegate_config.kube_cluster)
 
+            if self.delegate_config.dask_kwargs is not None:
+                dask_cluster = LocalCluster(**self.delegate_config.dask_kwargs)
+                self.client = Client(dask_cluster)
             else:
                 self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
+            
+        print(f"Connected to Dask Scheduler:\n{self.client}")
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
@@ -165,8 +148,8 @@ class DaskDelegate(Delegate):
 
         status_mapping = {
             "released": (JobState.STOPPED, "The job is known but not actively computing or in memory."),
-            "waiting": (JobState.WAITING, "The job is waiting for dependencies to arrive in memory."),
-            "no-worker": (JobState.WAITING, "The job is waiting for a worker to become available."),
+            "waiting": (JobState.WAITING, "The job is ready to be computed but is waiting for dependencies to arrive in worker memory."),
+            "no-worker": (JobState.WAITING, "The job is ready to be computed but is waiting for a worker to become available."),
             "processing": (JobState.RUNNING, "The job is running."),
             "memory": (JobState.DONE, "The job is done and is being held in memory."),
             "erred": (JobState.FAILED, "The job has failed."),
