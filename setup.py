@@ -38,7 +38,7 @@ setup(name=             version["__title__"],
       licence=          version["__license__"],
       packages=         find_packages("."),
       long_description= readme,
-      long_description_content_type= "text/markdown"
+      long_description_content_type= "text/markdown",
       classifiers=      [
           "Development Status :: 5 - Production/Stable",
           "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
