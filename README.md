@@ -46,7 +46,7 @@ jupyter notebook --port 9999 examples/StartHere.ipynb
 ## Docker
 
 ```
-docker run -it --rm --network host -p 29681:29681 stochss/stochss-compute:latest
+docker run -it --rm --network host stochss/stochss-compute:latest
 ```
 
 - Stochss-compute is now running on localhost:29681.
