@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - "main"
-      - "md-docker-compose-dask" # remember to delete
 jobs:
   build-push:
     runs-on: ubuntu-latest
