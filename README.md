@@ -56,6 +56,15 @@ docker run -it --rm --network host stochss/stochss-compute:latest
 docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
 ```
 
+```
+git clone https://github.com/StochSS/stochss-compute.git
+cd stochss-compute
+python3 -m venv venv 
+source venv/bin/activate
+pip3 install -r requirements.txt
+jupyter notebook examples
+```
+
 <!-- #### Minikube
 - A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).
 - Requires `minikube`, `docker`, and `kubectl` to be installed. Then:

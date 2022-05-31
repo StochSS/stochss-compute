@@ -48,7 +48,8 @@ class DaskDelegate(Delegate):
                 dask_cluster = LocalCluster(**self.delegate_config.dask_kwargs)
                 self.client = Client(dask_cluster)
             else:
-                self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
+                dask_cluster = LocalCluster(host=f"{self.delegate_config.dask_cluster_address}", port= self.delegate_config.dask_cluster_port)
+                self.client = Client(dask_cluster)
             
         print(f"Connected to Dask Scheduler:\n{self.client}")
 
