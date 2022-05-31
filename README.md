@@ -31,10 +31,10 @@ pip3 install stochss_compute
 ```
 python3 startup.py
 ```
-#### Configure your compute setup by editing the file `daskconfig.ini` or passing arguments to `startup.py`:
+<!-- #### Configure your compute setup by editing the file `daskconfig.ini` or passing arguments to `startup.py`:
 ```
 python3 startup.py --daskconfig daskconfig.ini
-```
+``` -->
 ### 3. An example is contained in `./examples/StartHere.ipynb`:
 ```
 # source venv/bin/activate # Uncomment if using a virtual environment
