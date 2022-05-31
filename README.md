@@ -1,6 +1,6 @@
 # StochSS-Compute
 
-StochSS-Compute is a compute delegation server for the [StochSS] family of stochastic simulation software.
+StochSS-Compute is a compute delegation server for the [StochSS](https://github.com/StochSS) family of stochastic simulation software.
 
 <table><tr><td><b>
 <img width="20%" align="right" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/stochss-logo.png">
