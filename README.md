@@ -139,3 +139,38 @@ results.wait()
 # Plot the results.
 results.plot()
 ``` -->
+
+License
+-------
+
+StochSS-Compute is licensed under the GNU General Public License version 3.  Please see the file [LICENSE](https://github.com/StochSS/stochss-compute/blob/main/LICENSE.md) for more information.
+
+Acknowledgments
+---------------
+
+This work has been funded by National Institutes of Health (NIH) NIBIB Award No. 2R01EB014877-04A1.
+
+StochSS-Compute uses numerous open-source packages, without which it would have been effectively impossible to develop this software with the resources we had.  We want to acknowledge this debt.  In alphabetical order, the packages are:
+
+* [Jupyter](https://jupyter.org) &ndash; web application for creating documents containing code, visualizations and narrative text
+* [Dask.Distributed](https://distributed.dask.org) &ndash; a library for distributed computation
+
+Finally, we are grateful for institutional resources made available by the [University of North Carolina at Asheville](https://www.unca.edu), the [University of California at Santa Barbara](https://ucsb.edu), and [Uppsala University](https://www.it.uu.se).
+
+<div align="center">
+  <a href="https://www.nigms.nih.gov">
+    <img width="100" height="100" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/US-NIH-NIGMS-Logo.png">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://www.unca.edu">
+    <img height="102" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/UNCASEAL_blue.png">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://www.ucsb.edu">
+    <img height="108" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/ucsb-seal-navy.jpg">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://www.it.uu.se">
+    <img height="115" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/uppsala-universitet-logo-svg-vector.png">
+  </a>
+</div>
