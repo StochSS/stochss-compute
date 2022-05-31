@@ -9,12 +9,8 @@ StochSS-Compute is a compute delegation server for the [StochSS](https://github.
 
 ## Example Quick Start
 
-### 1. Install stochss_compute:
-```
-pip3 install stochss_compute
-```
-#### OR  
-#### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment))
+### 1. Installing dependencies & `stochss_compute`
+#### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
@@ -22,42 +18,47 @@ python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
-#### OR  
-#### Global install of dependencies
+### OR
+#### Global install of dependencies:
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
 pip3 install -r requirements.txt
 ```
+### PyPI:
+```
+pip3 install stochss_compute
+```
 
-### 2. Start up the server and compute backend:
-#### Using the startup script
+### 2. Start up the server and compute backend
+#### Using the startup script dialogue:
 ```
 python3 startup.py
 ```
-#### Configure your compute setup by editing the file `DASKCONFIG` and passing arguments to `startup.py`
+<!-- #### Configure your compute setup by editing the file `daskconfig.ini` or passing arguments to `startup.py`:
 ```
-python3 startup.py --host localhost --port 29681 --daskconfig daskconfig.ini
+python3 startup.py --daskconfig daskconfig.ini
+``` -->
+### 3. An example is contained in `./examples/StartHere.ipynb`:
 ```
-### 3. Stochss-compute is now running. For an example, see the jupyter notebook `StartHere.ipynb`:
-```
-# New Terminal 
 # source venv/bin/activate # Uncomment if using a virtual environment
-jupyter notebook examples/StartHere.ipynb
+jupyter notebook --port 9999 examples/StartHere.ipynb
 ```
 - Jupyter should launch automatically. If not, copy and paste the following URL into your web browser:  
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
-
-### Docker
-An alternative installation to the above method is to use docker. We host an image on docker hub you can download and use simply by running the following line.
-
+***
+## Docker
+- As an alternative to the above steps, you can use Docker.
 
 ```
-docker run -p 29681:29681 mdip226/stochss-compute:latest
+docker run -it --rm --network host stochss/stochss-compute:latest
 ```
 
-- The `-p` flag publishes the container's exposed port on the host computer, as in `-p <hostPort>:<containerPort>`
 - Stochss-compute is now running on localhost:29681.
+- The cache defaults to the current working directory under `sd-cache`. To set a new path for the cache, you can pass one to `docker run`:
+```
+docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
+```
 
 <!-- #### Minikube
 - A third usage of StochSS compute it to use it with "Minikube", which is part of [Kubernetes](https://kubernetes.io/).

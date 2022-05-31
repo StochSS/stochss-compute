@@ -24,4 +24,4 @@ ENV FLASK_ENV="${FLASK_ENV}" \
 
 EXPOSE 29681
 
-CMD [ "python", "app.py", "--host", "0.0.0.0" ]
+CMD [ "python", "startup.py", "--host", "0.0.0.0"]
