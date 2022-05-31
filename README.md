@@ -42,8 +42,9 @@ jupyter notebook --port 9999 examples/StartHere.ipynb
 ```
 - Jupyter should launch automatically. If not, copy and paste the following URL into your web browser:  
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
-
+***
 ## Docker
+- As an alternative to the above steps, you can use Docker.
 
 ```
 docker run -it --rm --network host stochss/stochss-compute:latest
