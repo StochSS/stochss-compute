@@ -18,6 +18,9 @@ from setuptools import setup, find_packages
 
 SETUP_DIR = path.dirname(path.abspath(__file__))
 
+with open(path.join(SETUP_DIR, "README.md"), "r", errors="ignore") as f:
+    readme = f.read()
+
 version = {}
 with open(path.join(SETUP_DIR, "stochss_compute/__version__.py")) as f:
     text = f.read().rstrip().splitlines()
@@ -34,6 +37,8 @@ setup(name=             version["__title__"],
       url=              version["__url__"],
       licence=          version["__license__"],
       packages=         find_packages("."),
+      long_description= readme,
+      long_description_content_type= "text/markdown"
       classifiers=      [
           "Development Status :: 5 - Production/Stable",
           "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

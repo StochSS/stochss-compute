@@ -1,7 +1,11 @@
 # StochSS-Compute
 
-With StochSS-Compute, you can run GillesPy2 simulations on your own server. Results are cached and anonymized, so you
-can easily save and recall previous simulations. 
+StochSS-Compute is a compute delegation server for the [StochSS] family of stochastic simulation software.
+
+<table><tr><td><b>
+<img width="20%" align="right" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/stochss-logo.png">
+<a href="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform">PLEASE REGISTER AS A USER</a>, so that we can prove StochSS-Compute has many users when we seek funding to support development. StochSS-Compute is part of the <a href="http://www.stochss.org">StochSS</a> project.
+</td></tr></table>
 
 ## Example Quick Start
 
