@@ -38,12 +38,11 @@ class EC2Cluster:
             self._remote.terminate()
             self._remote.wait_until_terminated()
 
-        def authorize_SSH(self, groupName='default', cidrIp='0.0.0.0/0'):
+        def authorize_SSH(self, groupName='sssc-sg', cidrIp='0.0.0.0/0'):
             sgargs = {
                 'CidrIp': cidrIp,
                 'FromPort': 22,
                 'ToPort': 22,
-                'GroupName': groupName,
                 'IpProtocol': 'tcp',
             }
             resource = boto3.resource('ec2')
@@ -180,6 +179,7 @@ class EC2Cluster:
         vpc = self.resources.Vpc(vpcId)
         sg_response = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.',GroupName='sssc-sg')
         return sg_response.group_id
+
 
     def launch_single_node_cluster(self):
         self.create_root_key()
