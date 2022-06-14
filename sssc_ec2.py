@@ -143,7 +143,7 @@ class EC2Cluster:
 
     def create_default_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
-        search_filter = [
+        vpc_search_filter = [
             {
                 'Name': 'tag:Name',
                 'Values': [
@@ -158,7 +158,7 @@ class EC2Cluster:
             }
         ]
 
-        vpc_response = self.client.describe_vpcs(Filters=search_filter)
+        vpc_response = self.client.describe_vpcs(Filters=vpc_search_filter)
         
         if len(vpc_response['Vpcs']) == 0:
             vpc_tag = [
@@ -181,21 +181,48 @@ class EC2Cluster:
         return vpc_id
 
     def create_default_subnet(self, vpcId):
-        vpc = self.resources.Vpc(vpcId)
         subnet_cidrBlock = '172.31.0.0/20'
-        subnet_tag = [
+        subnet_search_filter = [
             {
-                'ResourceType': 'subnet',
-                'Tags': [
-                    {
-                        'Key': 'Name',
-                        'Value': 'sssc-subnet-0'
-                    }
+                'Name': 'vpc-id',
+                'Values': [
+                    vpcId
+                ]
+            },
+            {
+                'Name': 'tag:Name',
+                'Values': [
+                    'sssc-subnet-0'
+                ]
+            },
+            {
+                'Name': 'cidr',
+                'Values': [
+                    subnet_cidrBlock
                 ]
             }
         ]
-        subnet_response = vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
-        return subnet_response.subnet_id
+        subnet_response = self.client.describe_subnets(Filters=subnet_search_filter)
+        if len(subnet_response['Subnets']) == 0:
+            vpc = self.resources.Vpc(vpcId)
+            subnet_tag = [
+                {
+                    'ResourceType': 'subnet',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': 'sssc-subnet-0'
+                        }
+                    ]
+                }
+            ]
+            subnet_response = vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
+            subnet_id = subnet_response.subnet_id
+        else:
+            p.pprint(subnet_response)
+            subnet_id = subnet_response['Subnets'][0]['SubnetId']
+            
+        return subnet_id
 
     def create_default_security_group(self, vpcId):
         vpc = self.resources.Vpc(vpcId)
