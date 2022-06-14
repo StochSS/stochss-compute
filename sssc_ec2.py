@@ -259,7 +259,7 @@ class EC2Cluster:
         if len(instances) > 1:
             return instances
 
-    def terminate_all(self) -> None:
+    def terminate_all_instances(self) -> None:
         describe_instances = self.client.describe_instances()
         instance_ids = []
         for reservation in describe_instances['Reservations']:
@@ -267,6 +267,10 @@ class EC2Cluster:
                 instance_ids.append(instance['InstanceId'])
         print(instance_ids)
         self.client.terminate_instances(InstanceIds=instance_ids)
+
+    def delete_vpc(self):
+        # will need to wait on instance termination
+        pass
 
     def _get_running(self) -> List[str]:
         kwargs = {
