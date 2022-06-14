@@ -83,24 +83,29 @@ class EC2Cluster:
         
 
     def create_root_key(self, savePath='./', keyType='ed25519', keyFormat='pem') -> SSHKey:
+
         valid_formats = {'pem', 'ppk'}
         if keyFormat not in valid_formats:
             raise ValueError(f'keyFormat must be one of {valid_formats}.')
+
         valid_types = {'ed25519', 'rsa'}
         if keyType not in valid_types:
             raise ValueError(f'keyType must be one of {valid_types}.')
 
         key_path = f'{savePath}{self.rootKey.name}.{keyFormat}'
+
         try:
             key = open(key_path, 'x')
         except FileExistsError as e:
-            print(f'KeyPair detected in working directory. Using "{key_path}".')
+            print(f'StochSS-Compute root key detected in working directory. Using "{key_path}".')
             key_pair_response = self.client.describe_key_pairs(KeyNames=[self.rootKey.name])
             self.rootKey.id = key_pair_response['KeyPairs'][0]['KeyPairId']
             self.rootKey.fingerprint = key_pair_response['KeyPairs'][0]['KeyFingerprint']
             self.rootKey.path = key_path
             self.rootKey.type = key_pair_response['KeyPairs'][0]['KeyType']
             self.rootKey.format = keyFormat
+            return self.rootKey
+
         response = self.client.create_key_pair(KeyName=self.rootKey.name, KeyType=keyType, KeyFormat=keyFormat)
         key.write(response['KeyMaterial'])
         key.close()
