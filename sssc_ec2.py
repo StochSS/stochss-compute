@@ -143,7 +143,10 @@ class EC2Cluster:
         ]
         vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
         vpc_id = vpc_response['Vpc']['VpcId']
-        vpc = self.resources.Vpc(vpc_id)
+        return vpc_id
+
+    def create_default_subnet(self, vpcId):
+        vpc = self.resources.Vpc(vpcId)
         subnet_cidrBlock = '172.31.0.0/20'
         subnet_tag = [
             {
@@ -158,21 +161,27 @@ class EC2Cluster:
         ]
         subnet_response = vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
         return subnet_response.subnet_id
-    def create_default_security_group(self, subnetId):
-        vpc = self.resources.Vpc(subnetId)
+
+    def create_default_security_group(self, vpcId):
+        vpc = self.resources.Vpc(vpcId)
         sg_response = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.',GroupName='sssc-sg')
         return sg_response.group_id
 
     def launch_single_node_cluster(self):
         self.create_root_key()
-        subnetId = self.create_default_vpc()
-        self.create_default_security_group(subnetId)
-        head = self.launch_instances(subnetId=subnetId)
+        vpcId = self.create_default_vpc()
+        print(f'vpcId: {vpcId}')
+        subnetId = self.create_default_subnet(vpcId)
+        print(f'subnetId: {subnetId}')
+        sgId = self.create_default_security_group(vpcId)
+        print(f'sgId: {sgId}')
+        head = self.launch_instances(securityGroupId='sssc-sg')
+        print(f'head: {head.__dict__}')
         head.authorize_SSH()
 
         return
 
-    def launch_instances(self, *, subnetId, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
+    def launch_instances(self, *, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
         valid_types = {'stochss-compute', 'scheduler', 'worker'}
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
@@ -182,7 +191,7 @@ class EC2Cluster:
             'KeyName': self.rootKey.name,
             'MinCount': minCount, 
             'MaxCount': maxCount,
-            'SubnetId': subnetId,
+            # 'SubnetId': subnetId,
             'SecurityGroupIds': [securityGroupId]
             }
 
