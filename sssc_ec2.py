@@ -142,11 +142,18 @@ class EC2Cluster:
         print('\n'.join(list(dask.values()))+'\n')
 
     def create_default_vpc(self):
+        vpc_cidrBlock = '172.31.0.0/16'
         search_filter = [
             {
                 'Name': 'tag:Name',
                 'Values': [
                     'sssc-vpc'
+                ]
+            },
+            {
+                'Name': 'cidr',
+                'Values': [
+                    vpc_cidrBlock
                 ]
             }
         ]
@@ -154,7 +161,6 @@ class EC2Cluster:
         vpc_response = self.client.describe_vpcs(Filters=search_filter)
         
         if len(vpc_response['Vpcs']) == 0:
-            vpc_cidrBlock = '172.31.0.0/16'
             vpc_tag = [
                 {
                     'ResourceType': 'vpc',
@@ -169,6 +175,7 @@ class EC2Cluster:
             vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
             vpc_id = vpc_response['Vpc']['VpcId']
         else:
+            p.pprint(vpc_response)
             vpc_id = vpc_response['Vpcs'][0]['VpcId']
             
         return vpc_id
