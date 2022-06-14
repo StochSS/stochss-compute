@@ -5,7 +5,7 @@ import pprint
 
 p = pprint.PrettyPrinter(indent=1)
 
-class SSSCEC2:
+class EC2Cluster:
 
     class SSHKey:
         def __init__(self, name) -> None:
@@ -128,7 +128,7 @@ class SSSCEC2:
         print('\n'.join(list(docker.values()))+'\n')
         print('\n'.join(list(dask.values()))+'\n')
 
-    def create_vpc(self, ):
+    def create_default_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
         vpc_tag = [
             {
@@ -143,7 +143,7 @@ class SSSCEC2:
         ]
         vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
         vpc_id = vpc_response['Vpc']['VpcId']
-        vpc = self.resource.Vpc(vpc_id)
+        vpc = self.resources.Vpc(vpc_id)
         subnet_cidrBlock = '172.31.0.0/20'
         subnet_tag = [
             {
@@ -157,9 +157,22 @@ class SSSCEC2:
             }
         ]
         subnet_response = vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
-        
+        return subnet_response.subnet_id
+    def create_default_security_group(self, subnetId):
+        vpc = self.resources.Vpc(subnetId)
+        sg_response = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.',GroupName='sssc-sg')
+        return sg_response.group_id
 
-    def launch_instances(self, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[str], str]:
+    def launch_single_node_cluster(self):
+        self.create_root_key()
+        subnetId = self.create_default_vpc()
+        self.create_default_security_group(subnetId)
+        head = self.launch_instances(subnetId=subnetId)
+        head.authorize_SSH()
+
+        return
+
+    def launch_instances(self, *, subnetId, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
         valid_types = {'stochss-compute', 'scheduler', 'worker'}
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
@@ -169,6 +182,8 @@ class SSSCEC2:
             'KeyName': self.rootKey.name,
             'MinCount': minCount, 
             'MaxCount': maxCount,
+            'SubnetId': subnetId,
+            'SecurityGroupIds': [securityGroupId]
             }
 
         response = self.client.run_instances(**kwargs)
