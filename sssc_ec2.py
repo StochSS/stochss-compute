@@ -91,14 +91,23 @@ class EC2Cluster:
             raise ValueError(f'keyType must be one of {valid_types}.')
 
         key_path = f'{savePath}{self.rootKey.name}.{keyFormat}'
-        key = open(key_path, 'x')
+        try:
+            key = open(key_path, 'x')
+        except FileExistsError as e:
+            print(f'KeyPair detected in working directory. Using "{key_path}".')
+            key_pair_response = self.client.describe_key_pairs(KeyNames=[self.rootKey.name])
+            self.rootKey.id = key_pair_response['KeyPairs'][0]['KeyPairId']
+            self.rootKey.fingerprint = key_pair_response['KeyPairs'][0]['KeyFingerprint']
+            self.rootKey.path = key_path
+            self.rootKey.type = key_pair_response['KeyPairs'][0]['KeyType']
+            self.rootKey.format = keyFormat
         response = self.client.create_key_pair(KeyName=self.rootKey.name, KeyType=keyType, KeyFormat=keyFormat)
         key.write(response['KeyMaterial'])
         key.close()
         os.chmod(key_path, 0o400)
 
-        self.rootKey.fingerprint = response['KeyFingerprint']
         self.rootKey.id = response['KeyPairId']
+        self.rootKey.fingerprint = response['KeyFingerprint']
         self.rootKey.path = key_path
         self.rootKey.type = keyType
         self.rootKey.format = keyFormat
@@ -175,13 +184,13 @@ class EC2Cluster:
         print(f'subnetId: {subnetId}')
         sgId = self.create_default_security_group(vpcId)
         print(f'sgId: {sgId}')
-        head = self.launch_instances(securityGroupId='sssc-sg')
-        print(f'head: {head.__dict__}')
+        head = self.launch_instances(subnetId=subnetId, securityGroupId=sgId)
+        print(f'head: {head}')
         head.authorize_SSH()
 
         return
 
-    def launch_instances(self, *, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
+    def launch_instances(self, *, subnetId, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
         valid_types = {'stochss-compute', 'scheduler', 'worker'}
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
@@ -191,7 +200,7 @@ class EC2Cluster:
             'KeyName': self.rootKey.name,
             'MinCount': minCount, 
             'MaxCount': maxCount,
-            # 'SubnetId': subnetId,
+            'SubnetId': subnetId,
             'SecurityGroupIds': [securityGroupId]
             }
 
