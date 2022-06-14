@@ -142,20 +142,35 @@ class EC2Cluster:
         print('\n'.join(list(dask.values()))+'\n')
 
     def create_default_vpc(self):
-        vpc_cidrBlock = '172.31.0.0/16'
-        vpc_tag = [
+        search_filter = [
             {
-                'ResourceType': 'vpc',
-                'Tags': [
-                    {
-                        'Key': 'Name',
-                        'Value': 'sssc-vpc'
-                    }
+                'Name': 'tag:Name',
+                'Values': [
+                    'sssc-vpc'
                 ]
             }
         ]
-        vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
-        vpc_id = vpc_response['Vpc']['VpcId']
+
+        vpc_response = self.client.describe_vpcs(Filters=search_filter)
+        
+        if len(vpc_response['Vpcs']) == 0:
+            vpc_cidrBlock = '172.31.0.0/16'
+            vpc_tag = [
+                {
+                    'ResourceType': 'vpc',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': 'sssc-vpc'
+                        }
+                    ]
+                }
+            ]
+            vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
+            vpc_id = vpc_response['Vpc']['VpcId']
+        else:
+            vpc_id = vpc_response['Vpcs'][0]['VpcId']
+            
         return vpc_id
 
     def create_default_subnet(self, vpcId):
