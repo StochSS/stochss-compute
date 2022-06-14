@@ -128,6 +128,37 @@ class SSSCEC2:
         print('\n'.join(list(docker.values()))+'\n')
         print('\n'.join(list(dask.values()))+'\n')
 
+    def create_vpc(self, ):
+        vpc_cidrBlock = '172.31.0.0/16'
+        vpc_tag = [
+            {
+                'ResourceType': 'vpc',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': 'sssc-vpc'
+                    }
+                ]
+            }
+        ]
+        vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
+        vpc_id = vpc_response['Vpc']['VpcId']
+        vpc = self.resource.Vpc(vpc_id)
+        subnet_cidrBlock = '172.31.0.0/20'
+        subnet_tag = [
+            {
+                'ResourceType': 'subnet',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': 'sssc-subnet-0'
+                    }
+                ]
+            }
+        ]
+        subnet_response = vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
+        
+
     def launch_instances(self, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[str], str]:
         valid_types = {'stochss-compute', 'scheduler', 'worker'}
         if name not in valid_types:
