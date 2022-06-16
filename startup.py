@@ -24,10 +24,7 @@ def main():
 
     if args.daskconfig is not None:
         dask_args = parse_config(args.daskconfig)
-    else:
-        dask_args = config_dialogue(args)
-
-    delegate_config.dask_kwargs = dask_args
+        delegate_config.dask_kwargs = dask_args
 
     if args.daskhost is not None:
         delegate_config.dask_cluster_address = args.daskhost
@@ -107,42 +104,6 @@ def parse_config(path_to_config: str) -> Dict:
                         f"Could not read dask config file: Key: {key}. Value: {val}. Ignoring.")
                     continue
 
-def config_dialogue(args: Namespace) -> dict:
-    dask_args = dict()
-    while True:
-        inp = input("Use default dask settings? y/n\n")
-        if inp in ["y", "Y"]:
-            if args.daskhost is not None:
-                dask_args["host"] = args.daskhost
-            if args.daskport is not None:
-                dask_args["scheduler_port"] = args.daskhost
-            return dask_args
-        elif inp in ["n", "N"]:
-            if args.daskhost is None:
-                host = input(
-                    "Scheduler address? Defaults to localhost. Enter an address or press enter to use default address.\n")
-            else:
-                host = args.daskhost
-            if host != "":
-                dask_args["host"] = host
-            if args.daskport is None:
-                scheduler_port = input(
-                    "Scheduler port? Defaults to 8786. Enter a port or press enter to use default port.\n")
-            else:
-                scheduler_port = int(args.daskport)
-            if scheduler_port != "":
-                dask_args["scheduler_port"] = int(scheduler_port)
-            n_workers = input(
-                "Number of workers? Defaults to one worker per core. Enter an integer or press enter to use default setting.\n")
-            if n_workers != "":
-                dask_args["n_workers"] = int(n_workers)
-            threads_per_worker = input(
-                "Threads per worker? Defaults to 2. Enter an integer or press enter to use default setting.\n")
-            if threads_per_worker != "":
-                dask_args["threads_per_worker"] = int(threads_per_worker)
-            return dask_args
-        else:
-            continue
 
 if __name__ == "__main__":
     main()
