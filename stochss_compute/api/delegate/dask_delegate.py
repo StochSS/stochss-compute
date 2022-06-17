@@ -50,6 +50,10 @@ class DaskDelegate(Delegate):
 
         except ValueError as _:
             if self.delegate_config.cluster is None:
+                if self.delegate_config.host is None:
+                    self.delegate_config.host = 'localhost'
+                if self.delegate_config.scheduler_port is 0:
+                    self.delegate_config.scheduler_port = 8786
                 address = f'{self.delegate_config.host}:{self.delegate_config.scheduler_port}'
                 self.client = Client(address)
             else:
