@@ -1,37 +1,26 @@
-import logging
-from typing import Dict
-from distributed import Worker, Nanny
 
 from stochss_compute.api import start_api
 from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 from argparse import ArgumentParser, Namespace
-from configparser import ConfigParser, NoOptionError, NoSectionError
+from distributed import LocalCluster
 
 def main():
     args = parse_args()
-    
-    if args.host is None:
-        flask_host = "localhost"
-    else:
-        flask_host = args.host
 
-    if args.port is None:
-        flask_port = 29681
-    else:
-        flask_port = int(args.port)
+    dask_args = {}
+    for (arg, value) in vars(args).items():
+        if arg.startswith('dask_'):
+            dask_args[arg[5:]] = value
 
-    delegate_config = DaskDelegateConfig()
+    print(dask_args)
+    cluster = LocalCluster(**dask_args)
+    delegate_config = DaskDelegateConfig(**dask_args, cluster=cluster)
+    print(delegate_config.__dict__)
 
-    if args.daskconfig is not None:
-        dask_args = parse_config(args.daskconfig)
-        delegate_config.dask_kwargs = dask_args
-
-    if args.daskhost is not None:
-        delegate_config.dask_cluster_address = args.daskhost
-    if args.daskport is not None:
-        delegate_config.dask_cluster_port = args.daskport
-
-    start_api(host=flask_host, port=flask_port, debug=False, delegate_config=delegate_config)
+    try:
+        start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
+    except KeyboardInterrupt:
+        cluster.close()
 
 def parse_args() -> Namespace:
     usage = '''
@@ -41,68 +30,22 @@ def parse_args() -> Namespace:
         Server and cache that anonymizes StochSS simulation data. 
     '''
     parser = ArgumentParser(prog='StochSS-Compute', description=desc, add_help=True, usage=usage, conflict_handler='resolve')
-    
-    parser.add_argument("-h", "--host", required=False,
+    server = parser.add_argument_group('Server')
+    dask = parser.add_argument_group('Dask')
+    server.add_argument("-h", "--host", default='localhost', required=False,
                         help="The host to use for the flask server. Defaults to localhost.")
-    parser.add_argument("-p", "--port", type=int, required=False,
+    server.add_argument("-p", "--port", default=29681, type=int, required=False,
                         help="The port to use for the flask server. Defaults to 29681.")
-    parser.add_argument("-H", "--daskhost", type=int, required=False,
+    dask.add_argument("-H", "--dask-host", default=None, required=False,
                         help="The host to use for the dask scheduler. Defaults to localhost.")
-    parser.add_argument("-P", "--daskport", type=int, required=False,
-                        help="The port to use for the dask scheduler. Defaults to 8786.")
-    parser.add_argument("-D", "--daskconfig", required=False,
-                        help="Path to a config file.")
+    dask.add_argument("-P", "--dask-port", default=0, type=int, required=False,
+                        help="The port to use for the dask scheduler. Defaults to 8786, 0 to choose a random port.")
+    dask.add_argument('-W', '--dask-n-workers', default=None, type=int, required=False, help='Number of workers. Defaults to one per core.')
+    dask.add_argument('-T', '--dask-threads-per-worker', default=None, required=False, type=int, help='Number of workers. Defaults to one per core.')
+    dask.add_argument('--dask-processes', default=None, required=False, type=bool, help='Whether to use processes (True) or threads (False). Defaults to True, unless worker_class=Worker, in which case it defaults to False.')
+    dask.add_argument('-D', '--dask-dashboard-address', default=':8787', required=False, help='Address on which to listen for the Bokeh diagnostics server like ‘localhost:8787’ or ‘0.0.0.0:8787’. Defaults to ‘:8787’. Set to None to disable the dashboard. Use ‘:0’ for a random port.')
+    dask.add_argument('-N', '--dask-name', default=None, required=False, help='Address on which to listen for the Bokeh diagnostics server like ‘localhost:8787’ or ‘0.0.0.0:8787’. Defaults to ‘:8787’. Set to None to disable the dashboard. Use ‘:0’ for a random port.')
     return parser.parse_args()
-
-def parse_config(path_to_config: str) -> Dict:
-    config = ConfigParser(allow_no_value=False, empty_lines_in_values=False)
-    config.read(path_to_config)
-    dask_args = dict()
-    if len(config.sections()) == 0:
-        print("Could not read dask config file. Using default values.")
-    else:
-        for section in config.sections():
-            try:
-                items = config.items(section)
-            except NoSectionError:
-                print(f"Could not read dask config file: Key: {section}. Ignoring.")
-                continue
-            for item in items:
-                try:
-                    key = item[0]
-                    val = item[1]
-                    if val == "":
-                        continue
-                    elif key in ["host", "dashboard_address", "worker_dashboard_address", "protocol", "interface"]:
-                        dask_args[key] = config.get(section, key).strip('"\'')
-                    elif key in ["scheduler_port", "n_workers", "threads_per_worker"]:
-                        dask_args[key] = config.getint(section, key)
-                    elif key in ["processes", "asynchronous"]:
-                        dask_args[key] = config.getboolean(section, key)
-                    elif key == "silence_logs":
-                        if "WARN" in val:
-                            val = logging.WARNING
-                        if "CRITICAL" in val:
-                            val = logging.CRITICAL
-                        if "ERROR" in val:
-                            val = logging.ERROR
-                        if "INFO" in val:
-                            val = logging.INFO
-                        if "NOTSET" in val:
-                            val = logging.NOTSET
-                        if "DEBUG" in val:
-                            val = logging.DEBUG
-                        dask_args[key] = val
-                    elif key == "worker_class":
-                        if "Nanny" in val:
-                            dask_args[key] = Nanny
-                        if "Worker" in val:
-                            dask_args[key] = Worker
-                except (NoSectionError, NoOptionError) as e:
-                    print(e)
-                    print(
-                        f"Could not read dask config file: Key: {key}. Value: {val}. Ignoring.")
-                    continue
 
 
 if __name__ == "__main__":
