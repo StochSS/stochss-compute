@@ -31,14 +31,15 @@ pip3 install stochss_compute
 ```
 
 ### 2. Start up the server and compute backend
-#### Using the startup script dialogue:
+#### Using the startup script, which starts up a dask cluster, along with scheduler and workers:
 ```
 python3 startup.py
 ```
-<!-- #### Configure your compute setup by editing the file `daskconfig.ini` or passing arguments to `startup.py`:
+#### If you already have a dask cluster running on localhost:8786:
 ```
-python3 startup.py --daskconfig daskconfig.ini
-``` -->
+python3 app.py
+```
+
 ### 3. An example is contained in `./examples/StartHere.ipynb`:
 ```
 # source venv/bin/activate # Uncomment if using a virtual environment
