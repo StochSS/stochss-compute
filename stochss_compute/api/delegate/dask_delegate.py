@@ -55,7 +55,7 @@ class DaskDelegate(Delegate):
             else:
                 self.client = Client(self.delegate_config.cluster)
 
-        print(f"Connected to Dask Scheduler:\n{self.client}")
+            print(f"Connected to Dask Scheduler:\n{self.client}")
 
         # Setup functions to be run on the schedule.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
