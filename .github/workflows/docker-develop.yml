@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - "develop"
+      - 'mdip/fix/docker-startup'
 jobs:
   build-push:
     runs-on: ubuntu-latest
