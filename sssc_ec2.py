@@ -127,19 +127,27 @@ class EC2Cluster:
     def launch_commands(self) -> str:
         # These aren't right, just a draft
         # The return gets passed to run_instances as 'UserData'
-        docker = {
-            'docker0': 'yum install docker',
-            'docker1': 'docker start',
-            'docker2': 'docker pull stochss/stochss-compute',
-            'docker3': 'docker run -it stochss/stochss-compute'
-        }
-        dask = {
-            'dask0': 'yum install distributed',
-            'dask1': 'scheduler',
-            'dask2': 'dask-worker ...'
-        }
-        print('\n'.join(list(docker.values()))+'\n')
-        print('\n'.join(list(dask.values()))+'\n')
+        # docker = {
+        #     'docker0': '#!/bin/bash',
+        #     'docker1': 'sudo yum install docker',
+        #     'docker2': 'sudo amazon-linux-extras install docker',
+        #     'docker3': 'sudo service docker start',
+        #     'docker4': 'sudo usermod -a -G docker ec2-user',
+        #     'docker5': 'docker run -it stochss/stochss-compute'
+        # }
+        docker = '''!/bin/bash
+sudo yum install docker
+sudo amazon-linux-extras install docker
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+docker run -it stochss/stochss-compute'''
+        # dask = {
+        #     'dask0': 'yum install distributed',
+        #     'dask1': 'scheduler',
+        #     'dask2': 'dask-worker ...'
+        # }
+        return '\n'.join(list(docker.values()))+'\n'
+        # print('\n'.join(list(dask.values()))+'\n')
 
     def create_default_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -174,6 +182,8 @@ class EC2Cluster:
             ]
             vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
             vpc_id = vpc_response['Vpc']['VpcId']
+            self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport = { 'Value': True } )
+            self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames = { 'Value': True } )
         else:
             p.pprint(vpc_response)
             vpc_id = vpc_response['Vpcs'][0]['VpcId']
@@ -225,6 +235,7 @@ class EC2Cluster:
         return subnet_id
 
     def create_default_security_group(self, vpcId):
+        # TODO
         vpc = self.resources.Vpc(vpcId)
         sg_response = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.',GroupName='sssc-sg')
         return sg_response.group_id
@@ -248,14 +259,30 @@ class EC2Cluster:
         valid_types = {'stochss-compute', 'scheduler', 'worker'}
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
+        docker = '''!/bin/bash
+sudo yum install docker
+sudo amazon-linux-extras install docker
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+docker run -it stochss/stochss-compute'''
         kwargs = {
             'ImageId': imageId, 
             'InstanceType': instanceType,
             'KeyName': self.rootKey.name,
             'MinCount': minCount, 
             'MaxCount': maxCount,
-            'SubnetId': subnetId,
-            'SecurityGroupIds': [securityGroupId]
+            # 'SubnetId': subnetId,
+            # 'SecurityGroupIds': [securityGroupId],
+            'UserData': docker,
+            'NetworkInterfaces':[
+                {
+                    'DeviceIndex': 0,
+                    'SubnetId' : subnetId,
+                    'Groups': [
+                        securityGroupId
+                    ],
+                    'AssociatePublicIpAddress': True            
+                }]
             }
 
         response = self.client.run_instances(**kwargs)
