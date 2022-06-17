@@ -8,6 +8,7 @@ from distributed import Future, LocalCluster
 from distributed import Client
 from distributed import get_client
 from distributed.scheduler import TaskState
+import logging
 
 
 from .delegate import Delegate
@@ -21,10 +22,15 @@ from stochss_compute.api.cache import SimpleDiskCacheConfig
 
 class DaskDelegateConfig(DelegateConfig):
 
-    dask_cluster_port = 8786
-    dask_cluster_address = "localhost"
+    host: str = None
+    scheduler_port: int = 0
+    n_workers: int = None
+    threads_per_worker: int = None
+    name: str = None
+    processes: bool = None
+    dashboard_address: str =":8787"
 
-    dask_kwargs = None
+    cluster: type[LocalCluster] = None
 
     cache_provider: type[CacheProvider] = SimpleDiskCache(SimpleDiskCacheConfig())
 
@@ -43,14 +49,12 @@ class DaskDelegate(Delegate):
             self.client = get_client()
 
         except ValueError as _:
-
-            if self.delegate_config.dask_kwargs is not None:
-                dask_cluster = LocalCluster(**self.delegate_config.dask_kwargs)
-                self.client = Client(dask_cluster)
+            if self.delegate_config.cluster is None:
+                address = f'{self.delegate_config.host}:{self.delegate_config.scheduler_port}'
+                self.client = Client(address)
             else:
-                dask_cluster = LocalCluster(host=f"{self.delegate_config.dask_cluster_address}", port= self.delegate_config.dask_cluster_port)
-                self.client = Client(dask_cluster)
-            
+                self.client = Client(self.delegate_config.cluster)
+
         print(f"Connected to Dask Scheduler:\n{self.client}")
 
         # Setup functions to be run on the schedule.
