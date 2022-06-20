@@ -124,31 +124,6 @@ class EC2Cluster:
     def delete_root_key(self) -> None:
         self.client.delete_key_pair(KeyName=self.rootKey.name)
 
-    def launch_commands(self) -> str:
-        # These aren't right, just a draft
-        # The return gets passed to run_instances as 'UserData'
-        # docker = {
-        #     'docker0': '#!/bin/bash',
-        #     'docker1': 'sudo yum install docker',
-        #     'docker2': 'sudo amazon-linux-extras install docker',
-        #     'docker3': 'sudo service docker start',
-        #     'docker4': 'sudo usermod -a -G docker ec2-user',
-        #     'docker5': 'docker run -it stochss/stochss-compute'
-        # }
-        docker = '''!/bin/bash
-sudo yum install docker
-sudo amazon-linux-extras install docker
-sudo service docker start
-sudo usermod -a -G docker ec2-user
-docker run -it stochss/stochss-compute'''
-        # dask = {
-        #     'dask0': 'yum install distributed',
-        #     'dask1': 'scheduler',
-        #     'dask2': 'dask-worker ...'
-        # }
-        return '\n'.join(list(docker.values()))+'\n'
-        # print('\n'.join(list(dask.values()))+'\n')
-
     def create_default_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
         vpc_search_filter = [
@@ -186,6 +161,11 @@ docker run -it stochss/stochss-compute'''
             self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames = { 'Value': True } )
             vpc = self.resources.Vpc(vpc_id)
             igw_response = self.client.create_internet_gateway()
+            igw_id = igw_response['InternetGateway']['InternetGatewayId']
+            vpc.attach_internet_gateway(InternetGatewayId=igw_id)
+            rtb = vpc.create_route_table()
+            rtb_id = rtb.route_table_id
+            self.client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
 
         else:
             p.pprint(vpc_response)
@@ -263,7 +243,7 @@ docker run -it stochss/stochss-compute'''
         valid_types = {'stochss-compute', 'scheduler', 'worker'}
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
-        docker = '''!/bin/bash
+        launch_commands = '''!/bin/bash
 echo "SUP"'''
 #         docker = '''!/bin/bash
 # sudo yum install docker
@@ -277,9 +257,9 @@ echo "SUP"'''
             'KeyName': self.rootKey.name,
             'MinCount': minCount, 
             'MaxCount': maxCount,
-            # 'SubnetId': subnetId,
-            # 'SecurityGroupIds': [securityGroupId],
-            # 'UserData': docker,
+            'SubnetId': subnetId,
+            'SecurityGroupIds': [securityGroupId],
+            'UserData': launch_commands,
             # 'NetworkInterfaces':[
             #     {
             #         'DeviceIndex': 0,
