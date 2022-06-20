@@ -16,4 +16,4 @@ RUN pip install -r requirements.txt jupyter
 
 COPY . /usr/src/app
 
-CMD [ "jupyter", "notebook" ]
+CMD [ "jupyter", "notebook", "." ]
