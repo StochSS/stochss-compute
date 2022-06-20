@@ -228,6 +228,7 @@ docker run -it stochss/stochss-compute'''
             ]
             subnet_response = vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
             subnet_id = subnet_response.subnet_id
+            self.client.modify_subnet_attribute(SubnetId = subnet_id, MapPublicIpOnLaunch = { 'Value': True })
         else:
             p.pprint(subnet_response)
             subnet_id = subnet_response['Subnets'][0]['SubnetId']
@@ -271,18 +272,18 @@ docker run -it stochss/stochss-compute'''
             'KeyName': self.rootKey.name,
             'MinCount': minCount, 
             'MaxCount': maxCount,
-            # 'SubnetId': subnetId,
-            # 'SecurityGroupIds': [securityGroupId],
+            'SubnetId': subnetId,
+            'SecurityGroupIds': [securityGroupId],
             'UserData': docker,
-            'NetworkInterfaces':[
-                {
-                    'DeviceIndex': 0,
-                    'SubnetId' : subnetId,
-                    'Groups': [
-                        securityGroupId
-                    ],
-                    'AssociatePublicIpAddress': True            
-                }]
+            # 'NetworkInterfaces':[
+            #     {
+            #         'DeviceIndex': 0,
+            #         'SubnetId' : subnetId,
+            #         'Groups': [
+            #             securityGroupId
+            #         ],
+            #         'AssociatePublicIpAddress': True            
+            #     }]
             }
 
         response = self.client.run_instances(**kwargs)
