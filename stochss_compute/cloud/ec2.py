@@ -332,6 +332,7 @@ echo "SUP"'''
 
     def delete_vpc(self):
         # will need to wait on instance termination
+        
         pass
 
     def _get_running(self) -> List[str]:
