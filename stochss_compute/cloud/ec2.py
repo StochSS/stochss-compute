@@ -184,6 +184,9 @@ docker run -it stochss/stochss-compute'''
             vpc_id = vpc_response['Vpc']['VpcId']
             self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport = { 'Value': True } )
             self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames = { 'Value': True } )
+            vpc = self.resources.Vpc(vpc_id)
+            igw_response = self.client.create_internet_gateway()
+
         else:
             p.pprint(vpc_response)
             vpc_id = vpc_response['Vpcs'][0]['VpcId']
@@ -261,20 +264,22 @@ docker run -it stochss/stochss-compute'''
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
         docker = '''!/bin/bash
-sudo yum install docker
-sudo amazon-linux-extras install docker
-sudo service docker start
-sudo usermod -a -G docker ec2-user
-docker run -it stochss/stochss-compute'''
+echo "SUP"'''
+#         docker = '''!/bin/bash
+# sudo yum install docker
+# sudo amazon-linux-extras install docker
+# sudo service docker start
+# sudo usermod -a -G docker ec2-user
+# docker run -it stochss/stochss-compute'''
         kwargs = {
             'ImageId': imageId, 
             'InstanceType': instanceType,
             'KeyName': self.rootKey.name,
             'MinCount': minCount, 
             'MaxCount': maxCount,
-            'SubnetId': subnetId,
-            'SecurityGroupIds': [securityGroupId],
-            'UserData': docker,
+            # 'SubnetId': subnetId,
+            # 'SecurityGroupIds': [securityGroupId],
+            # 'UserData': docker,
             # 'NetworkInterfaces':[
             #     {
             #         'DeviceIndex': 0,
