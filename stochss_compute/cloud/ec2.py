@@ -159,12 +159,13 @@ class EC2Cluster:
             vpc_id = vpc_response['Vpc']['VpcId']
             self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport = { 'Value': True } )
             self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames = { 'Value': True } )
-            vpc = self.resources.Vpc(vpc_id)
             igw_response = self.client.create_internet_gateway()
             igw_id = igw_response['InternetGateway']['InternetGatewayId']
+            vpc = self.resources.Vpc(vpc_id)
             vpc.attach_internet_gateway(InternetGatewayId=igw_id)
-            rtb = vpc.create_route_table()
-            rtb_id = rtb.route_table_id
+            for rtb in vpc.route_tables.all():
+                if rtb.associations_attribute[0]['Main'] == True:
+                    rtb_id = rtb.route_table_id
             self.client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
 
         else:
