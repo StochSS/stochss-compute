@@ -38,41 +38,6 @@ class EC2Cluster:
             self._remote.terminate()
             self._remote.wait_until_terminated()
 
-        def authorize_SSH(self, groupName='sssc-sg', cidrIp='0.0.0.0/0'):
-            sgargs = {
-                'CidrIp': cidrIp,
-                'FromPort': 22,
-                'ToPort': 22,
-                'IpProtocol': 'tcp',
-            }
-            resource = boto3.resource('ec2')
-            sg = resource.SecurityGroup(self.security_group_id)
-            # deal with return
-            return sg.authorize_ingress(**sgargs)
-
-        # TODO come back to this because it will be easier when we use our own custom security group & vpc (shouldn't be too hard)
-        # note: might need different rules for dask, etc.
-
-        # for now, only one rule per instance (I think that will still work) (downside is it only accepts port ranges)
-        # def edit_ingress_rule(self, ipProtocol='tcp', fromPort=22, toPort=22, cidrIpv4='0.0.0.0/0', description='Inbound SSH'):
-        #     client = boto3.client('ec2')
-        #     resource = boto3.resource('ec2')
-        #     sg = resource.SecurityGroup(self.security_group_id)
-        #     sg_rule_id = client.describe_security_group_rules()['SecurityGroupRules'][0]['SecurityGroupRuleId']
-        #     new_rule = [{
-        #         'SecurityGroupRuleId': sg_rule_id,
-        #         'SecurityGroupRule': {
-        #             'IpProtocol': ipProtocol,
-        #             'FromPort': fromPort,
-        #             'ToPort': toPort,
-        #             'CidrIpv4': cidrIpv4,
-        #             'Description': description
-        #         }
-                
-        #     }]
-        #     return client.modify_security_group_rules(GroupId=self.security_group_id, SecurityGroupRules=new_rule)
-
-
     def __init__(self) -> None:
         self.client = boto3.client('ec2')
         self.resources = boto3.resource('ec2')
@@ -124,7 +89,7 @@ class EC2Cluster:
     def delete_root_key(self) -> None:
         self.client.delete_key_pair(KeyName=self.rootKey.name)
 
-    def create_default_vpc(self):
+    def create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
         vpc_search_filter = [
             {
@@ -157,8 +122,8 @@ class EC2Cluster:
             ]
             vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
             vpc_id = vpc_response['Vpc']['VpcId']
-            self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport = { 'Value': True } )
-            self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames = { 'Value': True } )
+            self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
+            self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True })
             igw_response = self.client.create_internet_gateway()
             igw_id = igw_response['InternetGateway']['InternetGatewayId']
             vpc = self.resources.Vpc(vpc_id)
@@ -174,7 +139,7 @@ class EC2Cluster:
             
         return vpc_id
 
-    def create_default_subnet(self, vpcId):
+    def create_sssc_subnet(self, vpcId):
         subnet_cidrBlock = '172.31.0.0/20'
         subnet_search_filter = [
             {
@@ -212,27 +177,33 @@ class EC2Cluster:
             ]
             subnet_response = vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
             subnet_id = subnet_response.subnet_id
-            self.client.modify_subnet_attribute(SubnetId = subnet_id, MapPublicIpOnLaunch = { 'Value': True })
+            self.client.modify_subnet_attribute(SubnetId=subnet_id, MapPublicIpOnLaunch={'Value': True})
         else:
             p.pprint(subnet_response)
             subnet_id = subnet_response['Subnets'][0]['SubnetId']
             
         return subnet_id
 
-    def create_default_security_group(self, vpcId):
-        # TODO
+    def create_sssc_security_group(self, vpcId):
         vpc = self.resources.Vpc(vpcId)
-        sg_response = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.',GroupName='sssc-sg')
-        return sg_response.group_id
+        sg = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
+        sgargs = {
+            'CidrIp': '0.0.0.0/0',
+            'FromPort': 22,
+            'ToPort': 22,
+            'IpProtocol': 'tcp',
+        }
+        sg.authorize_ingress(**sgargs)
+        return sg.group_id
 
 
     def launch_single_node_cluster(self):
         self.create_root_key()
-        vpcId = self.create_default_vpc()
+        vpcId = self.create_sssc_vpc()
         print(f'vpcId: {vpcId}')
-        subnetId = self.create_default_subnet(vpcId)
+        subnetId = self.create_sssc_subnet(vpcId)
         print(f'subnetId: {subnetId}')
-        sgId = self.create_default_security_group(vpcId)
+        sgId = self.create_sssc_security_group(vpcId)
         print(f'sgId: {sgId}')
         head = self.launch_instances(subnetId=subnetId, securityGroupId=sgId)
         print(f'head: {head}')
@@ -245,13 +216,11 @@ class EC2Cluster:
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
         launch_commands = '''!/bin/bash
-echo "SUP"'''
-#         docker = '''!/bin/bash
-# sudo yum install docker
-# sudo amazon-linux-extras install docker
-# sudo service docker start
-# sudo usermod -a -G docker ec2-user
-# docker run -it stochss/stochss-compute'''
+sudo yum install docker
+sudo amazon-linux-extras install docker
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+docker run -it stochss/stochss-compute'''
         kwargs = {
             'ImageId': imageId, 
             'InstanceType': instanceType,
@@ -261,15 +230,6 @@ echo "SUP"'''
             'SubnetId': subnetId,
             'SecurityGroupIds': [securityGroupId],
             'UserData': launch_commands,
-            # 'NetworkInterfaces':[
-            #     {
-            #         'DeviceIndex': 0,
-            #         'SubnetId' : subnetId,
-            #         'Groups': [
-            #             securityGroupId
-            #         ],
-            #         'AssociatePublicIpAddress': True            
-            #     }]
             }
 
         response = self.client.run_instances(**kwargs)
@@ -306,8 +266,6 @@ echo "SUP"'''
             _instance.public_ip_address = instance.public_ip_address
             _instance.root_device_name = instance.root_device_name
             _instance.root_device_type = instance.root_device_type
-            # keep it simple, only allow one security group (not sure how it would work with multiple, seems unnecessary for this application)
-            # however, in case the user already uses the default security group and vpc for other things, will need to create one specifically for sssc
             _instance.security_group_name = instance.security_groups[0]['GroupName']
             _instance.security_group_id = instance.security_groups[0]['GroupId']
             _instance.subnet_id = instance.subnet_id
@@ -331,19 +289,18 @@ echo "SUP"'''
         print(instance_ids)
         self.client.terminate_instances(InstanceIds=instance_ids)
 
-    def delete_vpc(self, vpcId):
-        # will need to wait on instance termination
+    def clean_up(self, vpcId):
         vpc = self.resources.Vpc(vpcId)
+        for instance in vpc.instances.all():
+            instance.terminate()
+            instance.wait_until_terminated()
         for subnet in vpc.subnets.all():
-            print(subnet)
             subnet.delete()
         for igw in vpc.internet_gateways.all():
-            print(igw)
             igw.detach_from_vpc(VpcId=vpc.vpc_id)
             igw.delete()
-        # seems to still be launching into default security group?
+        # TODO seems to still be launching into default security group?
         for sg in vpc.security_groups.all():
-            print(sg.group_name)
             if sg.group_name == 'sssc-sg':
                 sg.delete()
         vpc.delete()
