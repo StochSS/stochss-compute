@@ -331,10 +331,22 @@ echo "SUP"'''
         print(instance_ids)
         self.client.terminate_instances(InstanceIds=instance_ids)
 
-    def delete_vpc(self):
+    def delete_vpc(self, vpcId):
         # will need to wait on instance termination
-        
-        pass
+        vpc = self.resources.Vpc(vpcId)
+        for subnet in vpc.subnets.all():
+            print(subnet)
+            subnet.delete()
+        for igw in vpc.internet_gateways.all():
+            print(igw)
+            igw.detach_from_vpc(VpcId=vpc.vpc_id)
+            igw.delete()
+        # seems to still be launching into default security group?
+        for sg in vpc.security_groups.all():
+            print(sg.group_name)
+            if sg.group_name == 'sssc-sg':
+                sg.delete()
+        vpc.delete()
 
     def _get_running(self) -> List[str]:
         kwargs = {
