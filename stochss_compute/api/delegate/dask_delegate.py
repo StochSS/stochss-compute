@@ -61,7 +61,7 @@ class DaskDelegate(Delegate):
 
             print(f"Connected to Dask Scheduler:\n{self.client}")
 
-        # Setup functions to be run on the schedule.
+        # Setup functions to be run on the scheduler.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
             return job_id in dask_scheduler.tasks
 
