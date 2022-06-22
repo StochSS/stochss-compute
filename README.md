@@ -49,7 +49,7 @@ jupyter notebook --port 9999 examples/StartHere.ipynb
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
 ***
 ## Docker
-- As an alternative to the above steps, you can use Docker.
+### 1. As an alternative to the above steps, you can use Docker.
 
 ```
 docker run -it --rm --network host stochss/stochss-compute:latest
@@ -60,7 +60,7 @@ docker run -it --rm --network host stochss/stochss-compute:latest
 ```
 docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
 ```
-
+### 2. To check out the examples, in another terminal, run:
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
