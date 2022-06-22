@@ -26,7 +26,7 @@ def parse_args() -> Namespace:
     '''
     desc = '''
         Startup script for a StochSS-Compute cluster.
-        StochSS is a server and cache that anonymizes StochSS simulation data.
+        StochSS-Compute is a server and cache that anonymizes StochSS simulation data.
         Uses Dask, a Python parallel computing library.   
     '''
     parser = ArgumentParser(prog='StochSS-Compute', description=desc, add_help=True, usage=usage, conflict_handler='resolve')
