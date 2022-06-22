@@ -12,10 +12,8 @@ def main():
         if arg.startswith('dask_'):
             dask_args[arg[5:]] = value
 
-    print(dask_args)
     cluster = LocalCluster(**dask_args)
     delegate_config = DaskDelegateConfig(**dask_args, cluster=cluster)
-    print(delegate_config.__dict__)
 
     try:
         start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
