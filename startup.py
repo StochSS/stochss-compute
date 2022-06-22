@@ -13,6 +13,10 @@ def main():
             dask_args[arg[5:]] = value
 
     cluster = LocalCluster(**dask_args)
+    print(f'Scheduler Address: <{cluster.scheduler_address}>')
+    for i, worker in cluster.workers.items():
+        print(f'Worker {i}: {worker}')
+    
     print(f'Dashboard Link: <{cluster.dashboard_link}>')
     delegate_config = DaskDelegateConfig(**dask_args, cluster=cluster)
 
@@ -38,9 +42,9 @@ def parse_args() -> Namespace:
     server.add_argument("-p", "--port", default=29681, type=int, required=False,
                         help="The port to use for the flask server. Defaults to 29681.")
     dask.add_argument("-H", "--dask-host", default=None, required=False,
-                        help="The host to use for the dask scheduler. Only use if you will be connecting to your own dask cluster. Defaults to localhost.")
-    dask.add_argument("-P", "--dask-port", default=0, type=int, required=False,
-                        help="The port to use for the dask scheduler. Only use if you will be connecting to your own dask cluster. Defaults to 8786.")
+                        help="The host to use for the dask scheduler. Defaults to localhost.")
+    dask.add_argument("-P", "--dask-scheduler-port", default=0, type=int, required=False,
+                        help="The port to use for the dask scheduler. 0 for a random port. Defaults to a random port.")
     dask.add_argument('-W', '--dask-n-workers', default=None, type=int, required=False, help='Configure the number of workers. Defaults to one per core.')
     dask.add_argument('-T', '--dask-threads-per-worker', default=None, required=False, type=int, help='Configure the threads per worker. Default will let Dask decide.')
     dask.add_argument('--dask-processes', default=None, required=False, type=bool, help='Whether to use processes (True) or threads (False). Defaults to True, unless worker_class=Worker, in which case it defaults to False.')
