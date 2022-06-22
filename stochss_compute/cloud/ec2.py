@@ -46,7 +46,7 @@ class EC2Cluster:
         self.instances = []
         
 
-    def create_root_key(self, savePath='./', keyType='ed25519', keyFormat='pem') -> SSHKey:
+    def _create_root_key(self, savePath='./', keyType='ed25519', keyFormat='pem') -> SSHKey:
 
         valid_formats = {'pem', 'ppk'}
         if keyFormat not in valid_formats:
@@ -82,14 +82,11 @@ class EC2Cluster:
         self.rootKey.format = keyFormat
         return self.rootKey
 
-    # TODO
-    def load_root_key():
-        pass
 
-    def delete_root_key(self) -> None:
+    def _delete_root_key(self) -> None:
         self.client.delete_key_pair(KeyName=self.rootKey.name)
 
-    def create_sssc_vpc(self):
+    def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
         vpc_search_filter = [
             {
@@ -139,7 +136,7 @@ class EC2Cluster:
             
         return vpc_id
 
-    def create_sssc_subnet(self, vpcId):
+    def _create_sssc_subnet(self, vpcId):
         subnet_cidrBlock = '172.31.0.0/20'
         subnet_search_filter = [
             {
@@ -184,7 +181,7 @@ class EC2Cluster:
             
         return subnet_id
 
-    def create_sssc_security_group(self, vpcId):
+    def _create_sssc_security_group(self, vpcId):
         vpc = self.resources.Vpc(vpcId)
         sg = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
         sgargs = {
@@ -196,22 +193,18 @@ class EC2Cluster:
         sg.authorize_ingress(**sgargs)
         return sg.group_id
 
+    def _launch_network(self):
+        vpcId = self._create_sssc_vpc()
+        subnetId = self._create_sssc_subnet(vpcId)
+        sgId = self._create_sssc_security_group(vpcId)
+        return (subnetId, sgId)
 
     def launch_single_node_cluster(self):
-        self.create_root_key()
-        vpcId = self.create_sssc_vpc()
-        print(f'vpcId: {vpcId}')
-        subnetId = self.create_sssc_subnet(vpcId)
-        print(f'subnetId: {subnetId}')
-        sgId = self.create_sssc_security_group(vpcId)
-        print(f'sgId: {sgId}')
-        head = self.launch_instances(subnetId=subnetId, securityGroupId=sgId)
-        print(f'head: {head}')
-        head.authorize_SSH()
+        self._create_root_key()
+        (subnetId, sgId) = self._launch_network()
+        return self._launch_instances(subnetId=subnetId, securityGroupId=sgId)
 
-        return
-
-    def launch_instances(self, *, subnetId, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
+    def _launch_instances(self, *, subnetId, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
         valid_types = {'stochss-compute', 'scheduler', 'worker'}
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
@@ -280,7 +273,7 @@ docker run -it stochss/stochss-compute'''
         if len(instances) > 1:
             return instances
 
-    def terminate_all_instances(self) -> None:
+    def _terminate_all_instances(self) -> None:
         describe_instances = self.client.describe_instances()
         instance_ids = []
         for reservation in describe_instances['Reservations']:
@@ -324,9 +317,5 @@ docker run -it stochss/stochss-compute'''
                 instance_ids.append(instance['InstanceId'])
         return instance_ids
 
-    # def get_public_DNS(self, instance_id) -> str:
-    #     self.resources = boto3.resource('ec2')
-    #     instance = self.resources.Instance(instance_id)
-    #     return instance.public_dns_name
 
         
