@@ -23,7 +23,6 @@ def start_api(
         debug: bool = False, 
         delegate_type: type[Delegate] = DaskDelegate,
         delegate_config: DelegateConfig = DaskDelegateConfig(),
-        # kube: bool = False,
         **kwargs):
     
     """
@@ -57,20 +56,7 @@ def start_api(
         DELEGATE_CONFIG=delegate_config,
     )
 
-    # # Will return None if not being run using the kubernetes manifest where this environment variable is initialized
-    # kube_dask_worker_spec = os.environ.get("WORKER_SPEC_PATH")
-
-    # if kube_dask_worker_spec is not None:
-    #     kube_cluster = KubeCluster(pod_template=kube_dask_worker_spec, n_workers=1)
-    #     if debug:
-    #         print("Dask KubeCluster created:")
-    #         print(kube_cluster)
-    #     flask.config.update(
-    #         KUBE_CLUSTER=kube_cluster
-    #     )
-
     flask.register_blueprint(v1_api)
 
-    # use_reloader=False (prevents two KubeClusters from being created)
     # Start the REST API.
     flask.run(host=host, port=port, debug=debug, use_reloader=False, **kwargs)
