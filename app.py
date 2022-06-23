@@ -15,13 +15,10 @@ def main():
     api.start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
 
 def parse_args() -> Namespace:
-    usage = '''
-        startup.py -h HOST -p PORT
-    '''
     desc = '''
         StochSS-Compute is a server and cache that anonymizes StochSS simulation data.
     '''
-    parser = ArgumentParser(prog='StochSS-Compute', description=desc, add_help=True, usage=usage, conflict_handler='resolve')
+    parser = ArgumentParser(description=desc, add_help=True, conflict_handler='resolve')
     server = parser.add_argument_group('Server')
     dask = parser.add_argument_group('Dask')
     server.add_argument("-h", "--host", default='localhost', required=False,
