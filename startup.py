@@ -1,5 +1,6 @@
 
 from stochss_compute.api import start_api
+from stochss_compute.api.cache.simple_disk_cache import SimpleDiskCache, SimpleDiskCacheConfig
 from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 from argparse import ArgumentParser, Namespace
 from distributed import LocalCluster
@@ -18,7 +19,9 @@ def main():
         print(f'Worker {i}: {worker}')
     
     print(f'Dashboard Link: <{cluster.dashboard_link}>')
-    delegate_config = DaskDelegateConfig(**dask_args, cluster=cluster)
+    cache_provider = SimpleDiskCache(SimpleDiskCacheConfig(root_dir=args.cache))
+    delegate_config = DaskDelegateConfig(**dask_args, cluster=cluster, cache_provider=cache_provider)
+
 
     try:
         start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
@@ -35,12 +38,17 @@ def parse_args() -> Namespace:
         Uses Dask, a Python parallel computing library.   
     '''
     parser = ArgumentParser(description=desc, add_help=True, usage=usage, conflict_handler='resolve')
+
     server = parser.add_argument_group('Server')
-    dask = parser.add_argument_group('Dask')
     server.add_argument("-h", "--host", default='localhost', required=False,
                         help="The host to use for the flask server. Defaults to localhost.")
     server.add_argument("-p", "--port", default=29681, type=int, required=False,
                         help="The port to use for the flask server. Defaults to 29681.")
+    
+    cache = parser.add_argument_group('Cache')
+    cache.add_argument('-c', '--cache', default=None, required=False, help='Path to use for the cache.')
+
+    dask = parser.add_argument_group('Dask')
     dask.add_argument("-H", "--dask-host", default=None, required=False,
                         help="The host to use for the dask scheduler. Defaults to localhost.")
     dask.add_argument("-P", "--dask-scheduler-port", default=0, type=int, required=False,
@@ -50,6 +58,7 @@ def parse_args() -> Namespace:
     dask.add_argument('--dask-processes', default=None, required=False, type=bool, help='Whether to use processes (True) or threads (False). Defaults to True, unless worker_class=Worker, in which case it defaults to False.')
     dask.add_argument('-D', '--dask-dashboard-address', default=':8787', required=False, help='Address on which to listen for the Bokeh diagnostics server like ‘localhost:8787’ or ‘0.0.0.0:8787’. Defaults to ‘:8787’. Set to None to disable the dashboard. Use ‘:0’ for a random port.')
     dask.add_argument('-N', '--dask-name', default=None, required=False, help='A name to use when printing out the cluster, defaults to type name.')
+
     return parser.parse_args()
 
 
