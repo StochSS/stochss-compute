@@ -47,25 +47,15 @@ class DaskDelegate(Delegate):
         # Attempt to load the global Dask client.
         try:
             self.client = get_client()
-        # scenarios:
-        # cluster instantiated in startup.py without config
-        # same but with config
-        # cluster remote without config
-        # cluster remote with config
 
         except ValueError as _:
             if self.delegate_config.cluster is None:
-                print('cluster is None')
-                if self.delegate_config.host is not None and self.delegate_config.scheduler_port != 0:
-                    address = f'{self.delegate_config.host}:{self.delegate_config.scheduler_port}'
-                    self.client = Client(address)
-                else:
-                    if self.delegate_config.host is None:
-                        self.delegate_config.host = 'localhost'
-                    if self.delegate_config.scheduler_port == 0:
-                        self.delegate_config.scheduler_port = 8786
-                    address = f'{self.delegate_config.host}:{self.delegate_config.scheduler_port}'
-                    self.client = Client(address)
+                if self.delegate_config.host is None:
+                    self.delegate_config.host = 'localhost'
+                if self.delegate_config.scheduler_port == 0:
+                    self.delegate_config.scheduler_port = 8786
+                address = f'{self.delegate_config.host}:{self.delegate_config.scheduler_port}'
+                self.client = Client(address)
                 self.delegate_config.cluster = self.client.cluster
             else:
                 self.client = Client(self.delegate_config.cluster)
