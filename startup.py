@@ -34,7 +34,7 @@ def parse_args() -> Namespace:
         StochSS-Compute is a server and cache that anonymizes StochSS simulation data.
         Uses Dask, a Python parallel computing library.   
     '''
-    parser = ArgumentParser(description=desc, add_help=True, usage=None, conflict_handler='resolve')
+    parser = ArgumentParser(description=desc, add_help=True, usage=usage, conflict_handler='resolve')
     server = parser.add_argument_group('Server')
     dask = parser.add_argument_group('Dask')
     server.add_argument("-h", "--host", default='localhost', required=False,
