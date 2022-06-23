@@ -26,9 +26,9 @@ def parse_args() -> Namespace:
     server.add_argument("-p", "--port", default=29681, type=int, required=False,
                         help="The port to use for the flask server. Defaults to 29681.")
     dask.add_argument("-H", "--dask-host", default=None, required=False,
-                        help="The host to use for the dask scheduler. Only use if you will be connecting to your own dask cluster. Defaults to localhost.")
+                        help="The host to use for the dask scheduler. Defaults to localhost.")
     dask.add_argument("-P", "--dask-scheduler-port", default=0, type=int, required=False,
-                        help="The port to use for the dask scheduler. Only use if you will be connecting to your own dask cluster. Defaults to 8786.")
+                        help="The port to use for the dask scheduler. Defaults to 8786.")
     return parser.parse_args()
 
 if __name__ == "__main__":
