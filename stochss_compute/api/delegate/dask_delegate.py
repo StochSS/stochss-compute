@@ -8,8 +8,6 @@ from distributed import Future, LocalCluster
 from distributed import Client
 from distributed import get_client
 from distributed.scheduler import TaskState
-import logging
-
 
 from .delegate import Delegate
 from .delegate import JobState
