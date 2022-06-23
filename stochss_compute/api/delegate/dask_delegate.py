@@ -20,15 +20,8 @@ from stochss_compute.api.cache import SimpleDiskCacheConfig
 
 class DaskDelegateConfig(DelegateConfig):
 
-    host: str = None
-    scheduler_port: int = 0
-    n_workers: int = None
-    threads_per_worker: int = None
-    name: str = None
-    processes: bool = None
-    dashboard_address: str =":8787"
-
-    cluster: type[LocalCluster] = None
+    host: str = 'localhost'
+    scheduler_port: int = 8786
 
     cache_provider: type[CacheProvider] = SimpleDiskCache(SimpleDiskCacheConfig())
 
@@ -47,17 +40,8 @@ class DaskDelegate(Delegate):
             self.client = get_client()
 
         except ValueError as _:
-            if self.delegate_config.cluster is None:
-                if self.delegate_config.host is None:
-                    self.delegate_config.host = 'localhost'
-                if self.delegate_config.scheduler_port == 0:
-                    self.delegate_config.scheduler_port = 8786
-                address = f'{self.delegate_config.host}:{self.delegate_config.scheduler_port}'
-                self.client = Client(address)
-                self.delegate_config.cluster = self.client.cluster
-            else:
-                self.client = Client(self.delegate_config.cluster)
-
+            address = f'{self.delegate_config.host}:{self.delegate_config.scheduler_port}'
+            self.client = Client(address)
             print(f"Connected to Dask Scheduler:\n{self.client}")
 
         # Setup functions to be run on the scheduler.

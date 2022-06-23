@@ -5,12 +5,8 @@ from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 
 def main():
     args = parse_args()
-    dask_args = {}
-    for (arg, value) in vars(args).items():
-        if arg.startswith('dask_'):
-            dask_args[arg[5:]] = value
             
-    delegate_config = DaskDelegateConfig(**dask_args)
+    delegate_config = DaskDelegateConfig(host=args.dask_host, scheduler_port=args.dask_scheduler_port)
 
     api.start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
 
