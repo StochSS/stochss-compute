@@ -228,10 +228,11 @@ class EC2Cluster:
             raise ValueError(f'"name" must be one of {valid_types}.')
         launch_commands = '''!/bin/bash
 sudo yum update -y
-sudo amazon-linux-extras install docker
+sudo yum -y install docker
 sudo service docker start
 sudo usermod -a -G docker ec2-user
-docker run -it stochss/stochss-compute'''
+sudo chmod 666 /var/run/docker.sock
+docker run -it --network host stochss/stochss-compute:dev'''
         kwargs = {
             'ImageId': imageId, 
             'InstanceType': instanceType,
@@ -240,7 +241,7 @@ docker run -it stochss/stochss-compute'''
             'MaxCount': maxCount,
             'SubnetId': subnetId,
             'SecurityGroupIds': [securityGroupId],
-            # 'UserData': launch_commands,
+            'UserData': launch_commands,
             }
 
         response = self.client.run_instances(**kwargs)

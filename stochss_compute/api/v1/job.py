@@ -38,6 +38,7 @@ v1_job = Blueprint("V1 Job API Endpoint", __name__, url_prefix="/job")
 
 @v1_job.route("/start", methods=["POST"])
 def start_job():
+    print(request.json)
     request_obj = StartJobRequest.parse_raw(request.json)
 
     if delegate.job_complete(request_obj.job_id):
