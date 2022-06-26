@@ -6,3 +6,8 @@ dist
 **/*__pycache__
 .ipynb_checkpoints/
 examples/
+tests/
+kubernetes/
+docker/
+.github/
+docker-compose.yml
