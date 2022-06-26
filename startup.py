@@ -14,14 +14,17 @@ def main():
             dask_args[arg[5:]] = value
 
     cluster = LocalCluster(**dask_args)
+    tokens = cluster.scheduler_address.split(':')
+    dask_host = tokens[1][2:]
+    dask_port = int(tokens[2]) 
     print(f'Scheduler Address: <{cluster.scheduler_address}>')
     for i, worker in cluster.workers.items():
         print(f'Worker {i}: {worker}')
     
     print(f'Dashboard Link: <{cluster.dashboard_link}>')
-    cache_provider = SimpleDiskCache(SimpleDiskCacheConfig(root_dir=args.cache))
-    delegate_config = DaskDelegateConfig(**dask_args, cluster=cluster, cache_provider=cache_provider)
 
+    cache_provider = SimpleDiskCache(SimpleDiskCacheConfig(root_dir=args.cache))
+    delegate_config = DaskDelegateConfig(host=dask_host, scheduler_port=dask_port, cache_provider=cache_provider)
 
     try:
         start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
