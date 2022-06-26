@@ -47,8 +47,10 @@ class EC2Cluster:
         self.instances = []
         
 
-    def _create_root_key(self, savePath='./', keyType='ed25519', keyFormat='pem') -> SSHKey:
-
+    def _create_root_key(self) -> SSHKey:
+        savePath='./'
+        keyType='ed25519'
+        keyFormat='pem'
         valid_formats = {'pem', 'ppk'}
         if keyFormat not in valid_formats:
             raise ValueError(f'keyFormat must be one of {valid_formats}.')
@@ -100,7 +102,7 @@ class EC2Cluster:
 
     def _delete_root_key(self) -> None:
         self.client.delete_key_pair(KeyName=self.rootKey.name)
-        os.remove(self.rootKey.name)
+        os.remove(f'{self.rootKey.name}.pem')
 
     def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -316,34 +318,34 @@ docker run -it stochss/stochss-compute'''
         ]
 
         vpc_response = self.client.describe_vpcs(Filters=vpc_search_filter)
-        # self.client.describe_vpcs()
-        vpc_id = vpc_response['Vpcs'][0]['VpcId']
-        vpc = self.resources.Vpc(vpc_id)
-        for instance in vpc.instances.all():
-            instance.terminate()
-            print(f'Terminating "{instance.id}".......')
-            instance.wait_until_terminated()
-            print(f'Instance {instance.id}" terminated.')
-        for subnet in vpc.subnets.all():
-            print(f'Deleting {subnet.id}.......')
-            subnet.delete()
-            print(f'Subnet {subnet.id} deleted.')
-        for igw in vpc.internet_gateways.all():
-            print(f'Detaching {igw.id}.......')
-            igw.detach_from_vpc(VpcId=vpc.vpc_id)
-            print(f'Gateway {igw.id} detached.')
-            print(f'Deleting {igw.id}.......')
-            igw.delete()
-            print(f'Gateway {igw.id} deleted.')
-        # TODO seems to still be launching into default security group?
-        for sg in vpc.security_groups.all():
-            if sg.group_name == 'sssc-sg':
-                print(f'Deleting {sg.id}.......')
-                sg.delete()
-                print(f'Security group {sg.id} deleted.')
-        print(f'Deleting {vpc.id}.......')
-        vpc.delete()
-        print(f'VPC {vpc.id} deleted.')
+        if len(vpc_response['Vpcs']) != 0:
+            vpc_id = vpc_response['Vpcs'][0]['VpcId']
+            vpc = self.resources.Vpc(vpc_id)
+            for instance in vpc.instances.all():
+                instance.terminate()
+                print(f'Terminating "{instance.id}".......')
+                instance.wait_until_terminated()
+                print(f'Instance {instance.id}" terminated.')
+            # TODO seems to still be launching into default security group?
+            for sg in vpc.security_groups.all():
+                if sg.group_name == 'sssc-sg':
+                    print(f'Deleting {sg.id}.......')
+                    sg.delete()
+                    print(f'Security group {sg.id} deleted.')
+            for subnet in vpc.subnets.all():
+                print(f'Deleting {subnet.id}.......')
+                subnet.delete()
+                print(f'Subnet {subnet.id} deleted.')
+            for igw in vpc.internet_gateways.all():
+                print(f'Detaching {igw.id}.......')
+                igw.detach_from_vpc(VpcId=vpc.vpc_id)
+                print(f'Gateway {igw.id} detached.')
+                print(f'Deleting {igw.id}.......')
+                igw.delete()
+                print(f'Gateway {igw.id} deleted.')
+            print(f'Deleting {vpc.id}.......')
+            vpc.delete()
+            print(f'VPC {vpc.id} deleted.')
         self._delete_root_key()
 
     def _get_running(self) -> List[str]:
