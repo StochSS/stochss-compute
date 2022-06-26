@@ -1,5 +1,6 @@
 from typing import List, Union
 import boto3
+from botocore.exceptions import ClientError
 import os
 import pprint
 
@@ -58,9 +59,7 @@ class EC2Cluster:
 
         key_path = f'{savePath}{self.rootKey.name}.{keyFormat}'
 
-        try:
-            key = open(key_path, 'x')
-        except FileExistsError as e:
+        if os.path.exists(key_path):
             print(f'StochSS-Compute root key detected in working directory. Using "{key_path}".')
             key_pair_response = self.client.describe_key_pairs(KeyNames=[self.rootKey.name])
             self.rootKey.id = key_pair_response['KeyPairs'][0]['KeyPairId']
@@ -70,7 +69,16 @@ class EC2Cluster:
             self.rootKey.format = keyFormat
             return self.rootKey
 
-        response = self.client.create_key_pair(KeyName=self.rootKey.name, KeyType=keyType, KeyFormat=keyFormat)
+        
+        try:
+            response = self.client.create_key_pair(KeyName=self.rootKey.name, KeyType=keyType, KeyFormat=keyFormat)
+        except ClientError as error:
+            if error.response['Error']['Code'] == 'InvalidKeyPair.Duplicate':
+                print(error.response['Error']['Message'])
+                print(f'If you still have your key, move it into this working directory and make sure that it is named "{self.rootKey.name}".')
+                print(f'Otherwise, call clean_up() and re-try the operation.')
+            return
+        key = open(key_path, 'x')
         key.write(response['KeyMaterial'])
         key.close()
         os.chmod(key_path, 0o400)
@@ -209,7 +217,7 @@ class EC2Cluster:
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
         launch_commands = '''!/bin/bash
-sudo yum install docker
+sudo yum update -y
 sudo amazon-linux-extras install docker
 sudo service docker start
 sudo usermod -a -G docker ec2-user
@@ -222,7 +230,7 @@ docker run -it stochss/stochss-compute'''
             'MaxCount': maxCount,
             'SubnetId': subnetId,
             'SecurityGroupIds': [securityGroupId],
-            'UserData': launch_commands,
+            # 'UserData': launch_commands,
             }
 
         response = self.client.run_instances(**kwargs)
@@ -286,17 +294,30 @@ docker run -it stochss/stochss-compute'''
         vpc = self.resources.Vpc(vpcId)
         for instance in vpc.instances.all():
             instance.terminate()
+            print(f'Terminating "{instance.instance_id}".......')
             instance.wait_until_terminated()
+            print(f'Instance {instance.instance_id}" terminated.')
         for subnet in vpc.subnets.all():
+            print(f'Deleting {subnet.subnet_id}.......')
             subnet.delete()
+            print(f'Subnet {subnet.subnet_id} deleted.')
         for igw in vpc.internet_gateways.all():
+            print(f'Detaching {igw.internet_gateway_id}.......')
             igw.detach_from_vpc(VpcId=vpc.vpc_id)
+            print(f'Gateway {igw.internet_gateway_id} detached.')
+            print(f'Deleting {igw.internet_gateway_id}.......')
             igw.delete()
+            print(f'Gateway {igw.internet_gateway_id} deleted.')
         # TODO seems to still be launching into default security group?
         for sg in vpc.security_groups.all():
             if sg.group_name == 'sssc-sg':
+                print(f'Deleting {sg.group_name}:{sg.group_id}.......')
                 sg.delete()
+                print(f'Security group {sg.group_name}:{sg.group_id} deleted.')
+        print(f'Deleting {vpc.vpc_id}.......')
         vpc.delete()
+        print(f'VPC {vpc.vpc_id} deleted.')
+        self._delete_root_key()
 
     def _get_running(self) -> List[str]:
         kwargs = {
