@@ -324,7 +324,7 @@ docker run -it --network host stochss/stochss-compute:dev'''
             vpc = self.resources.Vpc(vpc_id)
             for instance in vpc.instances.all():
                 instance.terminate()
-                print(f'Terminating "{instance.id}".......')
+                print(f'Terminating "{instance.id}". This might take a minute.......')
                 instance.wait_until_terminated()
                 print(f'Instance {instance.id}" terminated.')
             # TODO seems to still be launching into default security group?
