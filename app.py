@@ -25,7 +25,7 @@ def parse_args() -> Namespace:
                         help="The port to use for the flask server. Defaults to 29681.")
 
     cache = parser.add_argument_group('Cache')
-    cache.add_argument('-c', '--cache', default=None, required=False, help='Path to use for the cache.')
+    cache.add_argument('-c', '--cache', default='sd-cache/', required=False, help='Path to use for the cache.')
 
     dask = parser.add_argument_group('Dask')
     dask.add_argument("-H", "--dask-host", default=None, required=False,
