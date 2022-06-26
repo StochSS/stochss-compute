@@ -61,7 +61,14 @@ class EC2Cluster:
 
         if os.path.exists(key_path):
             print(f'StochSS-Compute root key detected in working directory. Using "{key_path}".')
-            key_pair_response = self.client.describe_key_pairs(KeyNames=[self.rootKey.name])
+            try:
+                key_pair_response = self.client.describe_key_pairs(KeyNames=[self.rootKey.name])
+            except ClientError as error:
+                if error.response['Error']['Code'] == 'InvalidKeyPair.NotFound':
+                    print(error.response['Error']['Message'])
+                    print(f'An outdated key detected in working directory:  "{self.rootKey.name}".')
+                    print(f'Call clean_up() and re-try the operation.')
+                    raise error
             self.rootKey.id = key_pair_response['KeyPairs'][0]['KeyPairId']
             self.rootKey.fingerprint = key_pair_response['KeyPairs'][0]['KeyFingerprint']
             self.rootKey.path = key_path
@@ -77,7 +84,7 @@ class EC2Cluster:
                 print(error.response['Error']['Message'])
                 print(f'If you still have your key, move it into this working directory and make sure that it is named "{self.rootKey.name}".')
                 print(f'Otherwise, call clean_up() and re-try the operation.')
-            return
+                raise error
         key = open(key_path, 'x')
         key.write(response['KeyMaterial'])
         key.close()
@@ -93,6 +100,7 @@ class EC2Cluster:
 
     def _delete_root_key(self) -> None:
         self.client.delete_key_pair(KeyName=self.rootKey.name)
+        os.remove(self.rootKey.name)
 
     def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -208,8 +216,8 @@ class EC2Cluster:
         return (subnetId, sgId)
 
     def launch_single_node_cluster(self):
-        self._create_root_key()
         (subnetId, sgId) = self._launch_network()
+        self._create_root_key()
         return self._launch_instances(subnetId=subnetId, securityGroupId=sgId)
 
     def _launch_instances(self, *, subnetId, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
@@ -290,33 +298,52 @@ docker run -it stochss/stochss-compute'''
         print(instance_ids)
         self.client.terminate_instances(InstanceIds=instance_ids)
 
-    def clean_up(self, vpcId):
-        vpc = self.resources.Vpc(vpcId)
+    def clean_up(self):
+        vpc_cidrBlock = '172.31.0.0/16'
+        vpc_search_filter = [
+            {
+                'Name': 'tag:Name',
+                'Values': [
+                    'sssc-vpc'
+                ]
+            },
+            {
+                'Name': 'cidr',
+                'Values': [
+                    vpc_cidrBlock
+                ]
+            }
+        ]
+
+        vpc_response = self.client.describe_vpcs(Filters=vpc_search_filter)
+        # self.client.describe_vpcs()
+        vpc_id = vpc_response['Vpcs'][0]['VpcId']
+        vpc = self.resources.Vpc(vpc_id)
         for instance in vpc.instances.all():
             instance.terminate()
-            print(f'Terminating "{instance.instance_id}".......')
+            print(f'Terminating "{instance.id}".......')
             instance.wait_until_terminated()
-            print(f'Instance {instance.instance_id}" terminated.')
+            print(f'Instance {instance.id}" terminated.')
         for subnet in vpc.subnets.all():
-            print(f'Deleting {subnet.subnet_id}.......')
+            print(f'Deleting {subnet.id}.......')
             subnet.delete()
-            print(f'Subnet {subnet.subnet_id} deleted.')
+            print(f'Subnet {subnet.id} deleted.')
         for igw in vpc.internet_gateways.all():
-            print(f'Detaching {igw.internet_gateway_id}.......')
+            print(f'Detaching {igw.id}.......')
             igw.detach_from_vpc(VpcId=vpc.vpc_id)
-            print(f'Gateway {igw.internet_gateway_id} detached.')
-            print(f'Deleting {igw.internet_gateway_id}.......')
+            print(f'Gateway {igw.id} detached.')
+            print(f'Deleting {igw.id}.......')
             igw.delete()
-            print(f'Gateway {igw.internet_gateway_id} deleted.')
+            print(f'Gateway {igw.id} deleted.')
         # TODO seems to still be launching into default security group?
         for sg in vpc.security_groups.all():
             if sg.group_name == 'sssc-sg':
-                print(f'Deleting {sg.group_name}:{sg.group_id}.......')
+                print(f'Deleting {sg.id}.......')
                 sg.delete()
-                print(f'Security group {sg.group_name}:{sg.group_id} deleted.')
-        print(f'Deleting {vpc.vpc_id}.......')
+                print(f'Security group {sg.id} deleted.')
+        print(f'Deleting {vpc.id}.......')
         vpc.delete()
-        print(f'VPC {vpc.vpc_id} deleted.')
+        print(f'VPC {vpc.id} deleted.')
         self._delete_root_key()
 
     def _get_running(self) -> List[str]:
