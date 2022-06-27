@@ -15,6 +15,8 @@ from flask import Blueprint
 from pydantic import BaseModel
 from pydantic import ValidationError
 
+from ....cloud import ec2
+
 model_endpoint = Blueprint("V1 GillesPy2 Model API Endpoint", __name__, url_prefix="/model")
 
 class Model(gillespy2.core.Model):
@@ -58,6 +60,10 @@ def run():
     print(run_request.kwargs)
     if cloud == True:
         print(f">>>>>>>>>>>>>>>>{request.remote_addr}")
+        source_ip = request.remote_addr
+        cluster = ec2.Cluster()
+        cluster._restrict_ingress(source_ip)
+
     print(run_request.args)
 
     import hashlib
