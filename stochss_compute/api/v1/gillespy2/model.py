@@ -59,6 +59,8 @@ def run():
     cloud = run_request.kwargs.pop('cloud')
     print(run_request.kwargs)
     if cloud == True:
+        key = os.environ.get('CLOUD_KEY')
+        print(f">>>>>>>>>>>>>>>>{key}")
         print(f">>>>>>>>>>>>>>>>{request.remote_addr}")
         source_ip = request.remote_addr
         cluster = ec2.Cluster()
