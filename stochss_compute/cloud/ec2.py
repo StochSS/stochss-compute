@@ -3,10 +3,12 @@ import boto3
 from botocore.exceptions import ClientError
 import os
 import pprint
+import gillespy2
+from stochss_compute import RemoteSimulation, ComputeServer
 
 p = pprint.PrettyPrinter(indent=1)
 
-class EC2Cluster:
+class EC2Cluster():
 
     class SSHKey:
         def __init__(self, name) -> None:
@@ -102,7 +104,9 @@ class EC2Cluster:
 
     def _delete_root_key(self) -> None:
         self.client.delete_key_pair(KeyName=self.rootKey.name)
-        os.remove(f'{self.rootKey.name}.pem')
+        keypath = f'{self.rootKey.name}.pem'
+        if os.path.exists(keypath):
+            os.remove(keypath)
 
     def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -202,14 +206,62 @@ class EC2Cluster:
     def _create_sssc_security_group(self, vpcId):
         vpc = self.resources.Vpc(vpcId)
         sg = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
-        sgargs = {
+        sshargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': 22,
             'ToPort': 22,
             'IpProtocol': 'tcp',
         }
+        sg.authorize_ingress(**sshargs)
+        sgargs = {
+            'CidrIp': '0.0.0.0/0',
+            'FromPort': 29681,
+            'ToPort': 29681,
+            'IpProtocol': 'tcp',
+            'TagSpecifications': [
+                {
+                    'ResourceType': 'security-group-rule',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': '29681'
+                        },
+                    ]
+                },
+            ]
+        }
         sg.authorize_ingress(**sgargs)
         return sg.group_id
+
+    def _restrict_ingress(self, ipAddress: str = ''):
+        filter=[
+            {
+                'Name': 'group-name',
+                'Values': [
+                    'sssc-sg',
+                ]
+            },
+        ]
+        sg_response = self.client.describe_security_groups(Filters=filter)
+        # print(sg_response)
+        sg_id = sg_response['SecurityGroups'][0]['GroupId']
+        filter2=[
+            {
+                'Name': 'group-id',
+                'Values': [
+                    sg_id,
+                ]
+            },
+            {
+                'Name': 'tag:Name',
+                'Values': [
+                    '29681',
+                ]
+            },
+        ]
+        sgr_response = self.client.describe_security_group_rules(Filters=filter2)
+        print(sgr_response)
+        print(sgr_response['SecurityGroupRules'][0]['SecurityGroupRuleId'])
 
     def _launch_network(self):
         vpcId = self._create_sssc_vpc()
@@ -368,5 +420,8 @@ docker run -it --network host stochss/stochss-compute:dev'''
                 instance_ids.append(instance['InstanceId'])
         return instance_ids
 
+    def run(model):
+        myServer = ComputeServer("localhost", port=29681)
 
+        results = RemoteSimulation.on(myServer).with_model(model).run()
         
