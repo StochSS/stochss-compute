@@ -54,7 +54,10 @@ def run():
     model_id = f"{model.get_json_hash()}"
     number_trajectories = int(run_request.kwargs.pop("number_of_trajectories", 1))
 
+    cloud = run_request.kwargs.pop('cloud')
     print(run_request.kwargs)
+    if cloud == True:
+        print(f">>>>>>>>>>>>>>>>{request.remote_addr}")
     print(run_request.args)
 
     import hashlib
