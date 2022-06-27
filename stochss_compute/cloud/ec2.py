@@ -8,7 +8,7 @@ from stochss_compute import RemoteSimulation, ComputeServer
 
 p = pprint.PrettyPrinter(indent=1)
 
-class EC2Cluster():
+class Cluster():
 
     class SSHKey:
         def __init__(self, name) -> None:
@@ -261,7 +261,23 @@ class EC2Cluster():
         ]
         sgr_response = self.client.describe_security_group_rules(Filters=filter2)
         print(sgr_response)
-        print(sgr_response['SecurityGroupRules'][0]['SecurityGroupRuleId'])
+        sgr_id = sgr_response['SecurityGroupRules'][0]['SecurityGroupRuleId']
+        securityGroupRules=[
+            {
+                'SecurityGroupRuleId': sgr_id,
+                'SecurityGroupRule': {
+                    'IpProtocol': 'tcp',
+                    'FromPort': 29681,
+                    'ToPort': 29681,
+                    # 'CidrIpv4': f'{ipAddress}/32',
+                    'CidrIpv4': '0.0.0.0/0',
+                    'Description': 'TEST'
+                }
+            },
+        ]
+        self.client.modify_security_group_rules(GroupId=sg_id, SecurityGroupRules=securityGroupRules)
+        sgr_response = self.client.describe_security_group_rules(Filters=filter2)
+        print(sgr_response)
 
     def _launch_network(self):
         vpcId = self._create_sssc_vpc()
