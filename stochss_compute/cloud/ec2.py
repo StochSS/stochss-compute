@@ -3,8 +3,8 @@ import boto3
 from botocore.exceptions import ClientError
 import os
 # import pprint
-# import gillespy2
-# from stochss_compute import RemoteSimulation, ComputeServer
+from gillespy2 import Model
+from stochss_compute import RemoteSimulation, ComputeServer
 
 # p = pprint.PrettyPrinter(indent=1)
 
@@ -436,8 +436,9 @@ docker run -it --network host stochss/stochss-compute:dev'''
                 instance_ids.append(instance['InstanceId'])
         return instance_ids
 
-    # def run(model):
-    #     myServer = ComputeServer("localhost", port=29681)
+    def run(model: Model):
+        myServer = ComputeServer("localhost", port=29681)
 
-    #     results = RemoteSimulation.on(myServer).with_model(model).run()
+        unlock_response = RemoteSimulation.on(myServer).with_model(model).run(unlock=True)
+
         

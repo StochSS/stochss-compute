@@ -15,7 +15,6 @@ from flask import Blueprint
 from pydantic import BaseModel
 from pydantic import ValidationError
 
-from ....cloud import ec2
 
 model_endpoint = Blueprint("V1 GillesPy2 Model API Endpoint", __name__, url_prefix="/model")
 
@@ -56,15 +55,20 @@ def run():
     model_id = f"{model.get_json_hash()}"
     number_trajectories = int(run_request.kwargs.pop("number_of_trajectories", 1))
 
-    cloud = run_request.kwargs.pop('cloud')
+    unlock = run_request.kwargs.pop('unlock', False)
     print(run_request.kwargs)
-    if cloud == True:
+    if unlock == True:
         key = os.environ.get('CLOUD_KEY')
         print(f">>>>>>>>>>>>>>>>{key}")
         print(f">>>>>>>>>>>>>>>>{request.remote_addr}")
         source_ip = request.remote_addr
-        cluster = ec2.Cluster()
-        cluster._restrict_ingress(source_ip)
+        return JobStatusResponse(
+        job_id='Unlock',
+        status_id=0,
+        status_msg=source_ip,
+        is_complete=False,
+        has_failed=False
+    ).json(), 201
 
     print(run_request.args)
 
