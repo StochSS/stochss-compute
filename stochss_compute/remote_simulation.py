@@ -66,7 +66,10 @@ class RemoteSimulation():
 
         start_request = ModelRunRequest(model=self.model, kwargs=params)
         start_response = unwrap_or_err(JobStatusResponse, self.server.post(Endpoint.GILLESPY2_MODEL, sub="/run", request=start_request))
-        print(start_response)
+        print('****************')
+        print(start_response.status_msg)
+        if start_response.job_id == 'Unlock':
+            return start_response.status_msg
         remote_results = RemoteResults(result_id=start_response.job_id, server=self.server)
         return remote_results
 
