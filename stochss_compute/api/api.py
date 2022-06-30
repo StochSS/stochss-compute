@@ -14,8 +14,6 @@ from .cache import CacheProviderConfig
 from .cache import SimpleDiskCache
 from .cache import SimpleDiskCacheConfig
 
-from dask_kubernetes import KubeCluster
-import os
 
 def start_api(
         host: str, 

@@ -11,4 +11,5 @@ kubernetes/
 docker/
 .github/
 docker-compose.yml
-**/dask-worker-space
+**/dask-worker-space/
+**/sd-cache/
