@@ -2,54 +2,30 @@ from typing import List, Union
 import boto3
 from botocore.exceptions import ClientError
 import os
-# import pprint
 from gillespy2 import Model
 from stochss_compute import RemoteSimulation, ComputeServer
-
-# p = pprint.PrettyPrinter(indent=1)
+from secrets import token_bytes
 
 class Cluster():
 
-    class SSHKey:
-        def __init__(self, name) -> None:
-            self.name = name
-            
-    class Instance:
-        # TODO
-        # find out best way to make boto3 objects 'private' (do not need to be accessible) PY OH PY
-        # find out where & how to associate this class within library
-        def __init__(self, id) -> None:
-            resource = boto3.resource('ec2')
-            self._remote = resource.Instance(id)
-
-        def state(self) -> str:
-            self._remote.load()
-            return self._remote.state
-        
-        def reboot(self) -> None:
-            self._remote.reboot()
-
-        def start(self) -> None:
-            self._remote.start()
-            self._remote.wait_until_running()
-        
-        def stop(self) -> None:
-            self._remote.stop()
-            self._remote.wait_until_stopped()
-
-        def terminate(self) -> None:
-            self._remote.terminate()
-            self._remote.wait_until_terminated()
+    client = boto3.client('ec2')
+    resources = boto3.resource('ec2')
+    unlocked: bool = False
+    cloud_key: str = None
+    subnet = None
+    security_group = None
+    vpc = None
+    server = None
+    scheduler = None
+    workers: List = None
+    rootKey = None 
 
     def __init__(self) -> None:
-        self.client = boto3.client('ec2')
-        self.resources = boto3.resource('ec2')
         self.returns = {}
-        self.rootKey = self.SSHKey('sssc-root')
-        self.instances = []
+        # see if unlocked
         
 
-    def _create_root_key(self) -> SSHKey:
+    def _create_root_key(self):
         savePath='./'
         keyType='ed25519'
         keyFormat='pem'
@@ -99,14 +75,14 @@ class Cluster():
         self.rootKey.path = key_path
         self.rootKey.type = keyType
         self.rootKey.format = keyFormat
+        self.rootKey = self.resources.KeyPair('sssc-root')
         return self.rootKey
 
 
     def _delete_root_key(self) -> None:
         self.client.delete_key_pair(KeyName=self.rootKey.name)
-        keypath = f'{self.rootKey.name}.pem'
-        if os.path.exists(keypath):
-            os.remove(keypath)
+        if os.path.exists(self.rootKey.path):
+            os.remove(self.rootKey.path)
 
     def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -153,10 +129,10 @@ class Cluster():
             self.client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
 
         else:
-            p.pprint(vpc_response)
             vpc_id = vpc_response['Vpcs'][0]['VpcId']
-            
-        return vpc_id
+        
+        self.vpc = self.resources.Vpc(vpc_id)
+        return self.vpc
 
     def _create_sssc_subnet(self, vpcId):
         subnet_cidrBlock = '172.31.0.0/20'
@@ -198,10 +174,10 @@ class Cluster():
             subnet_id = subnet_response.subnet_id
             self.client.modify_subnet_attribute(SubnetId=subnet_id, MapPublicIpOnLaunch={'Value': True})
         else:
-            p.pprint(subnet_response)
             subnet_id = subnet_response['Subnets'][0]['SubnetId']
+        self.subnet = self.resources.Subnet(subnet_id)
             
-        return subnet_id
+        return self.subnet
 
     def _create_sssc_security_group(self, vpcId):
         vpc = self.resources.Vpc(vpcId)
@@ -231,7 +207,10 @@ class Cluster():
             ]
         }
         sg.authorize_ingress(**sgargs)
-        return sg.group_id
+        # test this by seeing if permissions change or not
+        sg.reload()
+        self.security_group = sg
+        return self.security_group
 
     def _restrict_ingress(self, ipAddress: str = ''):
         filter=[
@@ -280,31 +259,31 @@ class Cluster():
         print(sgr_response)
 
     def _launch_network(self):
-        vpcId = self._create_sssc_vpc()
-        subnetId = self._create_sssc_subnet(vpcId)
-        sgId = self._create_sssc_security_group(vpcId)
-        return (subnetId, sgId)
+        self._create_sssc_vpc()
+        self._create_sssc_subnet(self.vpc.id)
+        self._create_sssc_security_group(self.vpc.id)
 
     def launch_single_node_cluster(self):
-        (subnetId, sgId) = self._launch_network()
+        self._launch_network()
         self._create_root_key()
-        return self._launch_instances(subnetId=subnetId, securityGroupId=sgId)
+        return self._launch_instances(subnetId=self.subnet.id, securityGroupId=self.security_group.id)
 
-    def _launch_instances(self, *, subnetId, securityGroupId, name='stochss-compute', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
-        valid_types = {'stochss-compute', 'scheduler', 'worker'}
+    def _launch_instances(self, *, subnetId, securityGroupId, name='server', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
+        valid_types = {'server', 'scheduler', 'worker'}
         if name not in valid_types:
             raise ValueError(f'"name" must be one of {valid_types}.')
-        launch_commands = '''!/bin/bash
+        token = token_bytes(8)
+        launch_commands = f'''!/bin/bash
 sudo yum update -y
 sudo yum -y install docker
 sudo service docker start
 sudo usermod -a -G docker ec2-user
 sudo chmod 666 /var/run/docker.sock
-docker run -it --network host stochss/stochss-compute:dev'''
+docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev'''
         kwargs = {
             'ImageId': imageId, 
             'InstanceType': instanceType,
-            'KeyName': self.rootKey.name,
+            'KeyName': self.rootKey.key_name,
             'MinCount': minCount, 
             'MaxCount': maxCount,
             'SubnetId': subnetId,
@@ -349,7 +328,6 @@ docker run -it --network host stochss/stochss-compute:dev'''
             _instance.security_group_name = instance.security_groups[0]['GroupName']
             _instance.security_group_id = instance.security_groups[0]['GroupId']
             _instance.subnet_id = instance.subnet_id
-            # virtualization type?
             _instance.vpc_id = instance.vpc_id
 
             instances.append(_instance)
@@ -430,15 +408,18 @@ docker run -it --network host stochss/stochss-compute:dev'''
         }
         client = boto3.client('ec2')
         running_instances = client.describe_instances(**kwargs)
+        # make a dictionary from describe instances
         instance_ids = []
         for reservation in running_instances['Reservations']:
             for instance in reservation['Instances']:
                 instance_ids.append(instance['InstanceId'])
         return instance_ids
 
+    def describe_instances()
+
     def run(model: Model):
         myServer = ComputeServer("localhost", port=29681)
-
-        unlock_response = RemoteSimulation.on(myServer).with_model(model).run(unlock=True)
+        if self.unlocked == False:
+            unlock_response = RemoteSimulation.on(myServer).with_model(model).run(unlock=True)
 
         
