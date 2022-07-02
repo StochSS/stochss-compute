@@ -1,30 +1,29 @@
-from typing import List, Union
 import boto3
 from botocore.exceptions import ClientError
 import os
 from gillespy2 import Model
 from stochss_compute import RemoteSimulation, ComputeServer
-from secrets import token_bytes
+from secrets import token_hex
 
 class Cluster():
 
-    client = boto3.client('ec2')
-    resources = boto3.resource('ec2')
-    unlocked: bool = False
-    cloud_key: str = ''
-    subnet = None
-    security_group = None
-    vpc = None
-    server = None
-    scheduler = None
-    workers = []
-    root_key = None
-    key_path = ''
+    _client = boto3.client('ec2')
+    _resources = boto3.resource('ec2')
+    _locked: bool = False
+    _cloud_key: str = ''
+    _subnet = None
+    _security_group = None
+    _vpc = None
+    _server = None
+    _scheduler = None
+    _workers = []
+    _root_key = None
+    _key_path = ''
 
     def __init__(self) -> None:
-        self.returns = {}
-        # see if unlocked
-        # re-load cluster by setting resources
+        pass
+        # see if _locked
+        # re-load cluster by setting _resources
         
 
     def _create_root_key(self):
@@ -33,46 +32,46 @@ class Cluster():
         keyType='ed25519'
         keyFormat='pem'
 
-        self.key_path = f'{savePath}{name}.{keyFormat}'
+        self._key_path = f'{savePath}{name}.{keyFormat}'
 
-        if os.path.exists(self.key_path):
-            print(f'StochSS-Compute root key detected in working directory. Using "{self.key_path}".')
+        if os.path.exists(self._key_path):
+            print(f'StochSS-Compute root key detected in working directory. Using "{self._key_path}".')
             try:
-                key_pair_response = self.client.describe_key_pairs(KeyNames=[name])
+                key_pair_response = self._client.describe_key_pairs(KeyNames=[name])
             except ClientError as error:
                 if error.response['Error']['Code'] == 'InvalidKeyPair.NotFound':
                     print(error.response['Error']['Message'])
                     print(f'An outdated key detected in working directory:  "{name}".')
                     print(f'Call clean_up() and re-try the operation.')
                     raise error
-            self.root_key = self.resources.KeyPair(name)
-            return self.root_key
+            self._root_key = self._resources.KeyPair(name)
+            return self._root_key
 
         
         try:
-            response = self.client.create_key_pair(KeyName=name, KeyType=keyType, KeyFormat=keyFormat)
+            response = self._client.create_key_pair(KeyName=name, KeyType=keyType, KeyFormat=keyFormat)
         except ClientError as error:
             if error.response['Error']['Code'] == 'InvalidKeyPair.Duplicate':
                 print(error.response['Error']['Message'])
                 print(f'If you still have your key, move it into this working directory and make sure that it is named "{name}".')
                 print(f'Otherwise, call clean_up() and re-try the operation.')
                 raise error
-        key = open(self.key_path, 'x')
+        key = open(self._key_path, 'x')
         key.write(response['KeyMaterial'])
         key.close()
-        os.chmod(self.key_path, 0o400)
+        os.chmod(self._key_path, 0o400)
 
-        self.root_key = self.resources.KeyPair(name)
-        return self.root_key
+        self._root_key = self._resources.KeyPair(name)
+        return self._root_key
 
 
     def _delete_root_key(self) -> None:
         name = 'stochss-root'
-        self.client.delete_key_pair(KeyName=name)
-        if os.path.exists(self.key_path):
-            os.remove(self.key_path)
-        self.root_key = None
-        self.key_path = ''
+        self._client.delete_key_pair(KeyName=name)
+        if os.path.exists(self._key_path):
+            os.remove(self._key_path)
+        self._root_key = None
+        self._key_path = ''
 
     def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -91,7 +90,7 @@ class Cluster():
             }
         ]
 
-        vpc_response = self.client.describe_vpcs(Filters=vpc_search_filter)
+        vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
         
         if len(vpc_response['Vpcs']) == 0:
             vpc_tag = [
@@ -105,24 +104,24 @@ class Cluster():
                     ]
                 }
             ]
-            vpc_response = self.client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
+            vpc_response = self._client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
             vpc_id = vpc_response['Vpc']['VpcId']
-            self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
-            self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True })
-            igw_response = self.client.create_internet_gateway()
+            self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
+            self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True })
+            igw_response = self._client.create_internet_gateway()
             igw_id = igw_response['InternetGateway']['InternetGatewayId']
-            self.vpc = self.resources.Vpc(vpc_id)
-            self.vpc.attach_internet_gateway(InternetGatewayId=igw_id)
-            for rtb in self.vpc.route_tables.all():
+            self._vpc = self._resources.Vpc(vpc_id)
+            self._vpc.attach_internet_gateway(InternetGatewayId=igw_id)
+            for rtb in self._vpc.route_tables.all():
                 if rtb.associations_attribute[0]['Main'] == True:
                     rtb_id = rtb.route_table_id
-            self.client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
+            self._client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
 
         else:
             vpc_id = vpc_response['Vpcs'][0]['VpcId']
-            self.vpc = self.resources.Vpc(vpc_id)
+            self._vpc = self._resources.Vpc(vpc_id)
         
-        return self.vpc
+        return self._vpc
 
     def _create_sssc_subnet(self):
         subnet_cidrBlock = '172.31.0.0/20'
@@ -130,7 +129,7 @@ class Cluster():
             {
                 'Name': 'vpc-id',
                 'Values': [
-                    self.vpc.id
+                    self._vpc.id
                 ]
             },
             {
@@ -146,7 +145,7 @@ class Cluster():
                 ]
             }
         ]
-        subnet_response = self.client.describe_subnets(Filters=subnet_search_filter)
+        subnet_response = self._client.describe_subnets(Filters=subnet_search_filter)
 
         if len(subnet_response['Subnets']) == 0:
             subnet_tag = [
@@ -160,23 +159,23 @@ class Cluster():
                     ]
                 }
             ]
-            self.subnet = self.vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
-            self.client.modify_subnet_attribute(SubnetId=self.subnet.id, MapPublicIpOnLaunch={'Value': True})
+            self._subnet = self._vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
+            self._client.modify_subnet_attribute(SubnetId=self._subnet.id, MapPublicIpOnLaunch={'Value': True})
         else:
             subnet_id = subnet_response['Subnets'][0]['SubnetId']
-            self.subnet = self.resources.Subnet(subnet_id)
+            self._subnet = self._resources.Subnet(subnet_id)
             
-        return self.subnet
+        return self._subnet
 
     def _create_sssc_security_group(self):
-        self.security_group = self.vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
+        self._security_group = self._vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
         sshargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': 22,
             'ToPort': 22,
             'IpProtocol': 'tcp',
         }
-        self.security_group.authorize_ingress(**sshargs)
+        self._security_group.authorize_ingress(**sshargs)
         sgargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': 29681,
@@ -194,8 +193,8 @@ class Cluster():
                 },
             ]
         }
-        self.security_group.authorize_ingress(**sgargs)
-        return self.security_group
+        self._security_group.authorize_ingress(**sgargs)
+        return self._security_group
 
     def _restrict_ingress(self, ipAddress: str = ''):
         filter=[
@@ -206,7 +205,7 @@ class Cluster():
                 ]
             },
         ]
-        sg_response = self.client.describe_security_groups(Filters=filter)
+        sg_response = self._client.describe_security_groups(Filters=filter)
         # print(sg_response)
         sg_id = sg_response['SecurityGroups'][0]['GroupId']
         filter2=[
@@ -223,7 +222,7 @@ class Cluster():
                 ]
             },
         ]
-        sgr_response = self.client.describe_security_group_rules(Filters=filter2)
+        sgr_response = self._client.describe_security_group_rules(Filters=filter2)
         print(sgr_response)
         sgr_id = sgr_response['SecurityGroupRules'][0]['SecurityGroupRuleId']
         securityGroupRules=[
@@ -233,45 +232,43 @@ class Cluster():
                     'IpProtocol': 'tcp',
                     'FromPort': 29681,
                     'ToPort': 29681,
-                    # 'CidrIpv4': f'{ipAddress}/32',
-                    'CidrIpv4': '0.0.0.0/0',
+                    'CidrIpv4': f'{ipAddress}/32',
+                    # 'CidrIpv4': '0.0.0.0/0',
                     'Description': 'TEST'
                 }
             },
         ]
-        self.client.modify_security_group_rules(GroupId=sg_id, SecurityGroupRules=securityGroupRules)
-        sgr_response = self.client.describe_security_group_rules(Filters=filter2)
+        self._client.modify_security_group_rules(GroupId=sg_id, SecurityGroupRules=securityGroupRules)
+        sgr_response = self._client.describe_security_group_rules(Filters=filter2)
         print(sgr_response)
 
     def _launch_network(self):
         self._create_sssc_vpc()
         self._create_sssc_subnet()
         self._create_sssc_security_group()
-        return self.vpc
+        return self._vpc
 
-    def launch_single_node_cluster(self):
-        self._launch_network()
-        self._create_root_key()
-        return self._launch_server()
 
     def _launch_server(self, *, imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro'):
         name = 'sssc-server'
-        token = token_bytes(8)
-        launch_commands = f'''!/bin/bash
+        _cloud_key = token_hex(32)
+
+        launch_commands = f'''#!/bin/bash
 sudo yum update -y
 sudo yum -y install docker
 sudo service docker start
 sudo usermod -a -G docker ec2-user
-sudo chmod 666 /var/run/docker.sock
-docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev'''
+sudo chmod 666 /var/run/docker.sock 
+docker run --network host --rm -e CLOUD_LOCK={_cloud_key} stochss/stochss-compute:dev > /home/ec2-user/dockout 2> /home/ec2-user/dockerror
+'''
         kwargs = {
             'ImageId': imageId, 
             'InstanceType': instanceType,
-            'KeyName': self.rootKey.key_name,
+            'KeyName': self._root_key.key_name,
             'MinCount': 1, 
             'MaxCount': 1,
-            'SubnetId': self.subnet.id,
-            'SecurityGroupIds': [self.security_group.id],
+            'SubnetId': self._subnet.id,
+            'SecurityGroupIds': [self._security_group.id],
             'TagSpecifications': [
                 {
                     'ResourceType': 'instance',
@@ -283,26 +280,32 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
                     ]
                 },
             ],
-            # 'UserData': launch_commands,
+            'UserData': launch_commands,
             }
         print(f'Launching StochSS-Compute server instance.......(This could take a minute)')
-        response = self.client.run_instances(**kwargs)
+        response = self._client.run_instances(**kwargs)
         self.returns['launch'] = response # just for debug or keep?
         instance_id = response['Instances'][0]['InstanceId']
-        self.server = self.resources.Instance(id)
-        self.server.wait_until_running()
-        print(f'Instance "{instance_id}" is now ready.')
-        return self.server
+        self._server = self._resources.Instance(instance_id)
+        self._server.wait_until_running()
+        self._cloud_key = _cloud_key
+        print(f'Instance "{instance_id}" is running.')
+        return self._server
 
     def _terminate_all_instances(self) -> None:
-        describe_instances = self.client.describe_instances()
+        describe_instances = self._client.describe_instances()
         instance_ids = []
         for reservation in describe_instances['Reservations']:
             for instance in reservation['Instances']:
                 instance_ids.append(instance['InstanceId'])
         print(instance_ids)
-        self.client.terminate_instances(InstanceIds=instance_ids)
+        self._client.terminate_instances(InstanceIds=instance_ids)
 
+    def launch_single_node_cluster(self):
+        self._launch_network()
+        self._create_root_key()
+        return self._launch_server()
+        
     def clean_up(self):
         vpc_cidrBlock = '172.31.0.0/16'
         vpc_search_filter = [
@@ -320,28 +323,28 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
             }
         ]
         # instead, can just check to see if reference is None?
-        vpc_response = self.client.describe_vpcs(Filters=vpc_search_filter)
+        vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
         if len(vpc_response['Vpcs']) != 0:
-            vpc = self.vpc
+            vpc = self._vpc
             for instance in vpc.instances.all():
                 instance.terminate()
                 print(f'Terminating "{instance.id}". This might take a minute.......')
                 instance.wait_until_terminated()
-                self.server = None
-                self.scheduler = None
-                self.workers = []
+                self._server = None
+                self._scheduler = None
+                self._workers = []
                 print(f'Instance {instance.id}" terminated.')
             # TODO seems to still be launching into default security group? I think this is the defined behavior
             for sg in vpc.security_groups.all():
                 if sg.group_name == 'sssc-sg':
                     print(f'Deleting {sg.id}.......')
                     sg.delete()
-                    self.security_group = None
+                    self._security_group = None
                     print(f'Security group {sg.id} deleted.')
             for subnet in vpc.subnets.all():
                 print(f'Deleting {subnet.id}.......')
                 subnet.delete()
-                self.subnet = None
+                self._subnet = None
                 print(f'Subnet {subnet.id} deleted.')
             for igw in vpc.internet_gateways.all():
                 print(f'Detaching {igw.id}.......')
@@ -352,34 +355,14 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
                 print(f'Gateway {igw.id} deleted.')
             print(f'Deleting {vpc.id}.......')
             vpc.delete()
-            self.vpc = None
+            self._vpc = None
             print(f'VPC {vpc.id} deleted.')
         
-        print(f'Deleting {self.root_key.key_pair_id}.......')
+        print(f'Deleting {self._root_key.key_pair_id}.......')
         self._delete_root_key()
 
         print(f'Root key deleted.')
 
-
-    def _get_running(self) -> List[str]:
-        kwargs = {
-            'Filters':[
-                {
-                    'Name':'instance-state-name',
-                    'Values':[
-                        'running'
-                    ]
-                }
-            ]
-        }
-        client = boto3.client('ec2')
-        running_instances = client.describe_instances(**kwargs)
-        # make a dictionary from describe instances
-        instance_ids = []
-        for reservation in running_instances['Reservations']:
-            for instance in reservation['Instances']:
-                instance_ids.append(instance['InstanceId'])
-        return instance_ids
 
     def reload_cluster():
         # Will reload the cluster in case the user messes something up in the dashboard/something goes wrong.
@@ -387,8 +370,13 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
         pass
 
     def run(self, model: Model):
-        myServer = ComputeServer("localhost", port=29681)
-        if self.unlocked == False:
-            unlock_response = RemoteSimulation.on(myServer).with_model(model).run(unlock=True)
+        ip = self._server.public_ip_address
+        myServer = ComputeServer(ip, port=29681)
+        if self._locked == False:
+            source_ip = RemoteSimulation.on(myServer).with_model(model).run(cloud_key=self._cloud_key)
+            self._restrict_ingress(source_ip)
+            self._locked = True
+        return RemoteSimulation.on(myServer).with_model(model).run()
+
 
         
