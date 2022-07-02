@@ -26,43 +26,33 @@ class Cluster():
         
 
     def _create_root_key(self):
+        name = 'stochss-root'
         savePath='./'
         keyType='ed25519'
         keyFormat='pem'
-        valid_formats = {'pem', 'ppk'}
-        if keyFormat not in valid_formats:
-            raise ValueError(f'keyFormat must be one of {valid_formats}.')
 
-        valid_types = {'ed25519', 'rsa'}
-        if keyType not in valid_types:
-            raise ValueError(f'keyType must be one of {valid_types}.')
-
-        key_path = f'{savePath}{self.rootKey.name}.{keyFormat}'
+        key_path = f'{savePath}{name}.{keyFormat}'
 
         if os.path.exists(key_path):
             print(f'StochSS-Compute root key detected in working directory. Using "{key_path}".')
             try:
-                key_pair_response = self.client.describe_key_pairs(KeyNames=[self.rootKey.name])
+                key_pair_response = self.client.describe_key_pairs(KeyNames=[name])
             except ClientError as error:
                 if error.response['Error']['Code'] == 'InvalidKeyPair.NotFound':
                     print(error.response['Error']['Message'])
-                    print(f'An outdated key detected in working directory:  "{self.rootKey.name}".')
+                    print(f'An outdated key detected in working directory:  "{name}".')
                     print(f'Call clean_up() and re-try the operation.')
                     raise error
-            self.rootKey.id = key_pair_response['KeyPairs'][0]['KeyPairId']
-            self.rootKey.fingerprint = key_pair_response['KeyPairs'][0]['KeyFingerprint']
-            self.rootKey.path = key_path
-            self.rootKey.type = key_pair_response['KeyPairs'][0]['KeyType']
-            self.rootKey.format = keyFormat
+            self.rootKey = self.resources.KeyPair(name)
             return self.rootKey
 
         
         try:
-            response = self.client.create_key_pair(KeyName=self.rootKey.name, KeyType=keyType, KeyFormat=keyFormat)
+            response = self.client.create_key_pair(KeyName=name, KeyType=keyType, KeyFormat=keyFormat)
         except ClientError as error:
             if error.response['Error']['Code'] == 'InvalidKeyPair.Duplicate':
                 print(error.response['Error']['Message'])
-                print(f'If you still have your key, move it into this working directory and make sure that it is named "{self.rootKey.name}".')
+                print(f'If you still have your key, move it into this working directory and make sure that it is named "{name}".')
                 print(f'Otherwise, call clean_up() and re-try the operation.')
                 raise error
         key = open(key_path, 'x')
@@ -70,12 +60,7 @@ class Cluster():
         key.close()
         os.chmod(key_path, 0o400)
 
-        self.rootKey.id = response['KeyPairId']
-        self.rootKey.fingerprint = response['KeyFingerprint']
-        self.rootKey.path = key_path
-        self.rootKey.type = keyType
-        self.rootKey.format = keyFormat
-        self.rootKey = self.resources.KeyPair('sssc-root')
+        self.rootKey = self.resources.KeyPair(name)
         return self.rootKey
 
 
@@ -268,10 +253,7 @@ class Cluster():
         self._create_root_key()
         return self._launch_instances(subnetId=self.subnet.id, securityGroupId=self.security_group.id)
 
-    def _launch_instances(self, *, subnetId, securityGroupId, name='server', imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro', minCount=1, maxCount=1) -> Union[List[Instance], Instance]:
-        valid_types = {'server', 'scheduler', 'worker'}
-        if name not in valid_types:
-            raise ValueError(f'"name" must be one of {valid_types}.')
+    def _launch_server(self, *, subnetId, securityGroupId, imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro',):
         token = token_bytes(8)
         launch_commands = f'''!/bin/bash
 sudo yum update -y
@@ -284,59 +266,31 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
             'ImageId': imageId, 
             'InstanceType': instanceType,
             'KeyName': self.rootKey.key_name,
-            'MinCount': minCount, 
-            'MaxCount': maxCount,
+            'MinCount': 1, 
+            'MaxCount': 1,
             'SubnetId': subnetId,
             'SecurityGroupIds': [securityGroupId],
-            'UserData': launch_commands,
+            'TagSpecifications': [
+                {
+                    'ResourceType': 'instance',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': f'sssc-server'
+                        },
+                    ]
+                },
+            ],
+            # 'UserData': launch_commands,
             }
-
+        print(f'Launching StochSS-Compute server instance.......(This could take a minute)')
         response = self.client.run_instances(**kwargs)
-        self.returns['launch'] = response # just for debug or keep? (if keeping make a list)
-        instance_ids = []
-        for instance in response['Instances']:
-            instance_ids.append(instance['InstanceId'])
-        instances = []
-        for i, id in enumerate(instance_ids):
-            instance = self.resources.Instance(id)
-            instance.wait_until_running()
-            print(f'Instance "{id}" is now ready.')
-            _instance = self.Instance(id) #consider changing name due to similarity with boto3 class name
-            if name =='worker':
-                _instance.name = f'sssc-{name}-{i}'
-            elif name == 'scheduler':
-                _instance.name = f'sssc-{name}'
-            else:
-                _instance.name = name
-
-            # TODO find out how to best refactor this (probably just the obvious)
-            _instance.architechture = instance.architecture
-            _instance.cores = instance.cpu_options['CoreCount']
-            _instance.threads_per_core = instance.cpu_options['ThreadsPerCore']
-            _instance.image_id = instance.image_id
-            _instance.instance_type = instance.instance_type
-            _instance.key_name = instance.key_name
-            _instance.launch_time = instance.launch_time
-            _instance.availability_zone = instance.placement['AvailabilityZone']
-            _instance.platform = instance.platform_details
-            _instance.private_dns_name = instance.private_dns_name
-            _instance.private_ip_address = instance.private_ip_address
-            _instance.public_dns_name = instance.public_dns_name
-            _instance.public_ip_address = instance.public_ip_address
-            _instance.root_device_name = instance.root_device_name
-            _instance.root_device_type = instance.root_device_type
-            _instance.security_group_name = instance.security_groups[0]['GroupName']
-            _instance.security_group_id = instance.security_groups[0]['GroupId']
-            _instance.subnet_id = instance.subnet_id
-            _instance.vpc_id = instance.vpc_id
-
-            instances.append(_instance)
-        self.instances.extend(instances)
-
-        if len(instances) == 1:
-            return instances[0]
-        if len(instances) > 1:
-            return instances
+        self.returns['launch'] = response # just for debug or keep?
+        instance_id = response['Instances'][0]['InstanceId']
+        self.server = self.resources.Instance(id)
+        self.server.wait_until_running()
+        print(f'Instance "{instance_id}" is now ready.')
+        return self.server
 
     def _terminate_all_instances(self) -> None:
         describe_instances = self.client.describe_instances()
@@ -415,9 +369,8 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
                 instance_ids.append(instance['InstanceId'])
         return instance_ids
 
-    def describe_instances()
 
-    def run(model: Model):
+    def run(self, model: Model):
         myServer = ComputeServer("localhost", port=29681)
         if self.unlocked == False:
             unlock_response = RemoteSimulation.on(myServer).with_model(model).run(unlock=True)
