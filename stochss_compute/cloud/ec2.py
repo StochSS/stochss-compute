@@ -24,6 +24,7 @@ class Cluster():
     def __init__(self) -> None:
         self.returns = {}
         # see if unlocked
+        # re-load cluster by setting resources
         
 
     def _create_root_key(self):
@@ -70,6 +71,8 @@ class Cluster():
         self.client.delete_key_pair(KeyName=name)
         if os.path.exists(self.key_path):
             os.remove(self.key_path)
+        self.root_key = None
+        self.key_path = ''
 
     def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -108,26 +111,26 @@ class Cluster():
             self.client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True })
             igw_response = self.client.create_internet_gateway()
             igw_id = igw_response['InternetGateway']['InternetGatewayId']
-            vpc = self.resources.Vpc(vpc_id)
-            vpc.attach_internet_gateway(InternetGatewayId=igw_id)
-            for rtb in vpc.route_tables.all():
+            self.vpc = self.resources.Vpc(vpc_id)
+            self.vpc.attach_internet_gateway(InternetGatewayId=igw_id)
+            for rtb in self.vpc.route_tables.all():
                 if rtb.associations_attribute[0]['Main'] == True:
                     rtb_id = rtb.route_table_id
             self.client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
 
         else:
             vpc_id = vpc_response['Vpcs'][0]['VpcId']
+            self.vpc = self.resources.Vpc(vpc_id)
         
-        self.vpc = self.resources.Vpc(vpc_id)
         return self.vpc
 
-    def _create_sssc_subnet(self, vpcId):
+    def _create_sssc_subnet(self):
         subnet_cidrBlock = '172.31.0.0/20'
         subnet_search_filter = [
             {
                 'Name': 'vpc-id',
                 'Values': [
-                    vpcId
+                    self.vpc.id
                 ]
             },
             {
@@ -144,8 +147,8 @@ class Cluster():
             }
         ]
         subnet_response = self.client.describe_subnets(Filters=subnet_search_filter)
+
         if len(subnet_response['Subnets']) == 0:
-            vpc = self.resources.Vpc(vpcId)
             subnet_tag = [
                 {
                     'ResourceType': 'subnet',
@@ -157,25 +160,23 @@ class Cluster():
                     ]
                 }
             ]
-            subnet_response = vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
-            subnet_id = subnet_response.subnet_id
-            self.client.modify_subnet_attribute(SubnetId=subnet_id, MapPublicIpOnLaunch={'Value': True})
+            self.subnet = self.vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
+            self.client.modify_subnet_attribute(SubnetId=self.subnet.id, MapPublicIpOnLaunch={'Value': True})
         else:
             subnet_id = subnet_response['Subnets'][0]['SubnetId']
-        self.subnet = self.resources.Subnet(subnet_id)
+            self.subnet = self.resources.Subnet(subnet_id)
             
         return self.subnet
 
-    def _create_sssc_security_group(self, vpcId):
-        vpc = self.resources.Vpc(vpcId)
-        sg = vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
+    def _create_sssc_security_group(self):
+        self.security_group = self.vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
         sshargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': 22,
             'ToPort': 22,
             'IpProtocol': 'tcp',
         }
-        sg.authorize_ingress(**sshargs)
+        self.security_group.authorize_ingress(**sshargs)
         sgargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': 29681,
@@ -193,8 +194,7 @@ class Cluster():
                 },
             ]
         }
-        sg.authorize_ingress(**sgargs)
-        self.security_group = sg
+        self.security_group.authorize_ingress(**sgargs)
         return self.security_group
 
     def _restrict_ingress(self, ipAddress: str = ''):
@@ -245,15 +245,17 @@ class Cluster():
 
     def _launch_network(self):
         self._create_sssc_vpc()
-        self._create_sssc_subnet(self.vpc.id)
-        self._create_sssc_security_group(self.vpc.id)
+        self._create_sssc_subnet()
+        self._create_sssc_security_group()
+        return self.vpc
 
     def launch_single_node_cluster(self):
         self._launch_network()
         self._create_root_key()
-        return self._launch_instances(subnetId=self.subnet.id, securityGroupId=self.security_group.id)
+        return self._launch_server()
 
-    def _launch_server(self, *, subnetId, securityGroupId, imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro',):
+    def _launch_server(self, *, imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro'):
+        name = 'sssc-server'
         token = token_bytes(8)
         launch_commands = f'''!/bin/bash
 sudo yum update -y
@@ -268,15 +270,15 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
             'KeyName': self.rootKey.key_name,
             'MinCount': 1, 
             'MaxCount': 1,
-            'SubnetId': subnetId,
-            'SecurityGroupIds': [securityGroupId],
+            'SubnetId': self.subnet.id,
+            'SecurityGroupIds': [self.security_group.id],
             'TagSpecifications': [
                 {
                     'ResourceType': 'instance',
                     'Tags': [
                         {
                             'Key': 'Name',
-                            'Value': f'sssc-server'
+                            'Value': name
                         },
                     ]
                 },
@@ -317,25 +319,29 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
                 ]
             }
         ]
-
+        # instead, can just check to see if reference is None?
         vpc_response = self.client.describe_vpcs(Filters=vpc_search_filter)
         if len(vpc_response['Vpcs']) != 0:
-            vpc_id = vpc_response['Vpcs'][0]['VpcId']
-            vpc = self.resources.Vpc(vpc_id)
+            vpc = self.vpc
             for instance in vpc.instances.all():
                 instance.terminate()
                 print(f'Terminating "{instance.id}". This might take a minute.......')
                 instance.wait_until_terminated()
+                self.server = None
+                self.scheduler = None
+                self.workers = []
                 print(f'Instance {instance.id}" terminated.')
-            # TODO seems to still be launching into default security group?
+            # TODO seems to still be launching into default security group? I think this is the defined behavior
             for sg in vpc.security_groups.all():
                 if sg.group_name == 'sssc-sg':
                     print(f'Deleting {sg.id}.......')
                     sg.delete()
+                    self.security_group = None
                     print(f'Security group {sg.id} deleted.')
             for subnet in vpc.subnets.all():
                 print(f'Deleting {subnet.id}.......')
                 subnet.delete()
+                self.subnet = None
                 print(f'Subnet {subnet.id} deleted.')
             for igw in vpc.internet_gateways.all():
                 print(f'Detaching {igw.id}.......')
@@ -346,8 +352,14 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
                 print(f'Gateway {igw.id} deleted.')
             print(f'Deleting {vpc.id}.......')
             vpc.delete()
+            self.vpc = None
             print(f'VPC {vpc.id} deleted.')
+        
+        print(f'Deleting {self.root_key.key_pair_id}.......')
         self._delete_root_key()
+
+        print(f'Root key deleted.')
+
 
     def _get_running(self) -> List[str]:
         kwargs = {
@@ -369,6 +381,10 @@ docker run -it --network host -e CLOUD_KEY={token} stochss/stochss-compute:dev''
                 instance_ids.append(instance['InstanceId'])
         return instance_ids
 
+    def reload_cluster():
+        # Will reload the cluster in case the user messes something up in the dashboard/something goes wrong.
+        # basically will just be calling _init_ again once that contains the logic to load up everything into the object references by name
+        pass
 
     def run(self, model: Model):
         myServer = ComputeServer("localhost", port=29681)
