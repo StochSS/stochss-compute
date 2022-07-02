@@ -194,8 +194,6 @@ class Cluster():
             ]
         }
         sg.authorize_ingress(**sgargs)
-        # test this by seeing if permissions change or not
-        # sg.reload()
         self.security_group = sg
         return self.security_group
 
