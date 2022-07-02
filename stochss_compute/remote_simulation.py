@@ -68,7 +68,7 @@ class RemoteSimulation():
         start_response = unwrap_or_err(JobStatusResponse, self.server.post(Endpoint.GILLESPY2_MODEL, sub="/run", request=start_request))
         print('****************')
         print(start_response.status_msg)
-        if start_response.job_id == 'Unlock':
+        if start_response.job_id == 'Locked':
             return start_response.status_msg
         remote_results = RemoteResults(result_id=start_response.job_id, server=self.server)
         return remote_results

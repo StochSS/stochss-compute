@@ -55,15 +55,17 @@ def run():
     model_id = f"{model.get_json_hash()}"
     number_trajectories = int(run_request.kwargs.pop("number_of_trajectories", 1))
 
-    unlock = run_request.kwargs.pop('unlock', False)
-    cloud_key = os.environ.get('CLOUD_KEY')
+    cloud_key = run_request.kwargs.pop('cloud_key', None)
+    cloud_lock = os.environ.get('CLOUD_LOCK')
+    print(cloud_key)
+    print(cloud_lock)
     print(run_request.kwargs)
-    if cloud_key is not None and unlock == cloud_key:
+    if cloud_lock is not None and cloud_key == cloud_lock:
         print(f">>>>>>>>>>>>>>>>{cloud_key}")
         print(f">>>>>>>>>>>>>>>>{request.remote_addr}")
         source_ip = request.remote_addr
         return JobStatusResponse(
-        job_id='Unlock',
+        job_id='Locked',
         status_id=0,
         status_msg=source_ip,
         is_complete=False,
