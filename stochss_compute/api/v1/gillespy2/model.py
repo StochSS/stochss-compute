@@ -56,10 +56,10 @@ def run():
     number_trajectories = int(run_request.kwargs.pop("number_of_trajectories", 1))
 
     unlock = run_request.kwargs.pop('unlock', False)
+    cloud_key = os.environ.get('CLOUD_KEY')
     print(run_request.kwargs)
-    if unlock == True:
-        key = os.environ.get('CLOUD_KEY')
-        print(f">>>>>>>>>>>>>>>>{key}")
+    if cloud_key is not None and unlock == cloud_key:
+        print(f">>>>>>>>>>>>>>>>{cloud_key}")
         print(f">>>>>>>>>>>>>>>>{request.remote_addr}")
         source_ip = request.remote_addr
         return JobStatusResponse(
