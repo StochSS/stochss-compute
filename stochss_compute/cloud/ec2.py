@@ -11,14 +11,15 @@ class Cluster():
     client = boto3.client('ec2')
     resources = boto3.resource('ec2')
     unlocked: bool = False
-    cloud_key: str = None
+    cloud_key: str = ''
     subnet = None
     security_group = None
     vpc = None
     server = None
     scheduler = None
-    workers: List = None
-    rootKey = None 
+    workers = []
+    root_key = None
+    key_path = ''
 
     def __init__(self) -> None:
         self.returns = {}
@@ -31,10 +32,10 @@ class Cluster():
         keyType='ed25519'
         keyFormat='pem'
 
-        key_path = f'{savePath}{name}.{keyFormat}'
+        self.key_path = f'{savePath}{name}.{keyFormat}'
 
-        if os.path.exists(key_path):
-            print(f'StochSS-Compute root key detected in working directory. Using "{key_path}".')
+        if os.path.exists(self.key_path):
+            print(f'StochSS-Compute root key detected in working directory. Using "{self.key_path}".')
             try:
                 key_pair_response = self.client.describe_key_pairs(KeyNames=[name])
             except ClientError as error:
@@ -43,8 +44,8 @@ class Cluster():
                     print(f'An outdated key detected in working directory:  "{name}".')
                     print(f'Call clean_up() and re-try the operation.')
                     raise error
-            self.rootKey = self.resources.KeyPair(name)
-            return self.rootKey
+            self.root_key = self.resources.KeyPair(name)
+            return self.root_key
 
         
         try:
@@ -55,19 +56,20 @@ class Cluster():
                 print(f'If you still have your key, move it into this working directory and make sure that it is named "{name}".')
                 print(f'Otherwise, call clean_up() and re-try the operation.')
                 raise error
-        key = open(key_path, 'x')
+        key = open(self.key_path, 'x')
         key.write(response['KeyMaterial'])
         key.close()
-        os.chmod(key_path, 0o400)
+        os.chmod(self.key_path, 0o400)
 
-        self.rootKey = self.resources.KeyPair(name)
-        return self.rootKey
+        self.root_key = self.resources.KeyPair(name)
+        return self.root_key
 
 
     def _delete_root_key(self) -> None:
-        self.client.delete_key_pair(KeyName=self.rootKey.name)
-        if os.path.exists(self.rootKey.path):
-            os.remove(self.rootKey.path)
+        name = 'stochss-root'
+        self.client.delete_key_pair(KeyName=name)
+        if os.path.exists(self.key_path):
+            os.remove(self.key_path)
 
     def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -193,7 +195,7 @@ class Cluster():
         }
         sg.authorize_ingress(**sgargs)
         # test this by seeing if permissions change or not
-        sg.reload()
+        # sg.reload()
         self.security_group = sg
         return self.security_group
 
