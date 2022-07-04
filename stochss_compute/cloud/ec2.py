@@ -6,7 +6,9 @@ from gillespy2 import Model
 from stochss_compute import RemoteSimulation, ComputeServer
 from secrets import token_hex
 
-class Cluster():
+from stochss_compute.compute_server import Endpoint
+
+class Cluster(ComputeServer):
 
     _client = boto3.client('ec2')
     _resources = boto3.resource('ec2')
@@ -22,7 +24,20 @@ class Cluster():
     _key_path = ''
 
     def __init__(self) -> None:
-        pass
+        # TODO this will have to go after the address is made in launch
+        self.job_api = f"{self.address}/job"
+        self.memory_api = f"{self.address}/memory"
+        self.gillespy2_model_api = f"{self.address}/gillespy2/model"
+        self.gillespy2_results_api = f"{self.address}/gillespy2/results"
+        self.cloud_api = f"{self.address}/cloud"
+
+        self.endpoints = {
+            Endpoint.JOB: self.job_api,
+            Endpoint.RESULT: self.memory_api,
+            Endpoint.GILLESPY2_MODEL: self.gillespy2_model_api,
+            Endpoint.GILLESPY2_RESULTS: self.gillespy2_results_api,
+            Endpoint.CLOUD: self.cloud_api
+        }
         # see if _locked
         # re-load cluster by setting _resources
         
@@ -376,7 +391,7 @@ docker run --network host --rm -e CLOUD_LOCK={_cloud_key} stochss/stochss-comput
         ip = self._server.public_ip_address
         myServer = ComputeServer(ip, port=29681)
         if self._locked == False:
-            source_ip = RemoteSimulation.on(myServer).with_model(model).run(cloud_key=self._cloud_key)
+            source_ip = RemoteSimulation.on(myServer).with_model(model).lock_cluster(self._cloud_key)
             self._restrict_ingress(source_ip)
             self._locked = True
         return RemoteSimulation.on(myServer).with_model(model).run()
