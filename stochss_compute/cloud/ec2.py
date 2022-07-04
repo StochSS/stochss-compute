@@ -1,3 +1,4 @@
+from time import sleep
 import boto3
 from botocore.exceptions import ClientError
 import os
@@ -290,6 +291,8 @@ docker run --network host --rm -e CLOUD_LOCK={_cloud_key} stochss/stochss-comput
         self._server.wait_until_running()
         self._cloud_key = _cloud_key
         print(f'Instance "{instance_id}" is running.')
+        print(f'Downloading updates and starting server......')
+        sleep(30)
         return self._server
 
     def _terminate_all_instances(self) -> None:
