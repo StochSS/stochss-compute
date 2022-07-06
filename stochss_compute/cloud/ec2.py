@@ -293,13 +293,17 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         instance_id = response['Instances'][0]['InstanceId']
         self._server = self._resources.Instance(instance_id)
         self._server.wait_until_running()
+
         self._cloud_key = cloud_key
 
         print(f'Instance "{instance_id}" is running.')
 
         self._poll_launch_progress()
-        print('Restricting server access to only your ip.')
-        print(self._get_source_ip())
+        if self._restricted == False:
+            print('Restricting server access to only your ip.')
+            source_ip = self._get_source_ip()
+            self._restrict_ingress(source_ip)
+            self._restricted = True
         print('StochSS-Compute ready to go!')
         return self._server
 
@@ -307,13 +311,17 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         print(f'Downloading updates and starting server......')
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy())
+        sshtries = 0
         while True:
             try:
                 ssh.connect(self._server.public_ip_address, username='ec2-user', key_filename=self._key_path, look_for_keys=False)
                 break
             except Exception as e:
-                print(e)
+                if sshtries >= 5:
+                    raise e
+                self._server.reload()
                 sleep(5)
+                sshtries += 1
                 continue
 
         docker_installed = False
@@ -330,18 +338,14 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 if docker_installed == False:
                     print('Updates installed. Downloading Docker image.')
                 docker_installed = True
-            if rc != 0:
-                print(f'Non-zero exit status: {rc}.')
             if rc == 0:
-                print('Exit status 0.')
-            out = stdout.readline()
-            if out == 'true\n':
-                sleep(5)
-                print('StochSS-Compute is running.')
-                ssh.close()
-                break
-            else:
-                sleep(15)
+                out = stdout.readline()
+                if out == 'true\n':
+                    sleep(5)
+                    print('StochSS-Compute is running.')
+                    ssh.close()
+                    break
+            sleep(15)
 
     def launch_single_node_cluster(self):
         self._launch_network()
@@ -421,10 +425,6 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
     def run(self, model: Model):
         ip = self._server.public_ip_address
         server = ComputeServer(ip, port=29681)
-        if self._restricted == False:
-            source_ip = self._get_source_ip()
-            self._restrict_ingress(source_ip)
-            self._restricted = True
         return RemoteSimulation.on(server).with_model(model).run()
 
 
