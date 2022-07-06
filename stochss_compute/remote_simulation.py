@@ -5,8 +5,6 @@ import plotly.io as plotlyio
 
 from gillespy2.core import Model
 
-from stochss_compute.cloud.api import LockRequest, LockResponse
-
 from .remote_utils import unwrap_or_err
 
 from .compute_server import Endpoint
@@ -51,11 +49,6 @@ class RemoteSimulation():
         self.model = model
 
         return self
-
-    def lock_cluster(self, cloud_key):
-        lock_request = LockRequest(cloud_key=cloud_key)
-        lock_response = unwrap_or_err(LockResponse, self.server.post(Endpoint.CLOUD, sub='/lock', request=lock_request))
-        return lock_response.source_ip
 
     def run(self, **params) -> RemoteResults:
         """

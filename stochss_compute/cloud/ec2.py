@@ -7,12 +7,14 @@ from stochss_compute import RemoteSimulation, ComputeServer
 from secrets import token_hex
 
 from stochss_compute.compute_server import Endpoint
+from .api import SourceIpRequest, SourceIpResponse
+from ..remote_utils import unwrap_or_err
 
-class Cluster(ComputeServer):
+class Cluster():
 
     _client = boto3.client('ec2')
     _resources = boto3.resource('ec2')
-    _locked: bool = False
+    _restricted: bool = False
     _cloud_key: str = ''
     _subnet = None
     _security_group = None
@@ -25,20 +27,8 @@ class Cluster(ComputeServer):
 
     def __init__(self) -> None:
         # TODO this will have to go after the address is made in launch
-        self.job_api = f"{self.address}/job"
-        self.memory_api = f"{self.address}/memory"
-        self.gillespy2_model_api = f"{self.address}/gillespy2/model"
-        self.gillespy2_results_api = f"{self.address}/gillespy2/results"
-        self.cloud_api = f"{self.address}/cloud"
-
-        self.endpoints = {
-            Endpoint.JOB: self.job_api,
-            Endpoint.RESULT: self.memory_api,
-            Endpoint.GILLESPY2_MODEL: self.gillespy2_model_api,
-            Endpoint.GILLESPY2_RESULTS: self.gillespy2_results_api,
-            Endpoint.CLOUD: self.cloud_api
-        }
-        # see if _locked
+        pass
+        # see if _restricted
         # re-load cluster by setting _resources
         
 
@@ -222,7 +212,6 @@ class Cluster(ComputeServer):
             },
         ]
         sg_response = self._client.describe_security_groups(Filters=filter)
-        # print(sg_response)
         sg_id = sg_response['SecurityGroups'][0]['GroupId']
         filter2=[
             {
@@ -239,7 +228,6 @@ class Cluster(ComputeServer):
             },
         ]
         sgr_response = self._client.describe_security_group_rules(Filters=filter2)
-        print(sgr_response)
         sgr_id = sgr_response['SecurityGroupRules'][0]['SecurityGroupRuleId']
         securityGroupRules=[
             {
@@ -249,14 +237,12 @@ class Cluster(ComputeServer):
                     'FromPort': 29681,
                     'ToPort': 29681,
                     'CidrIpv4': f'{ipAddress}/32',
-                    # 'CidrIpv4': '0.0.0.0/0',
-                    'Description': 'TEST'
+                    'Description': 'Restricts cluster access.'
                 }
             },
         ]
         self._client.modify_security_group_rules(GroupId=sg_id, SecurityGroupRules=securityGroupRules)
         sgr_response = self._client.describe_security_group_rules(Filters=filter2)
-        print(sgr_response)
 
     def _launch_network(self):
         self._create_sssc_vpc()
@@ -275,7 +261,7 @@ sudo yum -y install docker
 sudo service docker start
 sudo usermod -a -G docker ec2-user
 sudo chmod 666 /var/run/docker.sock 
-docker run --network host --rm -e CLOUD_LOCK={_cloud_key} stochss/stochss-compute:dev > /home/ec2-user/dockout 2> /home/ec2-user/dockerror
+docker run --network host --rm -e CLOUD_LOCK={_cloud_key} --name sssc stochss/stochss-compute:dev > /home/ec2-user/sssc-logs 2> /home/ec2-user/sssc-logs
 '''
         kwargs = {
             'ImageId': imageId, 
@@ -300,24 +286,14 @@ docker run --network host --rm -e CLOUD_LOCK={_cloud_key} stochss/stochss-comput
             }
         print(f'Launching StochSS-Compute server instance.......(This could take a minute)')
         response = self._client.run_instances(**kwargs)
-        self.returns['launch'] = response # just for debug or keep?
         instance_id = response['Instances'][0]['InstanceId']
         self._server = self._resources.Instance(instance_id)
         self._server.wait_until_running()
         self._cloud_key = _cloud_key
+
         print(f'Instance "{instance_id}" is running.')
         print(f'Downloading updates and starting server......')
-        sleep(30)
         return self._server
-
-    def _terminate_all_instances(self) -> None:
-        describe_instances = self._client.describe_instances()
-        instance_ids = []
-        for reservation in describe_instances['Reservations']:
-            for instance in reservation['Instances']:
-                instance_ids.append(instance['InstanceId'])
-        print(instance_ids)
-        self._client.terminate_instances(InstanceIds=instance_ids)
 
     def launch_single_node_cluster(self):
         self._launch_network()
@@ -387,14 +363,21 @@ docker run --network host --rm -e CLOUD_LOCK={_cloud_key} stochss/stochss-comput
         # basically will just be calling _init_ again once that contains the logic to load up everything into the object references by name
         pass
 
+    def _get_source_ip(self):
+        ip = self._server.public_ip_address
+        server = ComputeServer(ip, port=29681)
+        source_ip_request = SourceIpRequest(cloud_key=self._cloud_key)
+        source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
+        return source_ip_response.source_ip
+
     def run(self, model: Model):
         ip = self._server.public_ip_address
-        myServer = ComputeServer(ip, port=29681)
-        if self._locked == False:
-            source_ip = RemoteSimulation.on(myServer).with_model(model).lock_cluster(self._cloud_key)
+        server = ComputeServer(ip, port=29681)
+        if self._restricted == False:
+            source_ip = self._get_source_ip()
             self._restrict_ingress(source_ip)
-            self._locked = True
-        return RemoteSimulation.on(myServer).with_model(model).run()
+            self._restricted = True
+        return RemoteSimulation.on(server).with_model(model).run()
 
 
         
