@@ -249,14 +249,16 @@ class Cluster():
         sgr_response = self._client.describe_security_group_rules(Filters=filter2)
 
     def _launch_network(self):
+        print("Launching Network.......")
         self._create_sssc_vpc()
         self._create_sssc_subnet()
         self._create_sssc_security_group()
         return self._vpc
 
 
-    def _launch_server(self, *, imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro'):
+    def _launch_server(self, instanceType='t3.micro'):
         name = 'sssc-server'
+        image_id = 'ami-0fa49cc9dc8d62c84'
         cloud_key = token_hex(32)
 
         launch_commands = f'''#!/bin/bash
@@ -268,7 +270,7 @@ sudo chmod 666 /var/run/docker.sock
 docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:dev > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err
 '''
         kwargs = {
-            'ImageId': imageId, 
+            'ImageId': image_id, 
             'InstanceType': instanceType,
             'KeyName': self._root_key.key_name,
             'MinCount': 1, 
@@ -408,7 +410,6 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         self._delete_root_key()
 
         print(f'Root key deleted.')
-
 
     def reload_cluster():
         # Will reload the cluster in case the user messes something up in the dashboard/something goes wrong.
