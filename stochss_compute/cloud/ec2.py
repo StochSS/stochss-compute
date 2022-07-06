@@ -1,14 +1,17 @@
-from time import sleep
-import boto3
-from botocore.exceptions import ClientError
-import os
-from gillespy2 import Model
 from stochss_compute import RemoteSimulation, ComputeServer
-from secrets import token_hex
-
 from stochss_compute.compute_server import Endpoint
 from .api import SourceIpRequest, SourceIpResponse
 from ..remote_utils import unwrap_or_err
+
+from gillespy2 import Model
+
+import boto3
+from botocore.exceptions import ClientError
+
+import os
+from time import sleep
+from secrets import token_hex
+
 
 class Cluster():
 
@@ -295,6 +298,9 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         print(f'Downloading updates and starting server......')
         return self._server
 
+    def _poll_launch_progress():
+        pass
+
     def launch_single_node_cluster(self):
         self._launch_network()
         self._create_root_key()
@@ -360,7 +366,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
 
     def reload_cluster():
         # Will reload the cluster in case the user messes something up in the dashboard/something goes wrong.
-        # basically will just be calling _init_ again once that contains the logic to load up everything into the object references by name
+        # basically will just be checking aws to see if the properly named resources exist in order to load up everything into the object references
         pass
 
     def _get_source_ip(self):
