@@ -253,7 +253,7 @@ class Cluster():
 
     def _launch_server(self, *, imageId='ami-0fa49cc9dc8d62c84', instanceType='t3.micro'):
         name = 'sssc-server'
-        _cloud_key = token_hex(32)
+        cloud_key = token_hex(32)
 
         launch_commands = f'''#!/bin/bash
 sudo yum update -y
@@ -261,7 +261,7 @@ sudo yum -y install docker
 sudo service docker start
 sudo usermod -a -G docker ec2-user
 sudo chmod 666 /var/run/docker.sock 
-docker run --network host --rm -e CLOUD_LOCK={_cloud_key} --name sssc stochss/stochss-compute:dev > /home/ec2-user/sssc-logs 2> /home/ec2-user/sssc-logs
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:dev > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err
 '''
         kwargs = {
             'ImageId': imageId, 
@@ -289,7 +289,7 @@ docker run --network host --rm -e CLOUD_LOCK={_cloud_key} --name sssc stochss/st
         instance_id = response['Instances'][0]['InstanceId']
         self._server = self._resources.Instance(instance_id)
         self._server.wait_until_running()
-        self._cloud_key = _cloud_key
+        self._cloud_key = cloud_key
 
         print(f'Instance "{instance_id}" is running.')
         print(f'Downloading updates and starting server......')
