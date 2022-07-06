@@ -35,7 +35,6 @@ class Cluster():
         # see if _restricted
         # re-load cluster by setting _resources
         
-
     def _create_root_key(self):
         name = 'stochss-root'
         savePath='./'
@@ -73,7 +72,6 @@ class Cluster():
 
         self._root_key = self._resources.KeyPair(name)
         return self._root_key
-
 
     def _delete_root_key(self) -> None:
         name = 'stochss-root'
@@ -255,7 +253,6 @@ class Cluster():
         self._create_sssc_security_group()
         return self._vpc
 
-
     def _launch_server(self, instanceType='t3.micro'):
         name = 'sssc-server'
         image_id = 'ami-0fa49cc9dc8d62c84'
@@ -427,6 +424,3 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         ip = self._server.public_ip_address
         server = ComputeServer(ip, port=29681)
         return RemoteSimulation.on(server).with_model(model).run()
-
-
-        
