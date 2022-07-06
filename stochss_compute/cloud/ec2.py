@@ -7,6 +7,7 @@ from gillespy2 import Model
 
 import boto3
 from botocore.exceptions import ClientError
+from paramiko import SSHClient, AutoAddPolicy
 
 import os
 from time import sleep
@@ -295,16 +296,45 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         self._cloud_key = cloud_key
 
         print(f'Instance "{instance_id}" is running.')
-        print(f'Downloading updates and starting server......')
+
+        self._poll_launch_progress()
         return self._server
 
-    def _poll_launch_progress():
-        pass
+    def _poll_launch_progress(self):
+        print(f'Downloading updates and starting server......')
+        ssh = SSHClient()
+        ssh.set_missing_host_key_policy(AutoAddPolicy())
+        while True:
+            try:
+                ssh.connect(self._server.public_ip_address, username='ec2-user', key_filename=self._key_path, look_for_keys=False)
+                break
+            except Exception as e:
+                print(e)
+                sleep(5)
+                continue
+        
+        while True:
+            stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' sssc")
+            rc = stdout.channel.recv_exit_status()
+            if rc == -1:
+                print("Something went wrong connecting to the server. No exit status provided by the server.")
+                return
+            if rc != 0:
+                print(f'Non-zero exit status: {rc}.')
+                return 
+            out = stdout.readline()
+            if out == 'true\n':
+                print('StochSS-Compute is running and ready to go!')
+                ssh.close()
+                break
+            else:
+                print('.................')
+                sleep(15)
 
     def launch_single_node_cluster(self):
         self._launch_network()
         self._create_root_key()
-        return self._launch_server()
+        self._launch_server()
         
     def clean_up(self):
         vpc_cidrBlock = '172.31.0.0/16'
