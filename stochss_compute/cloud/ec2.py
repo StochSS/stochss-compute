@@ -298,6 +298,9 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         print(f'Instance "{instance_id}" is running.')
 
         self._poll_launch_progress()
+        print('Restricting server access to only your ip.')
+        print(self._get_source_ip())
+        print('StochSS-Compute ready to go!')
         return self._server
 
     def _poll_launch_progress(self):
@@ -312,23 +315,32 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 print(e)
                 sleep(5)
                 continue
-        
+
+        docker_installed = False
+
         while True:
             stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' sssc")
             rc = stdout.channel.recv_exit_status()
             if rc == -1:
                 print("Something went wrong connecting to the server. No exit status provided by the server.")
                 return
+            if rc == 127:
+                print('.................')
+            if rc == 1:
+                if docker_installed == False:
+                    print('Updates installed. Downloading Docker image.')
+                docker_installed = True
             if rc != 0:
                 print(f'Non-zero exit status: {rc}.')
-                return 
+            if rc == 0:
+                print('Exit status 0.')
             out = stdout.readline()
             if out == 'true\n':
-                print('StochSS-Compute is running and ready to go!')
+                sleep(5)
+                print('StochSS-Compute is running.')
                 ssh.close()
                 break
             else:
-                print('.................')
                 sleep(15)
 
     def launch_single_node_cluster(self):
