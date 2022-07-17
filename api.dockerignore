@@ -1,0 +1,15 @@
+.dockerignore
+.git
+.venv
+.vscode
+dist
+env/
+**/*__pycache__
+.ipynb_checkpoints/
+examples/
+tests/
+kubernetes/
+docker/
+.github/
+docker-compose.yml
+**/dask-worker-space

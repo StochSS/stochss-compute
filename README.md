@@ -31,14 +31,15 @@ pip3 install stochss_compute
 ```
 
 ### 2. Start up the server and compute backend
-#### Using the startup script dialogue:
+#### Using the startup script, which starts up a dask cluster, along with scheduler and workers:
 ```
 python3 startup.py
 ```
-<!-- #### Configure your compute setup by editing the file `daskconfig.ini` or passing arguments to `startup.py`:
+#### If you already have a dask cluster running on localhost:8786:
 ```
-python3 startup.py --daskconfig daskconfig.ini
-``` -->
+python3 app.py
+```
+
 ### 3. An example is contained in `./examples/StartHere.ipynb`:
 ```
 # source venv/bin/activate # Uncomment if using a virtual environment
@@ -48,7 +49,7 @@ jupyter notebook --port 9999 examples/StartHere.ipynb
 `http://localhost:9999/notebooks/examples/StartHere.ipynb`
 ***
 ## Docker
-- As an alternative to the above steps, you can use Docker.
+### 1. As an alternative to the above steps, you can use Docker.
 
 ```
 docker run -it --rm --network host stochss/stochss-compute:latest
@@ -58,6 +59,15 @@ docker run -it --rm --network host stochss/stochss-compute:latest
 - The cache defaults to the current working directory under `sd-cache`. To set a new path for the cache, you can pass one to `docker run`:
 ```
 docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
+```
+### 2. To check out the examples, in another terminal, run:
+```
+git clone https://github.com/StochSS/stochss-compute.git
+cd stochss-compute
+python3 -m venv venv 
+source venv/bin/activate
+pip3 install -r requirements.txt
+jupyter notebook examples
 ```
 
 <!-- #### Minikube

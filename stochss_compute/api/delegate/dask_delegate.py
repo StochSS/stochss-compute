@@ -9,7 +9,6 @@ from distributed import Client
 from distributed import get_client
 from distributed.scheduler import TaskState
 
-
 from .delegate import Delegate
 from .delegate import JobState
 from .delegate import JobStatus
@@ -21,10 +20,8 @@ from stochss_compute.api.cache import SimpleDiskCacheConfig
 
 class DaskDelegateConfig(DelegateConfig):
 
-    dask_cluster_port = 8786
-    dask_cluster_address = "localhost"
-
-    dask_kwargs = None
+    host: str = 'localhost'
+    scheduler_port: int = 8786
 
     cache_provider: type[CacheProvider] = SimpleDiskCache(SimpleDiskCacheConfig())
 
@@ -43,16 +40,11 @@ class DaskDelegate(Delegate):
             self.client = get_client()
 
         except ValueError as _:
+            address = f'{self.delegate_config.host}:{self.delegate_config.scheduler_port}'
+            self.client = Client(address)
+            print(f"Connected to Dask Scheduler:\n{self.client}")
 
-            if self.delegate_config.dask_kwargs is not None:
-                dask_cluster = LocalCluster(**self.delegate_config.dask_kwargs)
-                self.client = Client(dask_cluster)
-            else:
-                self.client = Client(f"{self.delegate_config.dask_cluster_address}:{self.delegate_config.dask_cluster_port}")
-            
-        print(f"Connected to Dask Scheduler:\n{self.client}")
-
-        # Setup functions to be run on the schedule.
+        # Setup functions to be run on the scheduler.
         def __scheduler_job_exists(dask_scheduler, job_id: str) -> bool:
             return job_id in dask_scheduler.tasks
 
