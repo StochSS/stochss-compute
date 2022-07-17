@@ -14,9 +14,10 @@ VOLUME [ "/opt/venv" ]
 WORKDIR /usr/src/app
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /usr/src/app
+COPY stochss_compute /usr/src/app/stochss_compute
+COPY *.py *.md *.dockerfile *.cfg /usr/src/app/
 
 ARG FLASK_ENV="production"
 ENV FLASK_ENV="${FLASK_ENV}" \
