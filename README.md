@@ -1,12 +1,13 @@
 # StochSS-Compute
 
 StochSS-Compute is a compute delegation server for the [StochSS](https://github.com/StochSS) family of stochastic simulation software. StochSS-Compute allows for one to run StochSS or GillesPy2 simulations on distributed cloud compute resources.
-
+***
 <table><tr><td><b>
 <img width="20%" align="right" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/stochss-logo.png">
 <a href="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform">PLEASE REGISTER AS A USER</a>, so that we can prove StochSS-Compute has many users when we seek funding to support development. StochSS-Compute is part of the <a href="http://www.stochss.org">StochSS</a> project.
 </td></tr></table>
 
+***
 ## Example Tutorial
 ### 1. Run this Docker command:
 ```
@@ -14,7 +15,7 @@ docker run -it --rm -p 8888:8888 -p 8787:8787 stochss/stochss-compute:examples j
 ```
 ### 2. Open the link provided by the Jupyter Notebook server in your browser.
 ### 3. Open and run the self-contained `Tutorial-1.ipynb`
-
+***
 ## Installation 
 
 ### 1. Installing dependencies & `stochss_compute`
