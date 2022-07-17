@@ -28,9 +28,9 @@ def parse_args() -> Namespace:
     cache.add_argument('-c', '--cache', default='sd-cache/', required=False, help='Path to use for the cache.')
 
     dask = parser.add_argument_group('Dask')
-    dask.add_argument("-H", "--dask-host", default=None, required=False,
+    dask.add_argument("-H", "--dask-host", default='localhost', required=False,
                         help="The host to use for the dask scheduler. Defaults to localhost.")
-    dask.add_argument("-P", "--dask-scheduler-port", default=0, type=int, required=False,
+    dask.add_argument("-P", "--dask-scheduler-port", default=8786, type=int, required=False,
                         help="The port to use for the dask scheduler. Defaults to 8786.")
     return parser.parse_args()
 
