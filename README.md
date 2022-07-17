@@ -60,14 +60,9 @@ docker run -it --rm --network host stochss/stochss-compute:latest
 ```
 docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
 ```
-### 2. To check out the examples, in another terminal, run:
+### 2. To test out an example using this StochSS-Compute server, in another terminal, run:
 ```
-git clone https://github.com/StochSS/stochss-compute.git
-cd stochss-compute
-python3 -m venv venv 
-source venv/bin/activate
-pip3 install -r requirements.txt
-jupyter notebook examples
+docker run -it --rm --network host stochss/stochss-compute:examples jupyter notebook
 ```
 
 <!-- #### Minikube
