@@ -1,5 +1,10 @@
 FROM jupyter/minimal-notebook
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-ENV CHOWN_HOME=yes
+USER root
+RUN apt-get update && apt-get install -y g++ make
+USER jovyan
+COPY --chown=jovyan:users requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY --chown=jovyan:users stochss_compute stochss_compute
+COPY --chown=jovyan:users examples examples
+COPY --chown=jovyan:users *.py *.md ./
+WORKDIR /home/jovyan/examples

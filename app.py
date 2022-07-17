@@ -7,7 +7,7 @@ from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 def main():
     args = parse_args()
             
-    cache_provider = SimpleDiskCache(SimpleDiskCacheConfig(args.cache))
+    cache_provider = SimpleDiskCache(SimpleDiskCacheConfig(root_dir=args.cache))
     delegate_config = DaskDelegateConfig(host=args.dask_host, scheduler_port=args.dask_scheduler_port, cache_provider=cache_provider)
 
     api.start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
