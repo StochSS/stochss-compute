@@ -1,13 +1,22 @@
 # StochSS-Compute
 
 StochSS-Compute is a compute delegation server for the [StochSS](https://github.com/StochSS) family of stochastic simulation software. StochSS-Compute allows for one to run StochSS or GillesPy2 simulations on distributed cloud compute resources.
-
+***
 <table><tr><td><b>
 <img width="20%" align="right" src="https://raw.githubusercontent.com/StochSS/GillesPy2/develop/.graphics/stochss-logo.png">
 <a href="https://docs.google.com/forms/d/12tAH4f8CJ-3F-lK44Q9uQHFio_mGoK0oY829q5lD7i4/viewform">PLEASE REGISTER AS A USER</a>, so that we can prove StochSS-Compute has many users when we seek funding to support development. StochSS-Compute is part of the <a href="http://www.stochss.org">StochSS</a> project.
 </td></tr></table>
 
-## Example Quick Start
+***
+## Example Tutorial
+### 1. Run this Docker command:
+```
+docker run -it --rm -p 8888:8888 -p 8787:8787 stochss/stochss-compute:examples jupyter notebook
+```
+### 2. Open the link provided by the Jupyter Notebook server in your browser.
+### 3. Open and run the self-contained `Tutorial-1.ipynb`
+***
+## Installation 
 
 ### 1. Installing dependencies & `stochss_compute`
 #### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
@@ -31,24 +40,24 @@ pip3 install stochss_compute
 ```
 
 ### 2. Start up the server and compute backend
-#### Using the startup script dialogue:
+#### Using the startup script, which starts up a dask cluster, along with scheduler and workers:
 ```
 python3 startup.py
 ```
-<!-- #### Configure your compute setup by editing the file `daskconfig.ini` or passing arguments to `startup.py`:
+#### If you already have a dask cluster running on localhost:8786:
 ```
-python3 startup.py --daskconfig daskconfig.ini
-``` -->
+python3 app.py
+```
+
 ### 3. An example is contained in `./examples/StartHere.ipynb`:
 ```
 # source venv/bin/activate # Uncomment if using a virtual environment
 jupyter notebook --port 9999 examples/StartHere.ipynb
 ```
-- Jupyter should launch automatically. If not, copy and paste the following URL into your web browser:  
-`http://localhost:9999/notebooks/examples/StartHere.ipynb`
+- Jupyter should launch automatically. If not, open the URL provided by the Jupyter Notebook server in your browser.
 ***
 ## Docker
-- As an alternative to the above steps, you can use Docker.
+### 1. As an alternative to the above steps, you can use Docker.
 
 ```
 docker run -it --rm --network host stochss/stochss-compute:latest
@@ -58,6 +67,10 @@ docker run -it --rm --network host stochss/stochss-compute:latest
 - The cache defaults to the current working directory under `sd-cache`. To set a new path for the cache, you can pass one to `docker run`:
 ```
 docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
+```
+### 2. To test out `StartHere.ipynb` using this StochSS-Compute server, in another terminal, run:
+```
+docker run -it --rm --network host stochss/stochss-compute:examples jupyter notebook
 ```
 
 <!-- #### Minikube

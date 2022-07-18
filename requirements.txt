@@ -1,13 +1,10 @@
 Flask>=2.0.1
 dask>=2021.5.1
 distributed >= 2021.11.2
-redis>=3.5.3
 pydantic>=1.8.2
 dill
 requests
-dask_kubernetes
 jupyter
-blosc
 
 # Current required to enable client-side plot rendering.
 IPython

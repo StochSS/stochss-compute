@@ -1,33 +1,38 @@
 from stochss_compute import api
-import argparse
+from argparse import ArgumentParser, Namespace
+from stochss_compute.api.cache.simple_disk_cache import SimpleDiskCache, SimpleDiskCacheConfig
 
 from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 
-def server_start(host, port, debug=True, delegate_config=None):
-    if host is None:
-        host = "localhost"
-    if port is None:
-        port = 29681
-    api.start_api(host=host, port=port, debug=debug, delegate_config=delegate_config)
+def main():
+    args = parse_args()
+            
+    cache_provider = SimpleDiskCache(SimpleDiskCacheConfig(root_dir=args.cache))
+    delegate_config = DaskDelegateConfig(host=args.dask_host, scheduler_port=args.dask_scheduler_port, cache_provider=cache_provider)
+
+    api.start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
+
+def parse_args() -> Namespace:
+    desc = '''
+        StochSS-Compute is a server and cache that anonymizes StochSS simulation data.
+    '''
+    parser = ArgumentParser(description=desc, add_help=True, conflict_handler='resolve')
+
+    server = parser.add_argument_group('Server')
+    server.add_argument("-h", "--host", default='localhost', required=False,
+                        help="The host to use for the flask server. Defaults to localhost.")
+    server.add_argument("-p", "--port", default=29681, type=int, required=False,
+                        help="The port to use for the flask server. Defaults to 29681.")
+
+    cache = parser.add_argument_group('Cache')
+    cache.add_argument('-c', '--cache', default='sd-cache/', required=False, help='Path to use for the cache.')
+
+    dask = parser.add_argument_group('Dask')
+    dask.add_argument("-H", "--dask-host", default='localhost', required=False,
+                        help="The host to use for the dask scheduler. Defaults to localhost.")
+    dask.add_argument("-P", "--dask-scheduler-port", default=8786, type=int, required=False,
+                        help="The port to use for the dask scheduler. Defaults to 8786.")
+    return parser.parse_args()
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--port", type=int, required=False, help="The port to use for the flask server. Defaults to 1234.")
-    parser.add_argument("--host", required=False,
-                        help="The host to use for the flask server. Defaults to localhost.")
-    parser.add_argument("-P", "--daskport", type=int, required=False,
-                        help="The port to use for the dask scheduler. Defaults to 8786.")
-    parser.add_argument("--daskhost", required=False,
-                        help="The host to use for the dask scheduler. Defaults to localhost.")
-    args = parser.parse_args()
-
-    delegate_config = DaskDelegateConfig()
-
-    if args.daskport is not None:
-        delegate_config.dask_cluster_port = args.daskport
-    
-    if args.daskhost is not None:
-        delegate_config.dask_cluster_address = args.daskhost
-
-    server_start(args.host, args.port, delegate_config=delegate_config)
+    main()
