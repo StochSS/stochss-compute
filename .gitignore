@@ -153,4 +153,3 @@ Thumbs.db #thumbnail cache on Windows
 !.vscode/extensions.json
 *.code-workspace
 
-docker-build.sh
