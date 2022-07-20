@@ -66,7 +66,9 @@ class Cluster():
             os.remove(_KEY_PATH)
 
     def _create_sssc_vpc(self):
-
+        f"""
+        Creates a vpc named {_VPC_NAME}. 
+        """
         vpc_cidrBlock = '172.31.0.0/16'
         vpc_tag = [
             {
@@ -74,25 +76,31 @@ class Cluster():
                 'Tags': [
                     {
                         'Key': 'Name',
-                        'Value': 'sssc-vpc'
+                        'Value': _VPC_NAME
                     }
                 ]
             }
         ]
+
         vpc_response = self._client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
         vpc_id = vpc_response['Vpc']['VpcId']
+        vpc_waiter = self._client.get_waiter('vpc_available')
+        vpc_waiter.wait(VpcIds=[vpc_id])
+        self._vpc = self._resources.Vpc(vpc_id)
+
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
-        self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True })
+        self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True})
+
         igw_response = self._client.create_internet_gateway()
         igw_id = igw_response['InternetGateway']['InternetGatewayId']
-        self._vpc = self._resources.Vpc(vpc_id)
+        igw_waiter = self._client.get_waiter('internet_gateway_exists')
+        igw_waiter.wait(InternetGatewayIds=[igw_id])
+        
         self._vpc.attach_internet_gateway(InternetGatewayId=igw_id)
         for rtb in self._vpc.route_tables.all():
             if rtb.associations_attribute[0]['Main'] == True:
                 rtb_id = rtb.route_table_id
         self._client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
-
-        return self._vpc
 
     def _create_sssc_subnet(self):
         subnet_cidrBlock = '172.31.0.0/20'
