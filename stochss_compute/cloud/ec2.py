@@ -323,13 +323,6 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 # self._scheduler = None
                 # self._workers = []
                 print(f'Instance {instance.id}" terminated.')
-                print(f'Deleting "{instance.key_pair.name}".')
-                # TODO
-                instance.key_pair.delete()
-                print(f'Key Pair "{instance.key_pair.name}" deleted.')
-                print(f'Deleting "{_KEY_PATH}".')
-                self._delete_root_key()
-                print(f'Root key deleted.')
             # TODO seems to still be launching into default security group? I think this is the defined behavior
             for sg in vpc.security_groups.all():
                 if sg.group_name == 'sssc-sg':
@@ -353,6 +346,13 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             vpc.delete()
             self._vpc = None
             print(f'VPC {vpc.id} deleted.')
+        key_pair = self._resources.KeyPair(_KEY_NAME)
+        print(f'Deleting "{_KEY_NAME}".')
+        key_pair.delete()
+        print(f'Key Pair "{_KEY_NAME}" deleted.')
+        print(f'Deleting "{_KEY_PATH}".')
+        self._delete_root_key()
+        print(f'Root key deleted.')
         
     def _load_cluster(self, vpcId=None):
         '''
