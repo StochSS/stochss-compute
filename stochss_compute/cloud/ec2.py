@@ -2,6 +2,7 @@ from stochss_compute import RemoteSimulation, ComputeServer
 from stochss_compute.compute_server import Endpoint
 from .api import SourceIpRequest, SourceIpResponse
 from ..remote_utils import unwrap_or_err
+from exceptions import ResourceException
 
 from gillespy2 import Model
 
@@ -19,7 +20,6 @@ class Cluster():
     _client = boto3.client('ec2')
     _resources = boto3.resource('ec2')
     _restricted: bool = False
-    _cloud_key: str = ''
     _subnet = None
     _security_group = None
     _vpc = None
@@ -30,11 +30,30 @@ class Cluster():
     _key_path = ''
 
     def __init__(self) -> None:
-        # TODO this will have to go after the address is made in launch
-        pass
-        # see if _restricted
-        # re-load cluster by setting _resources
+        self.reload_cluster()
         
+    def _load_root_key(self):
+        name = 'stochss-root'
+        savePath='./'
+        keyFormat='pem'
+
+        self._key_path = f'{savePath}{name}.{keyFormat}'
+
+        if os.path.exists(self._key_path):
+            print(f'StochSS-Compute root key detected in working directory. Using "{self._key_path}".')
+            try:
+                self._client.describe_key_pairs(KeyNames=[name])
+            except ClientError as error:
+                if error.response['Error']['Code'] == 'InvalidKeyPair.NotFound':
+                    print(error.response['Error']['Message'])
+                    print(f'An outdated key detected in working directory:  "{name}".')
+                    print(f'Call clean_up() and re-try the operation.')
+                    raise ResourceException()
+            self._root_key = self._resources.KeyPair(name)
+            return self._root_key
+        else:
+            return None
+
     def _create_root_key(self):
         name = 'stochss-root'
         savePath='./'
@@ -43,35 +62,25 @@ class Cluster():
 
         self._key_path = f'{savePath}{name}.{keyFormat}'
 
-        if os.path.exists(self._key_path):
-            print(f'StochSS-Compute root key detected in working directory. Using "{self._key_path}".')
+        loadKey = self._load_root_key()
+        if loadKey is None:            
             try:
-                key_pair_response = self._client.describe_key_pairs(KeyNames=[name])
+                response = self._client.create_key_pair(KeyName=name, KeyType=keyType, KeyFormat=keyFormat)
             except ClientError as error:
-                if error.response['Error']['Code'] == 'InvalidKeyPair.NotFound':
+                if error.response['Error']['Code'] == 'InvalidKeyPair.Duplicate':
                     print(error.response['Error']['Message'])
-                    print(f'An outdated key detected in working directory:  "{name}".')
-                    print(f'Call clean_up() and re-try the operation.')
+                    print(f'If you still have your key, move it into this working directory and make sure that it is named "{name}".')
+                    print(f'Otherwise, call clean_up() and re-try the operation.')
                     raise error
+            key = open(self._key_path, 'x')
+            key.write(response['KeyMaterial'])
+            key.close()
+            os.chmod(self._key_path, 0o400)
+
             self._root_key = self._resources.KeyPair(name)
             return self._root_key
-
-        
-        try:
-            response = self._client.create_key_pair(KeyName=name, KeyType=keyType, KeyFormat=keyFormat)
-        except ClientError as error:
-            if error.response['Error']['Code'] == 'InvalidKeyPair.Duplicate':
-                print(error.response['Error']['Message'])
-                print(f'If you still have your key, move it into this working directory and make sure that it is named "{name}".')
-                print(f'Otherwise, call clean_up() and re-try the operation.')
-                raise error
-        key = open(self._key_path, 'x')
-        key.write(response['KeyMaterial'])
-        key.close()
-        os.chmod(self._key_path, 0o400)
-
-        self._root_key = self._resources.KeyPair(name)
-        return self._root_key
+        else:
+            return loadKey
 
     def _delete_root_key(self) -> None:
         name = 'stochss-root'
@@ -143,7 +152,7 @@ class Cluster():
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    'sssc-subnet-0'
+                    'sssc-subnet'
                 ]
             },
             {
@@ -162,7 +171,7 @@ class Cluster():
                     'Tags': [
                         {
                             'Key': 'Name',
-                            'Value': 'sssc-subnet-0'
+                            'Value': 'sssc-subnet'
                         }
                     ]
                 }
@@ -293,14 +302,13 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         self._server = self._resources.Instance(instance_id)
         self._server.wait_until_running()
 
-        self._cloud_key = cloud_key
 
         print(f'Instance "{instance_id}" is running.')
 
         self._poll_launch_progress()
         if self._restricted == False:
             print('Restricting server access to only your ip.')
-            source_ip = self._get_source_ip()
+            source_ip = self._get_source_ip(cloud_key)
             self._restrict_ingress(source_ip)
             self._restricted = True
         print('StochSS-Compute ready to go!')
@@ -352,18 +360,11 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         self._launch_server()
         
     def clean_up(self):
-        vpc_cidrBlock = '172.31.0.0/16'
         vpc_search_filter = [
             {
                 'Name': 'tag:Name',
                 'Values': [
                     'sssc-vpc'
-                ]
-            },
-            {
-                'Name': 'cidr',
-                'Values': [
-                    vpc_cidrBlock
                 ]
             }
         ]
@@ -376,8 +377,8 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 print(f'Terminating "{instance.id}". This might take a minute.......')
                 instance.wait_until_terminated()
                 self._server = None
-                self._scheduler = None
-                self._workers = []
+                # self._scheduler = None
+                # self._workers = []
                 print(f'Instance {instance.id}" terminated.')
             # TODO seems to still be launching into default security group? I think this is the defined behavior
             for sg in vpc.security_groups.all():
@@ -408,15 +409,69 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
 
         print(f'Root key deleted.')
 
-    def reload_cluster():
-        # Will reload the cluster in case the user messes something up in the dashboard/something goes wrong.
-        # basically will just be checking aws to see if the properly named resources exist in order to load up everything into the object references
-        pass
+    def reload_cluster(self, vpcId=None):
+        '''
+        Reload cluster resources. Returns False if no VPC named sssc-vpc.
+        '''
+        vpc_search_filter = [
+            {
+                'Name': 'tag:Name',
+                'Values': [
+                    'sssc-vpc'
+                ]
+            }
+        ]
+        # instead, can just check to see if reference is None?
+        vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
+        if len(vpc_response['Vpcs']) == 0:
+            return False
+        if len(vpc_response['Vpcs']) == 2:
+            print('More than one VPC named sssc-vpc. Call reload_cluster() with a vpc-id."')
+            return
+        vpc_id = vpc_response['Vpcs'][0]['VpcId']
+        self._vpc = self._resources.Vpc(vpc_id)
+        vpc = self._vpc
+        errors = False
+        for instance in vpc.instances.all():
+            for tag in instance.tags:
+                if tag['Key'] == 'Name' and tag['Value'] == 'sssc-server':
+                    self._server = instance
+                    self._root_key = instance
+        if self._server is None:
+            print('No instances named "sssc-server".')
+            errors = True
+        for sg in vpc.security_groups.all():
+            if sg.group_name == 'sssc-sg':
+                self._security_group = sg
+        if self._security_group is None:
+            print('No security group named "sssc-sg".')
+            errors = True
+        for subnet in vpc.subnets.all():
+            for tag in subnet.tags:
+                if tag['Key'] == 'Name' and tag['Value'] == 'sssc-subnet':
+                    self._subnet = subnet
+        if self._subnet is None:
+            print('No subnet named "sssc-subnet".')
+            errors = True
+        self._root_key = self._load_root_key()
 
-    def _get_source_ip(self):
+
+                
+    # _restricted: bool = False
+    # _cloud_key: str = ''
+    # _subnet = None
+    # _security_group = None
+    # _vpc = None
+    # _server = None
+    # _scheduler = None
+    # _workers = []
+    # _root_key = None
+    # _key_path = ''
+
+    def _get_source_ip(self, cloud_key):
         ip = self._server.public_ip_address
         server = ComputeServer(ip, port=29681)
-        source_ip_request = SourceIpRequest(cloud_key=self._cloud_key)
+        source_ip_request = SourceIpRequest(cloud_key=cloud_key)
         source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
         return source_ip_response.source_ip
 
