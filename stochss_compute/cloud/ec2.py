@@ -2,7 +2,7 @@ from stochss_compute import RemoteSimulation, ComputeServer
 from stochss_compute.compute_server import Endpoint
 from .api import SourceIpRequest, SourceIpResponse
 from ..remote_utils import unwrap_or_err
-from exceptions import ResourceException
+from .exceptions import ResourceException
 
 from gillespy2 import Model
 
@@ -40,7 +40,12 @@ class Cluster():
         """ 
         Attempts to load a StochSS-Compute cluster.
          """
-        self._load_cluster()
+        try:
+            self._load_cluster()
+        except ResourceException:
+            print('Misconfigured cluster detected. Cleaning up.')
+            self.clean_up()
+            print('StochSS-Compute ready to re-launch.')
 
     def _create_root_key(self):
         """ 
@@ -318,9 +323,10 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 # self._scheduler = None
                 # self._workers = []
                 print(f'Instance {instance.id}" terminated.')
-                print(f'Deleting "{instance.key_pair.id}".')
+                print(f'Deleting "{instance.key_pair.name}".')
+                # TODO
                 instance.key_pair.delete()
-                print(f'Key Pair "{instance.key_pair.id}" deleted.')
+                print(f'Key Pair "{instance.key_pair.name}" deleted.')
                 print(f'Deleting "{_KEY_PATH}".')
                 self._delete_root_key()
                 print(f'Root key deleted.')
@@ -352,21 +358,21 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         '''
         Reload cluster resources. Returns False if no VPC named sssc-vpc.
         '''
+
         vpc_search_filter = [
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    'sssc-vpc'
+                    _VPC_NAME
                 ]
             }
         ]
-        # instead, can just check to see if reference is None?
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
         if len(vpc_response['Vpcs']) == 0:
             return False
         if len(vpc_response['Vpcs']) == 2:
-            print('More than one VPC named sssc-vpc. Call _load_cluster() with a vpc-id."')
-            return
+            print('More than one VPC named sssc-vpc.')
+            raise ResourceException
         vpc_id = vpc_response['Vpcs'][0]['VpcId']
         self._vpc = self._resources.Vpc(vpc_id)
         vpc = self._vpc
@@ -375,7 +381,6 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             for tag in instance.tags:
                 if tag['Key'] == 'Name' and tag['Value'] == 'sssc-server':
                     self._server = instance
-                    self._root_key = instance.key_pair
         if self._server is None:
             print('No instances named "sssc-server".')
             errors = True
@@ -392,22 +397,8 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         if self._subnet is None:
             print('No subnet named "sssc-subnet".')
             errors = True
-        self._root_key = self._load_root_key()
         if errors is True:
-            raise ResourceException()
-
-
-                
-    # _restricted: bool = False
-    # _cloud_key: str = ''
-    # _subnet = None
-    # _security_group = None
-    # _vpc = None
-    # _server = None
-    # _scheduler = None
-    # _workers = []
-    # _root_key = None
-    # _key_path = ''
+            raise ResourceException
 
     def _get_source_ip(self, cloud_key):
         ip = self._server.public_ip_address
