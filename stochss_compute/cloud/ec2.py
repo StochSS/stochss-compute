@@ -22,6 +22,7 @@ _SCHEDULER_NAME = 'sssc-scheduler'
 _WORKER_PREFIX = 'sssc-worker-'
 _KEY_NAME = 'sssc-root'
 _KEY_PATH = './stochss-root.pem'
+_API_PORT = 29681
 
 class Cluster():
 
@@ -125,7 +126,11 @@ class Cluster():
         self._client.modify_subnet_attribute(SubnetId=self._subnet.id, MapPublicIpOnLaunch={'Value': True})
 
     def _create_sssc_security_group(self):
-        self._security_group = self._vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
+        f"""
+        Creates a security group named {_SECURITY_GROUP_NAME} for SSH and StochSS-Compute API access.
+        """
+        description = 'Default Security Group for StochSS-Compute.'
+        self._security_group = self._vpc.create_security_group(Description=description, GroupName=_SECURITY_GROUP_NAME)
         sshargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': 22,
@@ -135,8 +140,8 @@ class Cluster():
         self._security_group.authorize_ingress(**sshargs)
         sgargs = {
             'CidrIp': '0.0.0.0/0',
-            'FromPort': 29681,
-            'ToPort': 29681,
+            'FromPort': _API_PORT,
+            'ToPort': _API_PORT,
             'IpProtocol': 'tcp',
             'TagSpecifications': [
                 {
@@ -144,14 +149,13 @@ class Cluster():
                     'Tags': [
                         {
                             'Key': 'Name',
-                            'Value': '29681'
+                            'Value': _API_PORT
                         },
                     ]
                 },
             ]
         }
         self._security_group.authorize_ingress(**sgargs)
-        return self._security_group
 
     def _restrict_ingress(self, ipAddress: str = ''):
         filter=[
@@ -174,7 +178,7 @@ class Cluster():
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    '29681',
+                    '_API_PORT',
                 ]
             },
         ]
@@ -185,8 +189,8 @@ class Cluster():
                 'SecurityGroupRuleId': sgr_id,
                 'SecurityGroupRule': {
                     'IpProtocol': 'tcp',
-                    'FromPort': 29681,
-                    'ToPort': 29681,
+                    'FromPort': _API_PORT,
+                    'ToPort': _API_PORT,
                     'CidrIpv4': f'{ipAddress}/32',
                     'Description': 'Restricts cluster access.'
                 }
@@ -414,12 +418,12 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
 
     def _get_source_ip(self, cloud_key):
         ip = self._server.public_ip_address
-        server = ComputeServer(ip, port=29681)
+        server = ComputeServer(ip, port=_API_PORT)
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
         source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
         return source_ip_response.source_ip
 
     def run(self, model: Model):
         ip = self._server.public_ip_address
-        server = ComputeServer(ip, port=29681)
+        server = ComputeServer(ip, port=_API_PORT)
         return RemoteSimulation.on(server).with_model(model).run()
