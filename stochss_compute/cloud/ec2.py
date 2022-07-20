@@ -103,48 +103,26 @@ class Cluster():
         self._client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
 
     def _create_sssc_subnet(self):
+        f""" 
+        Creates a subnet named {_SUBNET_NAME}.
+        """
         subnet_cidrBlock = '172.31.0.0/20'
-        subnet_search_filter = [
+        subnet_tag = [
             {
-                'Name': 'vpc-id',
-                'Values': [
-                    self._vpc.id
-                ]
-            },
-            {
-                'Name': 'tag:Name',
-                'Values': [
-                    'sssc-subnet'
-                ]
-            },
-            {
-                'Name': 'cidr',
-                'Values': [
-                    subnet_cidrBlock
+                'ResourceType': 'subnet',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': _SUBNET_NAME
+                    }
                 ]
             }
         ]
-        subnet_response = self._client.describe_subnets(Filters=subnet_search_filter)
+        self._subnet = self._vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
+        waiter = self._client.get_waiter('subnet_available')
+        waiter.wait(SubnetIds=[self._subnet.id])
 
-        if len(subnet_response['Subnets']) == 0:
-            subnet_tag = [
-                {
-                    'ResourceType': 'subnet',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': 'sssc-subnet'
-                        }
-                    ]
-                }
-            ]
-            self._subnet = self._vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
-            self._client.modify_subnet_attribute(SubnetId=self._subnet.id, MapPublicIpOnLaunch={'Value': True})
-        else:
-            subnet_id = subnet_response['Subnets'][0]['SubnetId']
-            self._subnet = self._resources.Subnet(subnet_id)
-            
-        return self._subnet
+        self._client.modify_subnet_attribute(SubnetId=self._subnet.id, MapPublicIpOnLaunch={'Value': True})
 
     def _create_sssc_security_group(self):
         self._security_group = self._vpc.create_security_group(Description='Default Security Group for StochSS-Compute.', GroupName='sssc-sg')
