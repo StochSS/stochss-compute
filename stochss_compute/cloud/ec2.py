@@ -103,6 +103,8 @@ class Cluster():
                 rtb_id = rtb.route_table_id
         self._client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
 
+        self._vpc.reload()
+
     def _create_sssc_subnet(self):
         f""" 
         Creates a subnet named {_SUBNET_NAME}.
@@ -124,6 +126,7 @@ class Cluster():
         waiter.wait(SubnetIds=[self._subnet.id])
 
         self._client.modify_subnet_attribute(SubnetId=self._subnet.id, MapPublicIpOnLaunch={'Value': True})
+        self._subnet.reload()
 
     def _create_sssc_security_group(self):
         f"""
@@ -156,35 +159,26 @@ class Cluster():
             ]
         }
         self._security_group.authorize_ingress(**sgargs)
+        self._security_group.reload()
 
     def _restrict_ingress(self, ipAddress: str = ''):
-        filter=[
-            {
-                'Name': 'group-name',
-                'Values': [
-                    'sssc-sg',
-                ]
-            },
-        ]
-        sg_response = self._client.describe_security_groups(Filters=filter)
-        sg_id = sg_response['SecurityGroups'][0]['GroupId']
-        filter2=[
+        ruleFilter=[
             {
                 'Name': 'group-id',
                 'Values': [
-                    sg_id,
+                    self._security_group.id,
                 ]
             },
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    '_API_PORT',
+                    _API_PORT,
                 ]
             },
         ]
-        sgr_response = self._client.describe_security_group_rules(Filters=filter2)
+        sgr_response = self._client.describe_security_group_rules(Filters=ruleFilter)
         sgr_id = sgr_response['SecurityGroupRules'][0]['SecurityGroupRuleId']
-        securityGroupRules=[
+        newSecurityGroupRules=[
             {
                 'SecurityGroupRuleId': sgr_id,
                 'SecurityGroupRule': {
@@ -196,8 +190,8 @@ class Cluster():
                 }
             },
         ]
-        self._client.modify_security_group_rules(GroupId=sg_id, SecurityGroupRules=securityGroupRules)
-        sgr_response = self._client.describe_security_group_rules(Filters=filter2)
+        self._client.modify_security_group_rules(GroupId=self._security_group.id, securityGroupRules=newSecurityGroupRules)
+        self._security_group.reload()
 
     def _launch_network(self):
         print("Launching Network.......")
@@ -354,7 +348,6 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             self._vpc = None
             print(f'VPC {vpc.id} deleted.')
         
-
     def _load_cluster(self, vpcId=None):
         '''
         Reload cluster resources. Returns False if no VPC named sssc-vpc.
