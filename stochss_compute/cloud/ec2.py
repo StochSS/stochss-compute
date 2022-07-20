@@ -14,6 +14,14 @@ import os
 from time import sleep
 from secrets import token_hex
 
+_VPC_NAME = 'sssc-vpc'
+_SUBNET_NAME = 'sssc-subnet'
+_SECURITY_GROUP_NAME = 'sssc-sg'
+_SERVER_NAME = 'sssc-server'
+_SCHEDULER_NAME = 'sssc-scheduler'
+_WORKER_PREFIX = 'sssc-worker-'
+_KEY_NAME = 'sssc-root'
+_KEY_PATH = './stochss-root.pem'
 
 class Cluster():
 
@@ -26,69 +34,34 @@ class Cluster():
     _server = None
     _scheduler = None
     _workers = []
-    _root_key = None
-    _key_path = ''
 
     def __init__(self) -> None:
-        self.reload_cluster()
-        
-    def _load_root_key(self):
-        name = 'stochss-root'
-        savePath='./'
-        keyFormat='pem'
-
-        self._key_path = f'{savePath}{name}.{keyFormat}'
-
-        if os.path.exists(self._key_path):
-            print(f'StochSS-Compute root key detected in working directory. Using "{self._key_path}".')
-            try:
-                self._client.describe_key_pairs(KeyNames=[name])
-            except ClientError as error:
-                if error.response['Error']['Code'] == 'InvalidKeyPair.NotFound':
-                    print(error.response['Error']['Message'])
-                    print(f'An outdated key detected in working directory:  "{name}".')
-                    print(f'Call clean_up() and re-try the operation.')
-                    raise ResourceException()
-            self._root_key = self._resources.KeyPair(name)
-            return self._root_key
-        else:
-            return None
+        """ 
+        Attempts to load a StochSS-Compute cluster.
+         """
+        self._load_cluster()
 
     def _create_root_key(self):
-        name = 'stochss-root'
-        savePath='./'
+        """ 
+        Creates a KeyPair for SSH login and instance launch.
+        """
         keyType='ed25519'
         keyFormat='pem'
 
-        self._key_path = f'{savePath}{name}.{keyFormat}'
+        response = self._client.create_key_pair(KeyName=_KEY_NAME, KeyType=keyType, KeyFormat=keyFormat)
 
-        loadKey = self._load_root_key()
-        if loadKey is None:            
-            try:
-                response = self._client.create_key_pair(KeyName=name, KeyType=keyType, KeyFormat=keyFormat)
-            except ClientError as error:
-                if error.response['Error']['Code'] == 'InvalidKeyPair.Duplicate':
-                    print(error.response['Error']['Message'])
-                    print(f'If you still have your key, move it into this working directory and make sure that it is named "{name}".')
-                    print(f'Otherwise, call clean_up() and re-try the operation.')
-                    raise error
-            key = open(self._key_path, 'x')
-            key.write(response['KeyMaterial'])
-            key.close()
-            os.chmod(self._key_path, 0o400)
+        waiter = self._client.get_waiter('key_pair_exists')
+        waiter.wait(KeyNames=[_KEY_NAME])
 
-            self._root_key = self._resources.KeyPair(name)
-            return self._root_key
-        else:
-            return loadKey
+        key = open(_KEY_PATH, 'x')
+        key.write(response['KeyMaterial'])
+        key.close()
+        os.chmod(_KEY_PATH, 0o400)
 
     def _delete_root_key(self) -> None:
-        name = 'stochss-root'
-        self._client.delete_key_pair(KeyName=name)
-        if os.path.exists(self._key_path):
-            os.remove(self._key_path)
-        self._root_key = None
-        self._key_path = ''
+        if os.path.exists(_KEY_PATH):
+            os.remove(_KEY_PATH)
+            self._root_key = None
 
     def _create_sssc_vpc(self):
         vpc_cidrBlock = '172.31.0.0/16'
@@ -368,7 +341,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 ]
             }
         ]
-        # instead, can just check to see if reference is None?
+        # 
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
         if len(vpc_response['Vpcs']) != 0:
             vpc = self._vpc
@@ -380,6 +353,12 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 # self._scheduler = None
                 # self._workers = []
                 print(f'Instance {instance.id}" terminated.')
+                print(f'Deleting "{instance.key_pair.id}".')
+                instance.key_pair.delete()
+                print(f'Key Pair "{instance.key_pair.id}" deleted.')
+                print(f'Deleting "{_KEY_PATH}".')
+                self._delete_root_key()
+                print(f'Root key deleted.')
             # TODO seems to still be launching into default security group? I think this is the defined behavior
             for sg in vpc.security_groups.all():
                 if sg.group_name == 'sssc-sg':
@@ -404,12 +383,8 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             self._vpc = None
             print(f'VPC {vpc.id} deleted.')
         
-        print(f'Deleting {self._root_key.key_pair_id}.......')
-        self._delete_root_key()
 
-        print(f'Root key deleted.')
-
-    def reload_cluster(self, vpcId=None):
+    def _load_cluster(self, vpcId=None):
         '''
         Reload cluster resources. Returns False if no VPC named sssc-vpc.
         '''
@@ -426,7 +401,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         if len(vpc_response['Vpcs']) == 0:
             return False
         if len(vpc_response['Vpcs']) == 2:
-            print('More than one VPC named sssc-vpc. Call reload_cluster() with a vpc-id."')
+            print('More than one VPC named sssc-vpc. Call _load_cluster() with a vpc-id."')
             return
         vpc_id = vpc_response['Vpcs'][0]['VpcId']
         self._vpc = self._resources.Vpc(vpc_id)
@@ -436,7 +411,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             for tag in instance.tags:
                 if tag['Key'] == 'Name' and tag['Value'] == 'sssc-server':
                     self._server = instance
-                    self._root_key = instance
+                    self._root_key = instance.key_pair
         if self._server is None:
             print('No instances named "sssc-server".')
             errors = True
@@ -454,6 +429,8 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             print('No subnet named "sssc-subnet".')
             errors = True
         self._root_key = self._load_root_key()
+        if errors is True:
+            raise ResourceException()
 
 
                 
