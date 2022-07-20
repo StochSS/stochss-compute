@@ -59,58 +59,39 @@ class Cluster():
         os.chmod(_KEY_PATH, 0o400)
 
     def _delete_root_key(self) -> None:
+        f"""
+        Deletes {_KEY_PATH} if it exists. 
+        """
         if os.path.exists(_KEY_PATH):
             os.remove(_KEY_PATH)
-            self._root_key = None
 
     def _create_sssc_vpc(self):
+
         vpc_cidrBlock = '172.31.0.0/16'
-        vpc_search_filter = [
+        vpc_tag = [
             {
-                'Name': 'tag:Name',
-                'Values': [
-                    'sssc-vpc'
-                ]
-            },
-            {
-                'Name': 'cidr',
-                'Values': [
-                    vpc_cidrBlock
+                'ResourceType': 'vpc',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': 'sssc-vpc'
+                    }
                 ]
             }
         ]
+        vpc_response = self._client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
+        vpc_id = vpc_response['Vpc']['VpcId']
+        self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
+        self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True })
+        igw_response = self._client.create_internet_gateway()
+        igw_id = igw_response['InternetGateway']['InternetGatewayId']
+        self._vpc = self._resources.Vpc(vpc_id)
+        self._vpc.attach_internet_gateway(InternetGatewayId=igw_id)
+        for rtb in self._vpc.route_tables.all():
+            if rtb.associations_attribute[0]['Main'] == True:
+                rtb_id = rtb.route_table_id
+        self._client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
 
-        vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
-        
-        if len(vpc_response['Vpcs']) == 0:
-            vpc_tag = [
-                {
-                    'ResourceType': 'vpc',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': 'sssc-vpc'
-                        }
-                    ]
-                }
-            ]
-            vpc_response = self._client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
-            vpc_id = vpc_response['Vpc']['VpcId']
-            self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
-            self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True })
-            igw_response = self._client.create_internet_gateway()
-            igw_id = igw_response['InternetGateway']['InternetGatewayId']
-            self._vpc = self._resources.Vpc(vpc_id)
-            self._vpc.attach_internet_gateway(InternetGatewayId=igw_id)
-            for rtb in self._vpc.route_tables.all():
-                if rtb.associations_attribute[0]['Main'] == True:
-                    rtb_id = rtb.route_table_id
-            self._client.create_route(RouteTableId=rtb_id, GatewayId=igw_id, DestinationCidrBlock='0.0.0.0/0')
-
-        else:
-            vpc_id = vpc_response['Vpcs'][0]['VpcId']
-            self._vpc = self._resources.Vpc(vpc_id)
-        
         return self._vpc
 
     def _create_sssc_subnet(self):
