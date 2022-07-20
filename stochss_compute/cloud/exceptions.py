@@ -1,3 +1,4 @@
 class ResourceException(Exception):
-    print('Missing or misconfigured resources. You need to call clean_up().')
-    pass
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+        print('Missing or misconfigured resources. You need to call clean_up().')
