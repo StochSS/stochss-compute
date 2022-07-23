@@ -1,19 +1,23 @@
-FROM python:3.8.10-buster
+FROM jupyter/minimal-notebook
 
 LABEL authors="Ethan Green <egreen4@unca.edu>, Matthew Dippel <mdip226@gmail.com>"
 
-ENV VIRTUAL_ENV=/opt/venv
-# set up virtual environment inside container
-RUN python3 -m venv $VIRTUAL_ENV
-# activate the venv
-ENV PYTHONPATH="$VIRTUAL_ENV:$PYTHONPATH"
-ENV PATH="$VIRTUAL_ENV:$PATH"
-# make the venv a volume
-VOLUME [ "/opt/venv" ]
-WORKDIR /usr/src/app
-COPY requirements.txt .
-RUN pip install -r requirements.txt jupyter
+USER root
 
-COPY . /usr/src/app
+RUN apt-get update && apt-get install -y g++ make
 
-CMD [ "jupyter", "notebook", "." ]
+USER jovyan
+
+COPY --chown=jovyan:users requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN pip install --no-cache-dir bokeh
+
+COPY --chown=jovyan:users stochss_compute stochss_compute
+
+COPY --chown=jovyan:users examples examples
+
+COPY --chown=jovyan:users *.py *.md ./
+
+WORKDIR /home/jovyan/examples

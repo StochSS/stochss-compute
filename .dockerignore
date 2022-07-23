@@ -12,3 +12,4 @@ docker/
 .github/
 docker-compose.yml
 **/dask-worker-space
+docker-build.sh
