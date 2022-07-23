@@ -48,6 +48,22 @@ class Cluster():
             self.clean_up()
             print('StochSS-Compute ready to re-launch.')
 
+    def run(self, model: Model):
+        """ 
+        Runs a GillesPy2 Model on the cluster. Returns RemoteResults.
+         """
+        ip = self._server.public_ip_address
+        server = ComputeServer(ip, port=_API_PORT)
+        return RemoteSimulation.on(server).with_model(model).run()
+
+    def launch_single_node_cluster(self):
+        """ 
+        Launches a single node StochSS-Compute instance.
+         """
+        self._launch_network()
+        self._create_root_key()
+        self._launch_server()
+
     def clean_up(self):
         """ 
         Deletes all cluster resources.
@@ -267,7 +283,7 @@ class Cluster():
 
     def _launch_server(self, instanceType='t3.micro'):
         """ 
-        Launches a StochSS-Compute server instance. On
+        Launches a StochSS-Compute server instance.
          """
         cloud_key = token_hex(32)
 
@@ -315,6 +331,9 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         return self._server
 
     def _poll_launch_progress(self):
+        """ 
+        Polls the instance to see if the docker container is running.
+         """
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy())
         sshtries = 0
@@ -339,11 +358,11 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 ssh.close()
                 raise Exception("Something went wrong connecting to the server. No exit status provided by the server.")
             if rc == 1 or rc == 127:
-                print('Waiting on docker.')
+                print('Waiting on Docker daemon.')
                 sshtries += 1
                 if sshtries >= 5:
                     ssh.close()
-                    raise Exception("Something went wrong with docker. Max retry attempts exceeded.")
+                    raise Exception("Something went wrong with Docker. Max retry attempts exceeded.")
             if rc == 0:
                 out = stdout.readline()
                 if out == 'true\n':
@@ -355,7 +374,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         
     def _load_cluster(self, vpcId=None):
         '''
-        Reload cluster resources. Returns False if no VPC named sssc-vpc.
+        Reload cluster resources. Returns False if no vpc named sssc-vpc.
         '''
 
         vpc_search_filter = [
@@ -406,12 +425,3 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
         return source_ip_response.source_ip
 
-    def launch_single_node_cluster(self):
-        self._launch_network()
-        self._create_root_key()
-        self._launch_server()
-
-    def run(self, model: Model):
-        ip = self._server.public_ip_address
-        server = ComputeServer(ip, port=_API_PORT)
-        return RemoteSimulation.on(server).with_model(model).run()
