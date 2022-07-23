@@ -21,7 +21,7 @@ _SERVER_NAME = 'sssc-server'
 _SCHEDULER_NAME = 'sssc-scheduler'
 _WORKER_PREFIX = 'sssc-worker-'
 _KEY_NAME = 'sssc-root'
-_KEY_PATH = './sssc-root.pem'
+_KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
 _SSSC_AMI = 'ami-04268eeed853eaa55'
 
