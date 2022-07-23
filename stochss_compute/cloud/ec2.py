@@ -21,8 +21,9 @@ _SERVER_NAME = 'sssc-server'
 _SCHEDULER_NAME = 'sssc-scheduler'
 _WORKER_PREFIX = 'sssc-worker-'
 _KEY_NAME = 'sssc-root'
-_KEY_PATH = './stochss-root.pem'
+_KEY_PATH = './sssc-root.pem'
 _API_PORT = 29681
+_SSSC_AMI = 'ami-04268eeed853eaa55'
 
 class Cluster():
 
@@ -47,9 +48,61 @@ class Cluster():
             self.clean_up()
             print('StochSS-Compute ready to re-launch.')
 
+    def clean_up(self):
+        """ 
+        Deletes all cluster resources.
+         """
+        vpc_search_filter = [
+            {
+                'Name': 'tag:Name',
+                'Values': [
+                    'sssc-vpc'
+                ]
+            }
+        ]
+        # 
+        vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
+        if len(vpc_response['Vpcs']) != 0:
+            vpc = self._vpc
+            for instance in vpc.instances.all():
+                instance.terminate()
+                print(f'Terminating "{instance.id}". This might take a minute.......')
+                instance.wait_until_terminated()
+                self._server = None
+                # self._scheduler = None
+                # self._workers = []
+                print(f'Instance {instance.id}" terminated.')
+            for sg in vpc.security_groups.all():
+                if sg.group_name == 'sssc-sg':
+                    print(f'Deleting {sg.id}.......')
+                    sg.delete()
+                    self._security_group = None
+                    print(f'Security group {sg.id} deleted.')
+            for subnet in vpc.subnets.all():
+                print(f'Deleting {subnet.id}.......')
+                subnet.delete()
+                self._subnet = None
+                print(f'Subnet {subnet.id} deleted.')
+            for igw in vpc.internet_gateways.all():
+                print(f'Detaching {igw.id}.......')
+                igw.detach_from_vpc(VpcId=vpc.vpc_id)
+                print(f'Gateway {igw.id} detached.')
+                print(f'Deleting {igw.id}.......')
+                igw.delete()
+                print(f'Gateway {igw.id} deleted.')
+            print(f'Deleting {vpc.id}.......')
+            vpc.delete()
+            self._vpc = None
+            print(f'VPC {vpc.id} deleted.')
+        key_pair = self._resources.KeyPair(_KEY_NAME)
+        print(f'Deleting "{_KEY_NAME}".')
+        key_pair.delete()
+        print(f'Key Pair "{_KEY_NAME}" deleted.')
+        self._delete_root_key()
+        
     def _create_root_key(self):
         """ 
-        Creates a KeyPair for SSH login and instance launch.
+        Creates a key pair for SSH login and instance launch.
         """
         keyType='ed25519'
         keyFormat='pem'
@@ -69,7 +122,9 @@ class Cluster():
         Deletes {_KEY_PATH} if it exists. 
         """
         if os.path.exists(_KEY_PATH):
+            print(f'Deleting "{_KEY_PATH}".')
             os.remove(_KEY_PATH)
+            print(f'Root key deleted.')
 
     def _create_sssc_vpc(self):
         f"""
@@ -157,7 +212,7 @@ class Cluster():
                     'Tags': [
                         {
                             'Key': 'Name',
-                            'Value': _API_PORT
+                            'Value': 'api-server'
                         },
                     ]
                 },
@@ -167,6 +222,9 @@ class Cluster():
         self._security_group.reload()
 
     def _restrict_ingress(self, ipAddress: str = ''):
+        """ 
+        Modifies the security group API ingress rule to only allow access on port 29681 from the given ip address.
+         """
         ruleFilter=[
             {
                 'Name': 'group-id',
@@ -177,7 +235,7 @@ class Cluster():
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    _API_PORT,
+                    'api-server',
                 ]
             },
         ]
@@ -195,33 +253,32 @@ class Cluster():
                 }
             },
         ]
-        self._client.modify_security_group_rules(GroupId=self._security_group.id, securityGroupRules=newSecurityGroupRules)
+        self._client.modify_security_group_rules(GroupId=self._security_group.id, SecurityGroupRules=newSecurityGroupRules)
         self._security_group.reload()
 
     def _launch_network(self):
+        """ 
+        Launches required network resources.
+         """
         print("Launching Network.......")
         self._create_sssc_vpc()
         self._create_sssc_subnet()
         self._create_sssc_security_group()
-        return self._vpc
 
     def _launch_server(self, instanceType='t3.micro'):
-        name = 'sssc-server'
-        image_id = 'ami-0fa49cc9dc8d62c84'
+        """ 
+        Launches a StochSS-Compute server instance. On
+         """
         cloud_key = token_hex(32)
 
         launch_commands = f'''#!/bin/bash
-sudo yum update -y
-sudo yum -y install docker
 sudo service docker start
-sudo usermod -a -G docker ec2-user
-sudo chmod 666 /var/run/docker.sock 
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:dev > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err
 '''
         kwargs = {
-            'ImageId': image_id, 
+            'ImageId': _SSSC_AMI, 
             'InstanceType': instanceType,
-            'KeyName': self._root_key.key_name,
+            'KeyName': _KEY_NAME,
             'MinCount': 1, 
             'MaxCount': 1,
             'SubnetId': self._subnet.id,
@@ -232,7 +289,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                     'Tags': [
                         {
                             'Key': 'Name',
-                            'Value': name
+                            'Value': _SERVER_NAME
                         },
                     ]
                 },
@@ -258,13 +315,12 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         return self._server
 
     def _poll_launch_progress(self):
-        print(f'Downloading updates and starting server......')
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy())
         sshtries = 0
         while True:
             try:
-                ssh.connect(self._server.public_ip_address, username='ec2-user', key_filename=self._key_path, look_for_keys=False)
+                ssh.connect(self._server.public_ip_address, username='ec2-user', key_filename=_KEY_PATH, look_for_keys=False)
                 break
             except Exception as e:
                 if sshtries >= 5:
@@ -274,85 +330,28 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 sshtries += 1
                 continue
 
-        docker_installed = False
-
+        sshtries = 0
         while True:
+            sleep(10)
             stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' sssc")
             rc = stdout.channel.recv_exit_status()
             if rc == -1:
-                print("Something went wrong connecting to the server. No exit status provided by the server.")
-                return
-            if rc == 127:
-                print('.................')
-            if rc == 1:
-                if docker_installed == False:
-                    print('Updates installed. Downloading Docker image.')
-                docker_installed = True
+                ssh.close()
+                raise Exception("Something went wrong connecting to the server. No exit status provided by the server.")
+            if rc == 1 or rc == 127:
+                print('Waiting on docker.')
+                sshtries += 1
+                if sshtries >= 5:
+                    ssh.close()
+                    raise Exception("Something went wrong with docker. Max retry attempts exceeded.")
             if rc == 0:
                 out = stdout.readline()
                 if out == 'true\n':
-                    sleep(5)
+                    sleep(10)
                     print('StochSS-Compute is running.')
                     ssh.close()
                     break
-            sleep(15)
 
-    def launch_single_node_cluster(self):
-        self._launch_network()
-        self._create_root_key()
-        self._launch_server()
-        
-    def clean_up(self):
-        vpc_search_filter = [
-            {
-                'Name': 'tag:Name',
-                'Values': [
-                    'sssc-vpc'
-                ]
-            }
-        ]
-        # 
-        vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
-        if len(vpc_response['Vpcs']) != 0:
-            vpc = self._vpc
-            for instance in vpc.instances.all():
-                instance.terminate()
-                print(f'Terminating "{instance.id}". This might take a minute.......')
-                instance.wait_until_terminated()
-                self._server = None
-                # self._scheduler = None
-                # self._workers = []
-                print(f'Instance {instance.id}" terminated.')
-            # TODO seems to still be launching into default security group? I think this is the defined behavior
-            for sg in vpc.security_groups.all():
-                if sg.group_name == 'sssc-sg':
-                    print(f'Deleting {sg.id}.......')
-                    sg.delete()
-                    self._security_group = None
-                    print(f'Security group {sg.id} deleted.')
-            for subnet in vpc.subnets.all():
-                print(f'Deleting {subnet.id}.......')
-                subnet.delete()
-                self._subnet = None
-                print(f'Subnet {subnet.id} deleted.')
-            for igw in vpc.internet_gateways.all():
-                print(f'Detaching {igw.id}.......')
-                igw.detach_from_vpc(VpcId=vpc.vpc_id)
-                print(f'Gateway {igw.id} detached.')
-                print(f'Deleting {igw.id}.......')
-                igw.delete()
-                print(f'Gateway {igw.id} deleted.')
-            print(f'Deleting {vpc.id}.......')
-            vpc.delete()
-            self._vpc = None
-            print(f'VPC {vpc.id} deleted.')
-        key_pair = self._resources.KeyPair(_KEY_NAME)
-        print(f'Deleting "{_KEY_NAME}".')
-        key_pair.delete()
-        print(f'Key Pair "{_KEY_NAME}" deleted.')
-        print(f'Deleting "{_KEY_PATH}".')
-        self._delete_root_key()
-        print(f'Root key deleted.')
         
     def _load_cluster(self, vpcId=None):
         '''
@@ -406,6 +405,11 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
         source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
         return source_ip_response.source_ip
+
+    def launch_single_node_cluster(self):
+        self._launch_network()
+        self._create_root_key()
+        self._launch_server()
 
     def run(self, model: Model):
         ip = self._server.public_ip_address
