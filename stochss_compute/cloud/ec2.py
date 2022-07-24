@@ -15,7 +15,7 @@ from time import sleep
 from secrets import token_hex
 
 _VPC_NAME = 'sssc-vpc'
-_SUBNET_NAME = 'sssc-subnet'
+_SUBNET_PREFIX = 'sssc-subnet-'
 _SECURITY_GROUP_NAME = 'sssc-sg'
 _SERVER_NAME = 'sssc-server'
 _WORKER_PREFIX = 'sssc-worker-'
@@ -30,7 +30,10 @@ class Cluster():
     _client = boto3.client('ec2')
     _resources = boto3.resource('ec2')
     _restricted: bool = False
-    _subnet = None
+    _subnets = {
+        'public': None,
+        'private': None
+    }
     _security_group = None
     _vpc = None
     _server = None
@@ -61,7 +64,7 @@ class Cluster():
          """
         self._launch_network()
         self._create_root_key()
-        self._launch_single_node_cluster()
+        self._launch_head_node()
 
     def launch_multi_node_cluster(self, n_worker_nodes):
         self._launch_multi_node_cluster(n_worker_nodes)
@@ -99,7 +102,7 @@ class Cluster():
             for subnet in vpc.subnets.all():
                 print(f'Deleting {subnet.id}.......')
                 subnet.delete()
-                self._subnet = None
+                self._subnets['public'] = None
                 print(f'Subnet {subnet.id} deleted.')
             for igw in vpc.internet_gateways.all():
                 print(f'Detaching {igw.id}.......')
@@ -183,28 +186,34 @@ class Cluster():
 
         self._vpc.reload()
 
-    def _create_sssc_subnet(self):
+    def _create_sssc_subnet(self, public: bool):
         f""" 
-        Creates a subnet named {_SUBNET_NAME}.
+        Creates a public or private subnet prefixed {_SUBNET_PREFIX}.
         """
-        subnet_cidrBlock = '172.31.0.0/20'
+        if public is True:
+            label = 'public'
+            subnet_cidrBlock = '172.31.0.0/20'
+        else:
+            label = 'private'
+            subnet_cidrBlock = '172.31.16.0/20'
+        
         subnet_tag = [
             {
                 'ResourceType': 'subnet',
                 'Tags': [
                     {
                         'Key': 'Name',
-                        'Value': _SUBNET_NAME
+                        'Value': f'{_SUBNET_PREFIX}{label}'
                     }
                 ]
             }
         ]
-        self._subnet = self._vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
+        self._subnets[label] = self._vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
         waiter = self._client.get_waiter('subnet_available')
-        waiter.wait(SubnetIds=[self._subnet.id])
-
-        self._client.modify_subnet_attribute(SubnetId=self._subnet.id, MapPublicIpOnLaunch={'Value': True})
-        self._subnet.reload()
+        waiter.wait(SubnetIds=[self._subnets[label].id])
+        if public is True:
+            self._client.modify_subnet_attribute(SubnetId=self._subnets[label].id, MapPublicIpOnLaunch={'Value': public})
+            self._subnets[label].reload()
 
     def _create_sssc_security_group(self):
         f"""
@@ -280,26 +289,33 @@ class Cluster():
          """
         print("Launching Network.......")
         self._create_sssc_vpc()
-        self._create_sssc_subnet()
+        self._create_sssc_subnet(public=True)
+        self._create_sssc_subnet(public=False)
         self._create_sssc_security_group()
 
-    def _launch_single_node_cluster(self, instanceType='t3.micro'):
+    def _launch_head_node(self, instanceType='t3.micro', cluster: bool=False):
         """ 
         Launches a StochSS-Compute server instance.
          """
         cloud_key = token_hex(32)
-
-        launch_commands = f'''#!/bin/bash
+        if cluster is True:
+            launch_commands = f'''#!/bin/bash
 sudo service docker start
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err
+docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler > /home/ec2-user/dask-out 2> /home/ec2-user/dask-err &
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
+'''
+        else:
+            launch_commands = f'''#!/bin/bash
+sudo service docker start
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         kwargs = {
-            'ImageId': _SSSC_SINGLE_NODE_AMI, 
+            'ImageId': _SSSC_HEAD_NODE_AMI, 
             'InstanceType': instanceType,
             'KeyName': _KEY_NAME,
             'MinCount': 1, 
             'MaxCount': 1,
-            'SubnetId': self._subnet.id,
+            'SubnetId': self._subnets['public'].id,
             'SecurityGroupIds': [self._security_group.id],
             'TagSpecifications': [
                 {
@@ -322,52 +338,26 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
 
 
         print(f'Instance "{instance_id}" is running.')
-
-        self._poll_launch_progress()
+        if cluster is True:
+            self._poll_launch_progress(['sssc', 'scheduler'])
+        else:
+            self._poll_launch_progress(['sssc'])
         if self._restricted == False:
             print('Restricting server access to only your ip.')
-            source_ip = self._get_source_ip(cloud_key)
+            retries = 0
+            while True:
+                if retries <= 5:
+                    try:
+                        source_ip = self._get_source_ip(cloud_key)
+                        break
+                    except:
+                        retries += 1
+                        continue
             self._restrict_ingress(source_ip)
             self._restricted = True
         print('StochSS-Compute ready to go!')
-        return self._server
 
-    def _launch_multi_node_cluster(self, n_worker_nodes, serverInstanceType='t3.micro', workerInstanceType='t3.micro'):
-        cloud_key = token_hex(32)
-
-        launch_commands = f'''#!/bin/bash
-sudo service docker start
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err
-docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler
-'''
-        kwargs = {
-            'ImageId': _SSSC_HEAD_NODE_AMI, 
-            'InstanceType': serverInstanceType,
-            'KeyName': _KEY_NAME,
-            'MinCount': 1, 
-            'MaxCount': 1,
-            'SubnetId': self._subnet.id,
-            'SecurityGroupIds': [self._security_group.id],
-            'TagSpecifications': [
-                {
-                    'ResourceType': 'instance',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': _SERVER_NAME
-                        },
-                    ]
-                },
-            ],
-            'UserData': launch_commands,
-            }
-        print(f'Launching StochSS-Compute server instance.......(This could take a minute)')
-        response = self._client.run_instances(**kwargs)
-        instance_id = response['Instances'][0]['InstanceId']
-        self._server = self._resources.Instance(instance_id)
-        self._server.wait_until_running()
-
-    def _poll_launch_progress(self):
+    def _poll_launch_progress(self, containerNames: list):
         """ 
         Polls the instance to see if the docker container is running.
          """
@@ -385,31 +375,31 @@ docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler
                 sleep(5)
                 sshtries += 1
                 continue
-
-        sshtries = 0
-        while True:
-            sleep(10)
-            stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' sssc")
-            rc = stdout.channel.recv_exit_status()
-            if rc == -1:
-                ssh.close()
-                raise Exception("Something went wrong connecting to the server. No exit status provided by the server.")
-            if rc == 1 or rc == 127:
-                print('Waiting on Docker daemon.')
-                sshtries += 1
-                if sshtries >= 5:
+        for container in containerNames:
+            sshtries = 0
+            while True:
+                sleep(10)
+                stdin,stdout,stderr = ssh.exec_command(f"docker container inspect -f '{{.State.Running}}' {container}")
+                rc = stdout.channel.recv_exit_status()
+                if rc == -1:
                     ssh.close()
-                    raise Exception("Something went wrong with Docker. Max retry attempts exceeded.")
-            if rc == 0:
-                out = stdout.readline()
-                if out == 'true\n':
-                    sleep(10)
-                    print('StochSS-Compute is running.')
-                    ssh.close()
-                    break
+                    raise Exception("Something went wrong connecting to the server. No exit status provided by the server.")
+                if rc == 1 or rc == 127:
+                    print('Waiting on Docker daemon.')
+                    sshtries += 1
+                    if sshtries >= 5:
+                        ssh.close()
+                        raise Exception("Something went wrong with Docker. Max retry attempts exceeded.")
+                if rc == 0:
+                    out = stdout.readline()
+                    if out == 'true\n':
+                        sleep(10)
+                        print(f'Container {container} is running.')
+                        break
+        ssh.close()
 
-        
     def _load_cluster(self, vpcId=None):
+        # TODO check to see if restricted is true
         '''
         Reload cluster resources. Returns False if no vpc named sssc-vpc.
         '''
@@ -447,10 +437,12 @@ docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler
             errors = True
         for subnet in vpc.subnets.all():
             for tag in subnet.tags:
-                if tag['Key'] == 'Name' and tag['Value'] == 'sssc-subnet':
-                    self._subnet = subnet
-        if self._subnet is None:
-            print('No subnet named "sssc-subnet".')
+                if tag['Key'] == 'Name' and tag['Value'] == 'sssc-subnet-public':
+                    self._subnets['public'] = subnet
+                if tag['Key'] == 'Name' and tag['Value'] == 'sssc-subnet-private':
+                    self._subnets['private'] = subnet
+        if None in self._subnets.values():
+            print('Missing or misconfigured subnet.')
             errors = True
         if errors is True:
             raise ResourceException
