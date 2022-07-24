@@ -18,12 +18,12 @@ _VPC_NAME = 'sssc-vpc'
 _SUBNET_NAME = 'sssc-subnet'
 _SECURITY_GROUP_NAME = 'sssc-sg'
 _SERVER_NAME = 'sssc-server'
-_SCHEDULER_NAME = 'sssc-scheduler'
 _WORKER_PREFIX = 'sssc-worker-'
 _KEY_NAME = 'sssc-root'
 _KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
-_SSSC_AMI = 'ami-04268eeed853eaa55'
+_SSSC_SINGLE_NODE_AMI = 'ami-04268eeed853eaa55'
+_SSSC_HEAD_NODE_AMI = 'ami-00a208a0b9da1b13c'
 
 class Cluster():
 
@@ -34,7 +34,6 @@ class Cluster():
     _security_group = None
     _vpc = None
     _server = None
-    _scheduler = None
     _workers = []
 
     def __init__(self) -> None:
@@ -62,8 +61,12 @@ class Cluster():
          """
         self._launch_network()
         self._create_root_key()
-        self._launch_server()
+        self._launch_single_node_cluster()
 
+    def launch_multi_node_cluster(self, n_worker_nodes):
+        self._launch_multi_node_cluster(n_worker_nodes)
+
+        
     def clean_up(self):
         """ 
         Deletes all cluster resources.
@@ -85,7 +88,6 @@ class Cluster():
                 print(f'Terminating "{instance.id}". This might take a minute.......')
                 instance.wait_until_terminated()
                 self._server = None
-                # self._scheduler = None
                 # self._workers = []
                 print(f'Instance {instance.id}" terminated.')
             for sg in vpc.security_groups.all():
@@ -281,7 +283,7 @@ class Cluster():
         self._create_sssc_subnet()
         self._create_sssc_security_group()
 
-    def _launch_server(self, instanceType='t3.micro'):
+    def _launch_single_node_cluster(self, instanceType='t3.micro'):
         """ 
         Launches a StochSS-Compute server instance.
          """
@@ -292,7 +294,7 @@ sudo service docker start
 docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err
 '''
         kwargs = {
-            'ImageId': _SSSC_AMI, 
+            'ImageId': _SSSC_SINGLE_NODE_AMI, 
             'InstanceType': instanceType,
             'KeyName': _KEY_NAME,
             'MinCount': 1, 
@@ -329,6 +331,41 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             self._restricted = True
         print('StochSS-Compute ready to go!')
         return self._server
+
+    def _launch_multi_node_cluster(self, n_worker_nodes, serverInstanceType='t3.micro', workerInstanceType='t3.micro'):
+        cloud_key = token_hex(32)
+
+        launch_commands = f'''#!/bin/bash
+sudo service docker start
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err
+docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler
+'''
+        kwargs = {
+            'ImageId': _SSSC_HEAD_NODE_AMI, 
+            'InstanceType': serverInstanceType,
+            'KeyName': _KEY_NAME,
+            'MinCount': 1, 
+            'MaxCount': 1,
+            'SubnetId': self._subnet.id,
+            'SecurityGroupIds': [self._security_group.id],
+            'TagSpecifications': [
+                {
+                    'ResourceType': 'instance',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': _SERVER_NAME
+                        },
+                    ]
+                },
+            ],
+            'UserData': launch_commands,
+            }
+        print(f'Launching StochSS-Compute server instance.......(This could take a minute)')
+        response = self._client.run_instances(**kwargs)
+        instance_id = response['Instances'][0]['InstanceId']
+        self._server = self._resources.Instance(instance_id)
+        self._server.wait_until_running()
 
     def _poll_launch_progress(self):
         """ 
