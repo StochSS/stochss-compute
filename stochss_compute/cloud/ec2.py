@@ -34,6 +34,7 @@ class Cluster():
         'public': None,
         'private': None
     }
+    _default_security_group = None
     _security_group = None
     _vpc = None
     _server = None
@@ -69,7 +70,6 @@ class Cluster():
     def launch_multi_node_cluster(self, n_worker_nodes):
         self._launch_multi_node_cluster(n_worker_nodes)
 
-        
     def clean_up(self):
         """ 
         Deletes all cluster resources.
@@ -169,6 +169,7 @@ class Cluster():
         vpc_waiter = self._client.get_waiter('vpc_available')
         vpc_waiter.wait(VpcIds=[vpc_id])
         self._vpc = self._resources.Vpc(vpc_id)
+        self._default_security_group = list(sg for sg in self._vpc.security_groups.all())[0]
 
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True})
@@ -211,9 +212,9 @@ class Cluster():
         self._subnets[label] = self._vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
         waiter = self._client.get_waiter('subnet_available')
         waiter.wait(SubnetIds=[self._subnets[label].id])
-        if public is True:
-            self._client.modify_subnet_attribute(SubnetId=self._subnets[label].id, MapPublicIpOnLaunch={'Value': public})
-            self._subnets[label].reload()
+        # if public is True:
+        self._client.modify_subnet_attribute(SubnetId=self._subnets[label].id, MapPublicIpOnLaunch={'Value': True})
+        self._subnets[label].reload()
 
     def _create_sssc_security_group(self):
         f"""
@@ -301,8 +302,9 @@ class Cluster():
         if cluster is True:
             launch_commands = f'''#!/bin/bash
 sudo service docker start
+PRIVATE_IP=$(hostname -I | awk '{{print $1}}')
 docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler > /home/ec2-user/dask-out 2> /home/ec2-user/dask-err &
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud python3 app.py --host $PRIVATE_IP > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         else:
             launch_commands = f'''#!/bin/bash
@@ -346,16 +348,54 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             print('Restricting server access to only your ip.')
             retries = 0
             while True:
-                if retries <= 5:
-                    try:
-                        source_ip = self._get_source_ip(cloud_key)
-                        break
-                    except:
-                        retries += 1
+                try:
+                    source_ip = self._get_source_ip(cloud_key)
+                    break
+                except Exception as e:
+                    retries += 1
+                    if retries <= 5:
                         continue
+                    else:
+                        raise e
             self._restrict_ingress(source_ip)
             self._restricted = True
         print('StochSS-Compute ready to go!')
+
+    def _launch_worker_node(self, instanceType='t3.micro'):
+        scheduler_address = self._server.private_ip_address
+        print(f'{scheduler_address}')
+        launch_commands = f'''#!/bin/bash
+sudo service docker start
+docker run --network host --rm ghcr.io/dask/dask dask-worker {scheduler_address}:8786 > /home/ec2-user/worker-out 2> /home/ec2-user/worker-err
+'''
+        kwargs = {
+            'ImageId': _SSSC_HEAD_NODE_AMI, 
+            'InstanceType': instanceType,
+            'KeyName': _KEY_NAME,
+            'MinCount': 1, 
+            'MaxCount': 1,
+            'SubnetId': self._subnets['private'].id,
+            # 'SecurityGroupIds': [self._security_group.id],
+            'TagSpecifications': [
+                {
+                    'ResourceType': 'instance',
+                    'Tags': [
+                        {
+                            'Key': 'Name',
+                            'Value': _WORKER_PREFIX
+                        },
+                    ]
+                },
+            ],
+            'UserData': launch_commands,
+            }
+        print(f'Launching StochSS-Compute server instance.......(This could take a minute)')
+        response = self._client.run_instances(**kwargs)
+        instance_id = response['Instances'][0]['InstanceId']
+        worker_instance = self._resources.Instance(instance_id)
+        self._workers.append(worker_instance)
+        worker_instance.wait_until_running()
+
 
     def _poll_launch_progress(self, containerNames: list):
         """ 
@@ -379,8 +419,9 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             sshtries = 0
             while True:
                 sleep(10)
-                stdin,stdout,stderr = ssh.exec_command(f"docker container inspect -f '{{.State.Running}}' {container}")
+                stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' " + f'{container}')
                 rc = stdout.channel.recv_exit_status()
+                out = stdout.readline()
                 if rc == -1:
                     ssh.close()
                     raise Exception("Something went wrong connecting to the server. No exit status provided by the server.")
@@ -391,10 +432,9 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                         ssh.close()
                         raise Exception("Something went wrong with Docker. Max retry attempts exceeded.")
                 if rc == 0:
-                    out = stdout.readline()
                     if out == 'true\n':
                         sleep(10)
-                        print(f'Container {container} is running.')
+                        print(f'Container "{container}" is running.')
                         break
         ssh.close()
 
