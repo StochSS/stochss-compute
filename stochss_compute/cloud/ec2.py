@@ -35,7 +35,7 @@ class Cluster():
         'private': None
     }
     _default_security_group = None
-    _security_group = None
+    _server_security_group = None
     _vpc = None
     _server = None
     _workers = []
@@ -59,13 +59,13 @@ class Cluster():
         server = ComputeServer(ip, port=_API_PORT)
         return RemoteSimulation.on(server).with_model(model).run()
 
-    def launch_single_node_cluster(self):
+    def launch_single_node_instance(self, instanceType):
         """ 
         Launches a single node StochSS-Compute instance.
          """
         self._launch_network()
         self._create_root_key()
-        self._launch_head_node()
+        self._launch_head_node(cluster=False, instanceType=instanceType)
 
     def launch_multi_node_cluster(self, n_worker_nodes):
         self._launch_multi_node_cluster(n_worker_nodes)
@@ -78,7 +78,7 @@ class Cluster():
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    'sssc-vpc'
+                    _VPC_NAME
                 ]
             }
         ]
@@ -94,11 +94,13 @@ class Cluster():
                 # self._workers = []
                 print(f'Instance {instance.id}" terminated.')
             for sg in vpc.security_groups.all():
-                if sg.group_name == 'sssc-sg':
+                if sg.group_name == _SECURITY_GROUP_NAME:
                     print(f'Deleting {sg.id}.......')
                     sg.delete()
-                    self._security_group = None
+                    self._server_security_group = None
                     print(f'Security group {sg.id} deleted.')
+                elif sg.group_name == 'default':
+                    self._default_security_group = None
             for subnet in vpc.subnets.all():
                 print(f'Deleting {subnet.id}.......')
                 subnet.delete()
@@ -120,7 +122,18 @@ class Cluster():
         key_pair.delete()
         print(f'Key Pair "{_KEY_NAME}" deleted.')
         self._delete_root_key()
-        
+
+    def _launch_network(self):
+        """ 
+        Launches required network resources.
+         """
+        print("Launching Network.......")
+        self._create_sssc_vpc()
+        self._create_sssc_subnet(public=True)
+        self._create_sssc_subnet(public=False)
+        self._create_sssc_security_group()
+        self._vpc.reload()
+
     def _create_root_key(self):
         """ 
         Creates a key pair for SSH login and instance launch.
@@ -170,7 +183,6 @@ class Cluster():
         vpc_waiter.wait(VpcIds=[vpc_id])
         self._vpc = self._resources.Vpc(vpc_id)
         self._default_security_group = list(sg for sg in self._vpc.security_groups.all())[0]
-        print(self._default_security_group)
 
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True})
@@ -222,14 +234,14 @@ class Cluster():
         Creates a security group named {_SECURITY_GROUP_NAME} for SSH and StochSS-Compute API access.
         """
         description = 'Default Security Group for StochSS-Compute.'
-        self._security_group = self._vpc.create_security_group(Description=description, GroupName=_SECURITY_GROUP_NAME)
+        self._server_security_group = self._vpc.create_security_group(Description=description, GroupName=_SECURITY_GROUP_NAME)
         sshargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': 22,
             'ToPort': 22,
             'IpProtocol': 'tcp',
         }
-        self._security_group.authorize_ingress(**sshargs)
+        self._server_security_group.authorize_ingress(**sshargs)
         sgargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': _API_PORT,
@@ -247,8 +259,8 @@ class Cluster():
                 },
             ]
         }
-        self._security_group.authorize_ingress(**sgargs)
-        self._security_group.reload()
+        self._server_security_group.authorize_ingress(**sgargs)
+        self._server_security_group.reload()
 
     def _restrict_ingress(self, ipAddress: str = ''):
         """ 
@@ -258,7 +270,7 @@ class Cluster():
             {
                 'Name': 'group-id',
                 'Values': [
-                    self._security_group.id,
+                    self._server_security_group.id,
                 ]
             },
             {
@@ -282,20 +294,10 @@ class Cluster():
                 }
             },
         ]
-        self._client.modify_security_group_rules(GroupId=self._security_group.id, SecurityGroupRules=newSecurityGroupRules)
-        self._security_group.reload()
+        self._client.modify_security_group_rules(GroupId=self._server_security_group.id, SecurityGroupRules=newSecurityGroupRules)
+        self._server_security_group.reload()
 
-    def _launch_network(self):
-        """ 
-        Launches required network resources.
-         """
-        print("Launching Network.......")
-        self._create_sssc_vpc()
-        self._create_sssc_subnet(public=True)
-        self._create_sssc_subnet(public=False)
-        self._create_sssc_security_group()
-
-    def _launch_head_node(self, instanceType='t3.micro', cluster: bool=False):
+    def _launch_head_node(self, cluster: bool, instanceType='t3.micro'):
         """ 
         Launches a StochSS-Compute server instance.
          """
@@ -318,7 +320,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             'MinCount': 1, 
             'MaxCount': 1,
             'SubnetId': self._subnets['public'].id,
-            'SecurityGroupIds': [self._default_security_group.id, self._security_group.id],
+            'SecurityGroupIds': [self._default_security_group.id, self._server_security_group.id],
             'TagSpecifications': [
                 {
                     'ResourceType': 'instance',
@@ -375,7 +377,7 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
             'MinCount': 1, 
             'MaxCount': 1,
             'SubnetId': self._subnets['private'].id,
-            # 'SecurityGroupIds': [self._security_group.id],
+            # 'SecurityGroupIds': [self._server_security_group.id],
             'TagSpecifications': [
                 {
                     'ResourceType': 'instance',
@@ -396,10 +398,9 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
         self._workers.append(worker_instance)
         worker_instance.wait_until_running()
 
-
     def _poll_launch_progress(self, containerNames: list):
         """ 
-        Polls the instance to see if the docker container is running.
+        Polls the instance to see if the Docker container is running.
          """
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy())
@@ -438,9 +439,14 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
                         break
         ssh.close()
 
+    def _get_source_ip(self, cloud_key):
+        ip = self._server.public_ip_address
+        server = ComputeServer(ip, port=_API_PORT)
+        source_ip_request = SourceIpRequest(cloud_key=cloud_key)
+        source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
+        return source_ip_response.source_ip
+
     def _load_cluster(self, vpcId=None):
-        # TODO check to see if restricted is true
-        # TODO load default sec. group
         '''
         Reload cluster resources. Returns False if no vpc named sssc-vpc.
         '''
@@ -457,7 +463,7 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
         if len(vpc_response['Vpcs']) == 0:
             return False
         if len(vpc_response['Vpcs']) == 2:
-            print('More than one VPC named sssc-vpc.')
+            print(f'More than one VPC named "{_VPC_NAME}".')
             raise ResourceException
         vpc_id = vpc_response['Vpcs'][0]['VpcId']
         self._vpc = self._resources.Vpc(vpc_id)
@@ -465,33 +471,32 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
         errors = False
         for instance in vpc.instances.all():
             for tag in instance.tags:
-                if tag['Key'] == 'Name' and tag['Value'] == 'sssc-server':
+                if tag['Key'] == 'Name' and tag['Value'] == _SERVER_NAME:
                     self._server = instance
         if self._server is None:
-            print('No instances named "sssc-server".')
+            print(f'No instances named "{_SERVER_NAME}".')
             errors = True
         for sg in vpc.security_groups.all():
-            if sg.group_name == 'sssc-sg':
-                self._security_group = sg
-        if self._security_group is None:
-            print('No security group named "sssc-sg".')
+            if sg.group_name == 'default':
+                self._default_security_group = sg
+            if sg.group_name == _SECURITY_GROUP_NAME:
+                for rule in sg.ip_permissions:
+                    if rule['FromPort'] == 29681 and rule['ToPort'] == 29681 and rule['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
+                        errors = True
+                    else:
+                        self._restricted = True
+                self._server_security_group = sg
+        if self._server_security_group is None:
+            print(f'No security group named "{_SECURITY_GROUP_NAME}".')
             errors = True
         for subnet in vpc.subnets.all():
             for tag in subnet.tags:
-                if tag['Key'] == 'Name' and tag['Value'] == 'sssc-subnet-public':
+                if tag['Key'] == 'Name' and tag['Value'] == f'{_SUBNET_PREFIX}public':
                     self._subnets['public'] = subnet
-                if tag['Key'] == 'Name' and tag['Value'] == 'sssc-subnet-private':
+                if tag['Key'] == 'Name' and tag['Value'] == f'{_SUBNET_PREFIX}private':
                     self._subnets['private'] = subnet
         if None in self._subnets.values():
             print('Missing or misconfigured subnet.')
             errors = True
         if errors is True:
             raise ResourceException
-
-    def _get_source_ip(self, cloud_key):
-        ip = self._server.public_ip_address
-        server = ComputeServer(ip, port=_API_PORT)
-        source_ip_request = SourceIpRequest(cloud_key=cloud_key)
-        source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
-        return source_ip_response.source_ip
-
