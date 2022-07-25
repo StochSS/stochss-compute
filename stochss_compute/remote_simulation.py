@@ -1,11 +1,9 @@
 import bz2
 import sys
-import json
 
 import plotly.io as plotlyio
 
 from gillespy2.core import Model
-from gillespy2.core import Results
 
 from .remote_utils import unwrap_or_err
 
@@ -66,7 +64,7 @@ class RemoteSimulation():
 
         start_request = ModelRunRequest(model=self.model, kwargs=params)
         start_response = unwrap_or_err(JobStatusResponse, self.server.post(Endpoint.GILLESPY2_MODEL, sub="/run", request=start_request))
-
+        
         remote_results = RemoteResults(result_id=start_response.job_id, server=self.server)
         return remote_results
 

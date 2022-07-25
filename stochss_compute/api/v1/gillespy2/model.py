@@ -15,6 +15,7 @@ from flask import Blueprint
 from pydantic import BaseModel
 from pydantic import ValidationError
 
+
 model_endpoint = Blueprint("V1 GillesPy2 Model API Endpoint", __name__, url_prefix="/model")
 
 class Model(gillespy2.core.Model):
