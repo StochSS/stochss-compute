@@ -302,9 +302,8 @@ class Cluster():
         if cluster is True:
             launch_commands = f'''#!/bin/bash
 sudo service docker start
-PRIVATE_IP=$(hostname -I | awk '{{print $1}}')
 docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler > /home/ec2-user/dask-out 2> /home/ec2-user/dask-err &
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud python3 app.py --host $PRIVATE_IP > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud python3 app.py --host 0.0.0.0 > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         else:
             launch_commands = f'''#!/bin/bash
