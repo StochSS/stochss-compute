@@ -304,7 +304,7 @@ class Cluster():
             launch_commands = f'''#!/bin/bash
 sudo service docker start
 docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler > /home/ec2-user/dask-out 2> /home/ec2-user/dask-err &
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud python3 app.py --host 0.0.0.0 > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc -v /home/ec2-user/sd-cache:/usr/src/app/sd-cache stochss/stochss-compute:cloud python3 app.py --host 0.0.0.0 > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         else:
             launch_commands = f'''#!/bin/bash
