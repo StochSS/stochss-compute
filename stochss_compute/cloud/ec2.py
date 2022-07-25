@@ -170,6 +170,7 @@ class Cluster():
         vpc_waiter.wait(VpcIds=[vpc_id])
         self._vpc = self._resources.Vpc(vpc_id)
         self._default_security_group = list(sg for sg in self._vpc.security_groups.all())[0]
+        print(self._default_security_group)
 
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True})
@@ -317,7 +318,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             'MinCount': 1, 
             'MaxCount': 1,
             'SubnetId': self._subnets['public'].id,
-            'SecurityGroupIds': [self._security_group.id],
+            'SecurityGroupIds': [self._default_security_group.id, self._security_group.id],
             'TagSpecifications': [
                 {
                     'ResourceType': 'instance',
@@ -365,7 +366,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         print(f'{scheduler_address}')
         launch_commands = f'''#!/bin/bash
 sudo service docker start
-docker run --network host --rm ghcr.io/dask/dask dask-worker {scheduler_address}:8786 > /home/ec2-user/worker-out 2> /home/ec2-user/worker-err
+docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask dask-worker {scheduler_address}:8786 > /home/ec2-user/worker-out 2> /home/ec2-user/worker-err
 '''
         kwargs = {
             'ImageId': _SSSC_HEAD_NODE_AMI, 
@@ -439,6 +440,7 @@ docker run --network host --rm ghcr.io/dask/dask dask-worker {scheduler_address}
 
     def _load_cluster(self, vpcId=None):
         # TODO check to see if restricted is true
+        # TODO load default sec. group
         '''
         Reload cluster resources. Returns False if no vpc named sssc-vpc.
         '''
