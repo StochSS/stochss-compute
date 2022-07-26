@@ -8,6 +8,7 @@ from gillespy2 import Model
 
 import boto3
 from botocore.exceptions import ClientError
+from botocore.session import get_session
 from paramiko import SSHClient, AutoAddPolicy
 
 import os
@@ -18,17 +19,21 @@ _VPC_NAME = 'sssc-vpc'
 _SUBNET_PREFIX = 'sssc-subnet-'
 _SECURITY_GROUP_NAME = 'sssc-sg'
 _SERVER_NAME = 'sssc-server'
-_WORKER_PREFIX = 'sssc-worker-'
+# _WORKER_PREFIX = 'sssc-worker-'
 _KEY_NAME = 'sssc-root'
 _KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
-_SSSC_SINGLE_NODE_AMI = 'ami-04268eeed853eaa55'
-_SSSC_HEAD_NODE_AMI = 'ami-00a208a0b9da1b13c'
+_AMIS = {
+    'us-east-1': 'ami-0ef9fe14ea1c5c979',
+    'us-east-2': 'ami-04268eeed853eaa55',
+    'us-west-1': 'ami-0a8c547cd139d4672',
+    'us-west-2': 'ami-0e385035e7d059820',
+}
 
 class Cluster():
 
-    _client = boto3.client('ec2')
-    _resources = boto3.resource('ec2')
+    _client = None
+    _resources = None
     _restricted: bool = False
     _subnets = {
         'public': None,
@@ -38,26 +43,30 @@ class Cluster():
     _server_security_group = None
     _vpc = None
     _server = None
-    _workers = []
+    _ami = None
 
     def __init__(self) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster.
          """
+        self._client = boto3.client('ec2')
+        self._resources = boto3.resource('ec2')
+        region = get_session().get_config_variable('region')
+        self._ami = _AMIS[region]
         try:
             self._load_cluster()
         except ResourceException:
-            print('Misconfigured cluster detected. Cleaning up.')
+            print('Cleaning up.')
             self.clean_up()
             print('StochSS-Compute ready to re-launch.')
 
-    def run(self, model: Model):
+    def run(self, model: Model, **params):
         """ 
         Runs a GillesPy2 Model on the cluster. Returns RemoteResults.
          """
         ip = self._server.public_ip_address
         server = ComputeServer(ip, port=_API_PORT)
-        return RemoteSimulation.on(server).with_model(model).run()
+        return RemoteSimulation.on(server).with_model(model).run(**params) # Make sure I passed this correctly
 
     def launch_single_node_instance(self, instanceType):
         """ 
@@ -65,10 +74,7 @@ class Cluster():
          """
         self._launch_network()
         self._create_root_key()
-        self._launch_head_node(cluster=False, instanceType=instanceType)
-
-    def launch_multi_node_cluster(self, n_worker_nodes):
-        self._launch_multi_node_cluster(n_worker_nodes)
+        self._launch_head_node(instanceType=instanceType)
 
     def clean_up(self):
         """ 
@@ -82,16 +88,15 @@ class Cluster():
                 ]
             }
         ]
-        # 
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
-        if len(vpc_response['Vpcs']) != 0:
-            vpc = self._vpc
+        for vpc_dict in vpc_response['Vpcs']:
+            vpc_id = vpc_dict['VpcId']
+            vpc = self._resources.Vpc(vpc_id)
             for instance in vpc.instances.all():
                 instance.terminate()
                 print(f'Terminating "{instance.id}". This might take a minute.......')
                 instance.wait_until_terminated()
                 self._server = None
-                # self._workers = []
                 print(f'Instance {instance.id}" terminated.')
             for sg in vpc.security_groups.all():
                 if sg.group_name == _SECURITY_GROUP_NAME:
@@ -117,10 +122,14 @@ class Cluster():
             vpc.delete()
             self._vpc = None
             print(f'VPC {vpc.id} deleted.')
-        key_pair = self._resources.KeyPair(_KEY_NAME)
-        print(f'Deleting "{_KEY_NAME}".')
-        key_pair.delete()
-        print(f'Key Pair "{_KEY_NAME}" deleted.')
+        try:
+            self._client.describe_key_pairs(KeyNames=[_KEY_NAME])
+            key_pair = self._resources.KeyPair(_KEY_NAME)
+            print(f'Deleting "{_KEY_NAME}".')
+            key_pair.delete()
+            print(f'Key Pair "{_KEY_NAME}" deleted.')
+        except:
+            pass
         self._delete_root_key()
 
     def _launch_network(self):
@@ -297,24 +306,18 @@ class Cluster():
         self._client.modify_security_group_rules(GroupId=self._server_security_group.id, SecurityGroupRules=newSecurityGroupRules)
         self._server_security_group.reload()
 
-    def _launch_head_node(self, cluster: bool, instanceType='t3.micro'):
+    def _launch_head_node(self, instanceType='t3.micro'):
         """ 
         Launches a StochSS-Compute server instance.
          """
         cloud_key = token_hex(32)
-        if cluster is True:
-            launch_commands = f'''#!/bin/bash
-sudo service docker start
-docker run --network host --rm --name scheduler ghcr.io/dask/dask dask-scheduler > /home/ec2-user/dask-out 2> /home/ec2-user/dask-err &
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc -v /home/ec2-user/sd-cache:/usr/src/app/sd-cache stochss/stochss-compute:cloud python3 app.py --host 0.0.0.0 > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
-'''
-        else:
-            launch_commands = f'''#!/bin/bash
+
+        launch_commands = f'''#!/bin/bash
 sudo service docker start
 docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         kwargs = {
-            'ImageId': _SSSC_HEAD_NODE_AMI, 
+            'ImageId': self._ami, 
             'InstanceType': instanceType,
             'KeyName': _KEY_NAME,
             'MinCount': 1, 
@@ -340,63 +343,15 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         self._server = self._resources.Instance(instance_id)
         self._server.wait_until_running()
 
-
         print(f'Instance "{instance_id}" is running.')
-        if cluster is True:
-            self._poll_launch_progress(['sssc', 'scheduler'])
-        else:
-            self._poll_launch_progress(['sssc'])
-        if self._restricted == False:
-            print('Restricting server access to only your ip.')
-            retries = 0
-            while True:
-                try:
-                    source_ip = self._get_source_ip(cloud_key)
-                    break
-                except Exception as e:
-                    retries += 1
-                    if retries <= 5:
-                        continue
-                    else:
-                        raise e
-            self._restrict_ingress(source_ip)
-            self._restricted = True
-        print('StochSS-Compute ready to go!')
 
-    def _launch_worker_node(self, instanceType='t3.micro'):
-        scheduler_address = self._server.private_ip_address
-        print(f'{scheduler_address}')
-        launch_commands = f'''#!/bin/bash
-sudo service docker start
-docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask dask-worker {scheduler_address}:8786 > /home/ec2-user/worker-out 2> /home/ec2-user/worker-err
-'''
-        kwargs = {
-            'ImageId': _SSSC_HEAD_NODE_AMI, 
-            'InstanceType': instanceType,
-            'KeyName': _KEY_NAME,
-            'MinCount': 1, 
-            'MaxCount': 1,
-            'SubnetId': self._subnets['private'].id,
-            # 'SecurityGroupIds': [self._server_security_group.id],
-            'TagSpecifications': [
-                {
-                    'ResourceType': 'instance',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': _WORKER_PREFIX
-                        },
-                    ]
-                },
-            ],
-            'UserData': launch_commands,
-            }
-        print(f'Launching StochSS-Compute server instance.......(This could take a minute)')
-        response = self._client.run_instances(**kwargs)
-        instance_id = response['Instances'][0]['InstanceId']
-        worker_instance = self._resources.Instance(instance_id)
-        self._workers.append(worker_instance)
-        worker_instance.wait_until_running()
+        self._poll_launch_progress(['sssc'])
+
+        print('Restricting server access to only your ip.')
+        source_ip = self._get_source_ip(cloud_key)
+
+        self._restrict_ingress(source_ip)
+        print('StochSS-Compute ready to go!')
 
     def _poll_launch_progress(self, containerNames: list):
         """ 
@@ -446,7 +401,7 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
         source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
         return source_ip_response.source_ip
 
-    def _load_cluster(self, vpcId=None):
+    def _load_cluster(self):
         '''
         Reload cluster resources. Returns False if no vpc named sssc-vpc.
         '''
@@ -461,6 +416,14 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
         ]
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
         if len(vpc_response['Vpcs']) == 0:
+            if os.path.exists(_KEY_PATH):
+                raise ResourceException
+            else:
+                try:
+                    self._client.describe_key_pairs(KeyNames=[_KEY_NAME]) 
+                    raise ResourceException
+                except:
+                    pass              
             return False
         if len(vpc_response['Vpcs']) == 2:
             print(f'More than one VPC named "{_VPC_NAME}".')
@@ -483,8 +446,6 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
                 for rule in sg.ip_permissions:
                     if rule['FromPort'] == 29681 and rule['ToPort'] == 29681 and rule['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
                         errors = True
-                    else:
-                        self._restricted = True
                 self._server_security_group = sg
         if self._server_security_group is None:
             print(f'No security group named "{_SECURITY_GROUP_NAME}".')
@@ -500,3 +461,5 @@ docker run --network host --rm -e EXTRA_PIP_PACKAGES=gillespy2 ghcr.io/dask/dask
             errors = True
         if errors is True:
             raise ResourceException
+        else:
+            print('Cluster loaded.')
