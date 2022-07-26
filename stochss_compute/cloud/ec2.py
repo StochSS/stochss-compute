@@ -19,7 +19,6 @@ _VPC_NAME = 'sssc-vpc'
 _SUBNET_PREFIX = 'sssc-subnet-'
 _SECURITY_GROUP_NAME = 'sssc-sg'
 _SERVER_NAME = 'sssc-server'
-# _WORKER_PREFIX = 'sssc-worker-'
 _KEY_NAME = 'sssc-root'
 _KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
@@ -53,12 +52,7 @@ class Cluster():
         self._resources = boto3.resource('ec2')
         region = get_session().get_config_variable('region')
         self._ami = _AMIS[region]
-        try:
-            self._load_cluster()
-        except ResourceException:
-            print('Cleaning up.')
-            self.clean_up()
-            print('StochSS-Compute ready to re-launch.')
+        self._load_cluster()
 
     def run(self, model: Model, **params):
         """ 
@@ -337,7 +331,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
             ],
             'UserData': launch_commands,
             }
-        print(f'Launching StochSS-Compute server instance.......(This could take a minute)')
+        print(f'Launching StochSS-Compute server instance. This might take a minute.......')
         response = self._client.run_instances(**kwargs)
         instance_id = response['Instances'][0]['InstanceId']
         self._server = self._resources.Instance(instance_id)
