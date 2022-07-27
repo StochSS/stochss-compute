@@ -15,7 +15,7 @@ class Endpoint(Enum):
     CLOUD = 5
 
 class ComputeServer():
-    def __init__(self, host, port: int = 80):
+    def __init__(self, host, port: int = 29681):
         self.host = host
         self.port = port
 

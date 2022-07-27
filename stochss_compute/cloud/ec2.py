@@ -59,7 +59,7 @@ class Cluster():
         Runs a GillesPy2 Model on the cluster. Returns RemoteResults.
          """
         ip = self._server.public_ip_address
-        server = ComputeServer(ip, port=_API_PORT)
+        server = ComputeServer(ip)
         return RemoteSimulation.on(server).with_model(model).run(**params) # Make sure I passed this correctly
 
     def launch_single_node_instance(self, instanceType):
@@ -390,7 +390,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
 
     def _get_source_ip(self, cloud_key):
         ip = self._server.public_ip_address
-        server = ComputeServer(ip, port=_API_PORT)
+        server = ComputeServer(ip)
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
         source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
         return source_ip_response.source_ip
