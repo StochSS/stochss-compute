@@ -6,11 +6,13 @@ from typing import Dict
 from ..apiutils import delegate
 from ..job import JobStatusResponse
 from ..dataclass import ErrorResponse
+from distributed import get_client
 
 import gillespy2.core
 
 from flask import request
 from flask import Blueprint
+from flask import app
 
 from pydantic import BaseModel
 from pydantic import ValidationError
@@ -70,20 +72,24 @@ def run():
 
     # Run each trajectory and save in a dataset.
     # Warning: Here be possible threading issues. Needs investigation.
-    dependencies = delegate.client.map(gillespy2.core.Model.run, [model] * number_trajectories, **run_request.kwargs, key=keys)
-
+    client = get_client()
+    dependencies = client.map(gillespy2.core.Model.run, [model] * number_trajectories, **run_request.kwargs, key=keys)
     cache_dir = delegate.cache_provider.config.root_dir
+    client.publish_dataset(dependencies, name=f"{model_id}-trajectories", override=True)
     os.makedirs(cache_dir, exist_ok=True)
 
     def join_results(results):
         # Save the dependent trajectories in memory.
         from distributed import get_client
+        # import os
         client = get_client()
-        client.publish_dataset(dependencies, name=f"{model_id}-trajectories", override=True)
-
+        # print("Type:")
+        # for n in dependencies:
+        #     print(type(n)) 
         data = []
 
         for i, result in enumerate(results):
+            # delegate.cache_provider.put(keys[i],result.to_json())
             with open(os.path.join(cache_dir, keys[i]), "w+") as outfile:
                 outfile.write(result.to_json())
 
@@ -92,8 +98,14 @@ def run():
         from gillespy2.core import Results
         result_json = Results(data).to_json()
 
+        # delegate.cache_provider.put(job_id, result_json)
         with open(os.path.join(cache_dir, job_id), "w+") as outfile:
             outfile.write(result_json)
+
+        # worker = get_worker()
+        # os.makedirs(worker.id, exist_ok=True)
+        # with open(os.path.join(worker.id, job_id), "w+") as outfile:
+        #     outfile.write(result_json)
 
         return result_json
 

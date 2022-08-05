@@ -12,6 +12,7 @@ class SimpleDiskCache(CacheProvider):
         self.config = config
 
     def put(self, id: str, value: str):
+        print("PUT")
         # Write value to a file with the name `id`. If a file already exists, replace it.
         with open(os.path.join(self.config.root_dir, id), "w+") as outfile:
             outfile.write(value)

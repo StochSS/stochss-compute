@@ -80,8 +80,10 @@ class DaskDelegate(Delegate):
         # Create a job to run the desired function.
         job_future: Future = self.client.submit(work, *function_args, **kwargs, key=job_id, pure=False)
 
+        print('SUBMITTING PUT')
         # Start additional cache job which depends on the results of the previous.
         cache_future: Future = self.client.submit(self.cache_provider.put, *[job_id, job_future], pure=False)
+        print('PUT RETURN')
 
         # Publish the job as a dataset to maintain state across requests.
         self.client.publish_dataset(job_future, name=job_id, override=True)
