@@ -1,8 +1,9 @@
 from tornado.httpclient import HTTPRequest
 import gillespy2
 import numpy
-from ..core.requests import SimulationRunRequest
-url = 'http://localhost:29681/simulation'
+from core.requests import SimulationRunRequest
+import requests
+url = 'http://localhost:29681/run'
 class MichaelisMenten(gillespy2.Model):
      def __init__(self, parameter_values=None):
             #initialize Model
@@ -61,5 +62,6 @@ class MichaelisMenten(gillespy2.Model):
             self.timespan(numpy.linspace(0,1000,101))
 model = MichaelisMenten()
 request = SimulationRunRequest(model, 'SSA')
-print(request.__dict__)
-# HTTPRequest(url, json=model_json)
+print(type(request.json()))
+requests.post(url, json=request.json())
+# HTTPRequest(url, method='POST', body=request.json())

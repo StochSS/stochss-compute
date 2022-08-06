@@ -1,6 +1,6 @@
 import asyncio
 from tornado.web import Application
-from api.v1.simulation import RunHandler
+from api.v1.run import RunHandler
 
 def make_app():
     return Application([
