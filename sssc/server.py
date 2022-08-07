@@ -4,22 +4,24 @@ from api import RunHandler
 import os
 from argparse import ArgumentParser, Namespace
 
-def make_app(scheduler_address):
+def make_app(args):
+    scheduler_address = f'{args.dask_host}:{args.dask_scheduler_port}'
+    print(f'Scheduler Address: {scheduler_address}')
     return Application([
-        (r"/run", RunHandler, {'scheduler_address': scheduler_address}),
+        (r"/run", RunHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
         # (r"/run", RunHandler, kwargs),
     ])
 
 async def main():
     args = parse_args()
             
-    scheduler_address = f'{args.dask_host}:{args.dask_scheduler_port}'
     if os.path.exists(args.cache):
         # load cache ?
         pass
     else:
         os.mkdir(args.cache)
-    app = make_app(scheduler_address)
+        
+    app = make_app(args)
     app.listen(args.port)
     await asyncio.Event().wait()
 
