@@ -5,6 +5,8 @@ import plotly.io as plotlyio
 
 from gillespy2.core import Model, GillesPySolver
 
+from sssc.errors import RemoteSimulationError
+
 from .remote_utils import unwrap_or_err
 
 from .compute_server import Endpoint
@@ -22,33 +24,29 @@ from .api.v1.job import (
     ErrorResponse
 )
 
-class RemoteSimulation():
+class RemoteSimulation:
+
     def __init__(self,
                  model: Model = None,
                  server: ComputeServer = None,
                  server_host: str = None,
                  server_port: int = 29681,
                  solver: GillesPySolver = None,
-                 algorithm: str = 'SSA'
+                 algorithm: str = None,
+                 timeout: int = None,
+                 t: int = None,
+                 increment: int = None,
+                 seed: int = None,
+                 
+                 **solver_args
                  ) -> None:
+
         if server is not None and server_host is not None:
-            print('Pass a ComputeServer or host but not both.')
+            raise RemoteSimulationError('Pass a ComputeServer or host but not both.')
         if server is None and server_host is None:
-            print('Pass a ComputeServer or host.')
-        if server_port is None:
-            print('Pass a port.')
-        if solver
-    @classmethod
-    def on(cls, server: ComputeServer):
-        """
-        Specify a stochss-compute server that subsequent simulations will be run on.
-
-        :param server: A ComputeServer instance which contains connection details
-            of the stochss-compute instance to run simulations on.
-        :type server: ComputeServer
-        """
-
-        return RemoteSimulation(server)
+            raise RemoteSimulationError('Pass a ComputeServer or host.')
+        if server is None and server_port is None:
+            raise RemoteSimulationError('Pass a ComputeServer or port.')
 
     def __init__(self, server: ComputeServer):
         self.server = server
