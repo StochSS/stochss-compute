@@ -9,8 +9,8 @@ from sssc.errors import RemoteSimulationError
 
 from .remote_utils import unwrap_or_err
 
-from .compute_server import Endpoint
-from .compute_server import ComputeServer
+from .sssc_server import Endpoint
+from .sssc_server import ComputeServer
 
 from .remote_results import RemoteResults
 
@@ -28,7 +28,7 @@ class RemoteSimulation:
 
     def __init__(self,
                  model: Model = None,
-                 server: ComputeServer = None,
+                 server = None,
                  server_host: str = None,
                  server_port: int = 29681,
                  solver: GillesPySolver = None,
@@ -42,14 +42,12 @@ class RemoteSimulation:
                  ) -> None:
 
         if server is not None and server_host is not None:
-            raise RemoteSimulationError('Pass a ComputeServer or host but not both.')
+            raise RemoteSimulationError('Pass a ComputeServer/Cluster object or host but not both.')
         if server is None and server_host is None:
-            raise RemoteSimulationError('Pass a ComputeServer or host.')
+            raise RemoteSimulationError('Pass a ComputeServer/Cluster object or host.')
         if server is None and server_port is None:
-            raise RemoteSimulationError('Pass a ComputeServer or port.')
+            raise RemoteSimulationError('Pass a ComputeServer/Cluster object or port.')
 
-    def __init__(self, server: ComputeServer):
-        self.server = server
 
     def with_model(self, model: Model):
         """
