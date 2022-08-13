@@ -1,4 +1,5 @@
 from sssc.compute_server import ComputeServer
+from sssc.server import Server
 from sssc.errors import RemoteSimulationError
 
 from gillespy2.core import GillesPySolver, Model
@@ -9,11 +10,11 @@ from sssc.server import Endpoint
 from tornado.escape import json_decode
 
 class RemoteSimulation:
-    # TODO accept arguments in constructor, but override in run
+    # TODO accept arguments in constructor, but override in run?
 
     def __init__(self,
                  model: Model = None,
-                 server = None,
+                 server: Server = None,
                  server_host: str = None,
                  server_port: int = 29681,
                  solver: GillesPySolver = None,
@@ -54,7 +55,7 @@ class RemoteSimulation:
 
         if sim_response.status == SimStatus.ERROR:
             raise RemoteSimulationError(sim_response.message)
-            
+
 
         return remote_results
 
