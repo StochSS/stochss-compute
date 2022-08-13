@@ -1,10 +1,11 @@
-from stochss_compute import RemoteSimulation, ComputeServer
+from stochss_compute import RemoteSimulation
 from stochss_compute.compute_server import Endpoint
 from .api import SourceIpRequest, SourceIpResponse
 from ..remote_utils import unwrap_or_err
 from .exceptions import ResourceException
 
 from gillespy2 import Model
+from sssc.server import Server
 
 import boto3
 from botocore.exceptions import ClientError
@@ -29,7 +30,7 @@ _AMIS = {
     'us-west-2': 'ami-0e385035e7d059820',
 }
 
-class Cluster():
+class Cluster(Server):
 
     _client = None
     _resources = None
@@ -54,13 +55,16 @@ class Cluster():
         self._ami = _AMIS[region]
         self._load_cluster()
 
-    def run(self, model: Model, **params):
-        """ 
-        Runs a GillesPy2 Model on the cluster. Returns RemoteResults.
-         """
-        ip = self._server.public_ip_address
-        server = ComputeServer(ip)
-        return RemoteSimulation.on(server).with_model(model).run(**params) # Make sure I passed this correctly
+    @property
+    def address(self):
+        if self._server is None:
+            raise Exception('No server found. First launch a cluster.')
+        if self._server.public_ip_address is None:
+            self._server.reload()
+        if self._server.public_ip_address is None:
+            raise Exception('No public address found.')
+
+        return f'http://{self._server.public_ip_address}/{_API_PORT}'
 
     def launch_single_node_instance(self, instanceType):
         """ 
@@ -389,10 +393,8 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         ssh.close()
 
     def _get_source_ip(self, cloud_key):
-        ip = self._server.public_ip_address
-        server = ComputeServer(ip)
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
-        source_ip_response = unwrap_or_err(SourceIpResponse, server.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
+        source_ip_response = unwrap_or_err(SourceIpResponse, self.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
         return source_ip_response.source_ip
 
     def _load_cluster(self):
