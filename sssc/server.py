@@ -8,15 +8,13 @@ from requests.exceptions import ConnectionError
 from time import sleep
 
 class Endpoint(Enum):
-    GILLESPY2_MODEL = 1
-    GILLESPY2_RESULTS = 2
-    CLOUD = 3
+    SIMULATION_GILLESPY2 = 1
+    CLOUD = 2
 
 class Server(ABC):    
 
     _endpoints = {
-        Endpoint.GILLESPY2_MODEL: "/api/v2/simulation/gillespy2/run",
-        Endpoint.GILLESPY2_RESULTS: "/api/v2/simulation/gillespy2/results",
+        Endpoint.SIMULATION_GILLESPY2: "/api/v2/simulation/gillespy2",
         Endpoint.CLOUD: "/api/v2/cloud"
     }
 
