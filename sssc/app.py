@@ -8,7 +8,9 @@ def make_app(args):
     scheduler_address = f'{args.dask_host}:{args.dask_scheduler_port}'
     print(f'Scheduler Address: {scheduler_address}')
     return Application([
-        (r"/run", RunHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
+        (r"/api/v2/simulation/gillespy2/run", RunHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
+        (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/status", StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
+        (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/cache", CacheHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
         # (r"/run", RunHandler, kwargs),
     ])
 
