@@ -1,30 +1,10 @@
-import bz2
-import sys
-
-import plotly.io as plotlyio
-
-from gillespy2.core import Model, GillesPySolver
-
+from sssc.compute_server import ComputeServer
 from sssc.errors import RemoteSimulationError
 
-from .remote_utils import unwrap_or_err
-
-from .server import Endpoint
-from .server import ComputeServer
-
-from .remote_results import RemoteResults
-
-from .api.v1.gillespy2.model import ModelRunRequest
-
-from .api.v1.job import (
-    StartJobRequest,
-    StartJobResponse,
-    JobStatusResponse,
-    JobStopResponse,
-    ErrorResponse
-)
+from gillespy2.core import GillesPySolver, Model
 
 class RemoteSimulation:
+    # TODO accept arguments in constructor, but override in run
 
     def __init__(self,
                  model: Model = None,
@@ -36,9 +16,9 @@ class RemoteSimulation:
                  timeout: int = None,
                  t: int = None,
                  increment: int = None,
+                 number_of_trajectories = None,
                  seed: int = None,
-                 
-                 **solver_args
+                 **solver_args,
                  ) -> None:
 
         if server is not None and server_host is not None:
@@ -48,6 +28,13 @@ class RemoteSimulation:
         if server is None and server_port is None:
             raise RemoteSimulationError('Pass a ComputeServer/Cluster object or port.')
 
+        if server is None:
+            self.server = ComputeServer(server_host, server_port)
+        else:
+            self.server = server
+        
+        
     def run(self):
+
         pass
 

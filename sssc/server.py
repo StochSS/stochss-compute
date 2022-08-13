@@ -21,7 +21,7 @@ class Server(ABC):
     }
 
     def __init__(self) -> None:
-        raise TypeError('Server cannot be instantiated directly. Must be RemoteServer or Cluster.')
+        raise TypeError('Server cannot be instantiated directly. Must be ComputeServer or Cluster.')
 
     @property
     @abstractmethod
