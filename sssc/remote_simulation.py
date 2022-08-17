@@ -1,11 +1,11 @@
-from sssc.compute_server import ComputeServer
-from sssc.server import Server
-from sssc.errors import RemoteSimulationError
+from compute_server import ComputeServer
+from server import Server
+from errors import RemoteSimulationError
 
 from gillespy2.core import GillesPySolver, Model
 
-from sssc.messages import SimulationRunRequest, SimulationRunResponse, SimStatus
-from sssc.server import Endpoint
+from messages import SimulationRunRequest, SimulationRunResponse, SimStatus
+from server import Endpoint
 
 from tornado.escape import json_decode
 
@@ -15,25 +15,27 @@ class RemoteSimulation:
     def __init__(self,
                  model: Model = None,
                  server: Server = None,
-                 server_host: str = None,
-                 server_port: int = 29681,
+                 host: str = None,
+                 port: int = 29681,
                  solver: GillesPySolver = None,
                  ) -> None:
 
-        if server is not None and server_host is not None:
+        if server is not None and host is not None:
             raise RemoteSimulationError('Pass a ComputeServer/Cluster object or host but not both.')
-        if server is None and server_host is None:
+        if server is None and host is None:
             raise RemoteSimulationError('Pass a ComputeServer/Cluster object or host.')
-        if server is None and server_port is None:
+        if server is None and port is None:
             raise RemoteSimulationError('Pass a ComputeServer/Cluster object or port.')
 
         if server is None:
-            self.server = ComputeServer(server_host, server_port)
+            self.server = ComputeServer(host, port)
         else:
             self.server = server
+
+        self.model = model
         
 
-    def run(self, **params) -> RemoteResults:
+    def run(self, **params):
         """
         Simulate the Model on the target ComputeServer, returning the results once complete.
 
@@ -46,7 +48,7 @@ class RemoteSimulation:
             params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
 
         sim_request = SimulationRunRequest(model=self.model, kwargs=params)
-        response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request.__dict__)
+        response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
 
         if not response_raw.ok:
             raise Exception(response_raw.reason)
@@ -56,6 +58,7 @@ class RemoteSimulation:
         if sim_response.status == SimStatus.ERROR:
             raise RemoteSimulationError(sim_response.message)
 
+        return sim_response.results
 
-        return remote_results
+
 

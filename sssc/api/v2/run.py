@@ -19,12 +19,15 @@ class RunHandler(RequestHandler):
         self.running = {}
 
     async def post(self):
-        request_dict = json_decode(self.request.body)
-        model_string = request_dict['model']
-        kwargs_string = request_dict['kwargs']
+        sim_request = SimulationRunRequest.parse(self.request.body)
+        print(sim_request.model)
+        print(sim_request.kwargs)
         model: Model = Model.from_json(model_string)
         kwargs: dict = json_decode(kwargs_string)
-        simulation_hash = hashlib.md5(str.encode(f'{model_string}{kwargs_string}')).hexdigest()
+        hashable = f'{model_string}{kwargs_string}'
+        print(f'>>>>>>>HASHABLE:{hashable}')
+        simulation_hash = hashlib.md5(str.encode(hashable)).hexdigest()
+        print(f'>>>>>>>HASH: {simulation_hash}')
         
         self.results_path = os.path.join(self.cache_dir, f'{simulation_hash}.results')
         if os.path.exists(self.results_path):
@@ -57,7 +60,6 @@ class RunHandler(RequestHandler):
         file.close()
 
         
-
 # class ResultsHandler(RequestHandler):
 #     def 
         

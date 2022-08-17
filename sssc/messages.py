@@ -1,6 +1,7 @@
+from urllib import request
 from gillespy2.core import Model, Results
 from enum import Enum
-from tornado.escape import json_encode
+from tornado.escape import json_encode, json_decode
 
 class SimStatus(Enum):
     PENDING = 'The simulation is pending.'
@@ -16,12 +17,26 @@ class Response:
 
 class SimulationRunRequest(Request):
     def __init__(self, model: Model, **params):
-        self._model = model.to_json()
-        self.kwargs = json_encode(params)
+        self._model = model
+        self._kwargs = params
 
     @property
     def model(self):
         return Model.from_json(self._model)
+
+    @property
+    def kwargs(self):
+        return json_decode(self._kwargs)
+
+    def encode(self):
+        return {'model': self._model.to_json(), 'kwargs': json_encode(self._kwargs)}
+
+    @classmethod
+    def parse(self, raw_request: str):
+        request_dict = json_decode(raw_request)
+        kwargs_dict = json_decode(request_dict['model'])
+        kwargs_dict = json_decode(request_dict['kwargs'])
+        return SimulationRunRequest(, **kwargs_dict)
 
 class SimulationRunResponse(Response):
     def __init__(self, status: SimStatus, message: str = None, results: Results = None):

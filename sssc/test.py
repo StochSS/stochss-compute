@@ -1,12 +1,8 @@
-import json
 import gillespy2
 import numpy
-import tornado.escape
-from messages import SimulationRunRequest
-from tornado.httpclient import HTTPRequest
-from tornado.httpclient import HTTPClient, AsyncHTTPClient
-import requests
-url = 'http://localhost:29681/run'
+
+from remote_simulation import RemoteSimulation
+
 class MichaelisMenten(gillespy2.Model):
      def __init__(self, parameter_values=None):
             #initialize Model
@@ -16,12 +12,8 @@ class MichaelisMenten(gillespy2.Model):
             A = gillespy2.Species(name='A', initial_value=301)
             self.add_species([A])
             self.timespan(numpy.linspace(0,1000,101))
+
 model = MichaelisMenten()
-request = SimulationRunRequest(model, 'SSA')
-test = {
-        'test': 'test'
-}
-request_json = tornado.escape.json_encode(test)
-print(type(request_json))
-response = requests.post(url, json=request.__dict__ )
-print(response.text)
+simulation = RemoteSimulation(model=model, host='localhost')
+results = simulation.run()
+print(results)

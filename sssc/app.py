@@ -1,6 +1,6 @@
 import asyncio
 from tornado.web import Application
-from api import RunHandler
+from api.v2.run import RunHandler
 import os
 from argparse import ArgumentParser, Namespace
 
@@ -9,8 +9,8 @@ def make_app(args):
     print(f'Scheduler Address: {scheduler_address}')
     return Application([
         (r"/api/v2/simulation/gillespy2/run", RunHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
-        (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/status", StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
-        (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/cache", CacheHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
+        # (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/status", StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
+        # (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/cache", CacheHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
         # (r"/run", RunHandler, kwargs),
     ])
 
