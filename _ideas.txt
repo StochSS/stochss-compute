@@ -1,0 +1,76 @@
+Simulation:
+    - Model
+        - 
+    - .run()
+    - GillespySolver/algorithm
+        - One or the other, not both
+        - C++ or Py
+        - Compile once for efficiency
+        - CLE
+        - ODE
+        - SSA
+        - Tau Leaping
+        - Tau Hybrid
+        - Options:
+            - Model (required)
+            - ? profile_reactions
+    - Results
+        - Dict of arrays
+    - 
+RemoteSimulation:
+    All of the above plus:
+        - Compute server
+            - host
+            - port 29681 (but can be changed)
+        - A set of models with certain properties should 
+          all hash to the same value and
+          thus share the same results
+                - Should share these properties:
+                    - Same algorithm 
+                    - Same model arguments
+    - Model
+    - GillespySolver
+        -options
+
+**********************
+
+RemoteSimulation.on(myServer).with_model(myModel).run(algorithm='SSA')
+
+**********************
+
+sim = RemoteSimulation(host, model, algorithm)
+    - or any combination of the necessary/optional arguments
+      such as solver, port, etc.
+    - include run arguments?
+
+sim.run(args)
+
+sim.results()
+
+**********************
+
+sim = RemoteSimulation(host, model, algorithm)
+
+results = sim.run(args) 
+(returns immediately if cached,
+ otherwise, wait and poll for results periodically 
+ (interrupt to cancel))
+
+optional results.fetch() if polling is cancelled
+
+************************
+
+sim = RemoteSimulation(host, model, algorithm)
+
+results = sim.run(args) 
+ (returns immediately with sim status only)
+ (running/pending/done/error)
+
+results.wait()
+results.status()
+results.cancel()
+results.resolve() (waits and then fetches)
+
+**************************
+
+sim = RemoteSimulation(host, model, algorithm)

@@ -1,16 +1,30 @@
-from stochss_compute import api
+import asyncio
+from tornado.web import Application
+from stochss_compute.server.run import RunHandler
+import os
 from argparse import ArgumentParser, Namespace
-from stochss_compute.api.cache.simple_disk_cache import SimpleDiskCache, SimpleDiskCacheConfig
 
-from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
+def make_app(args):
+    scheduler_address = f'{args.dask_host}:{args.dask_scheduler_port}'
+    print(f'Scheduler Address: {scheduler_address}')
+    return Application([
+        (r"/api/v2/simulation/gillespy2/run", RunHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
+        # (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/status", StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
+        # (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/cache", CacheHandler, {'scheduler_address': scheduler_address, 'cache_dir': args.cache}),
+    ])
 
-def main():
+async def main():
     args = parse_args()
             
-    cache_provider = SimpleDiskCache(SimpleDiskCacheConfig(root_dir=args.cache))
-    delegate_config = DaskDelegateConfig(host=args.dask_host, scheduler_port=args.dask_scheduler_port, cache_provider=cache_provider)
-
-    api.start_api(host=args.host, port=args.port, debug=False, delegate_config=delegate_config)
+    if os.path.exists(args.cache):
+        # load cache ?
+        pass
+    else:
+        os.mkdir(args.cache)
+        
+    app = make_app(args)
+    app.listen(args.port)
+    await asyncio.Event().wait()
 
 def parse_args() -> Namespace:
     desc = '''
@@ -25,7 +39,7 @@ def parse_args() -> Namespace:
                         help="The port to use for the flask server. Defaults to 29681.")
 
     cache = parser.add_argument_group('Cache')
-    cache.add_argument('-c', '--cache', default='sd-cache/', required=False, help='Path to use for the cache.')
+    cache.add_argument('-c', '--cache', default='cache/', required=False, help='Path to use for the cache.')
 
     dask = parser.add_argument_group('Dask')
     dask.add_argument("-H", "--dask-host", default='localhost', required=False,
@@ -35,4 +49,4 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

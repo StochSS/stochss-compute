@@ -2,14 +2,13 @@
 from abc import ABC, abstractmethod
 import requests
 
-from enum import Enum
+from stochss_compute.client.endpoint import Endpoint
+from stochss_compute.core.messages import Request
 
 from requests.exceptions import ConnectionError
 from time import sleep
 
-class Endpoint(Enum):
-    SIMULATION_GILLESPY2 = 1
-    CLOUD = 2
+
 
 class Server(ABC):    
 
@@ -26,7 +25,7 @@ class Server(ABC):
     def address(self):
         return NotImplemented
 
-    def post(self, endpoint: Endpoint, sub: str, request = None) -> requests.Response:
+    def post(self, endpoint: Endpoint, sub: str, request: Request = None) -> requests.Response:
 
         if self.address is NotImplemented:
             raise NotImplementedError
@@ -41,7 +40,7 @@ class Server(ABC):
                     print(f"[POST] {url}")
                     return requests.post(url)
                 print(f"[{type(request).__name__}] {url}")
-                return requests.post(url, json=request.__dict__)
+                return requests.post(url, json=request.encode())
 
             except ConnectionError as ce:
                 print(f"Connection refused by server. Retrying in {sec} seconds....")

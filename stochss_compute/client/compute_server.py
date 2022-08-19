@@ -1,5 +1,5 @@
 
-from server import Server
+from stochss_compute.client.server import Server
 
 class ComputeServer(Server):    
 

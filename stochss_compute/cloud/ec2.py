@@ -1,5 +1,5 @@
 from stochss_compute import RemoteSimulation
-from stochss_compute.compute_server import Endpoint
+from stochss_compute.core.compute_server import Endpoint
 from .api import SourceIpRequest, SourceIpResponse
 from ..remote_utils import unwrap_or_err
 from .exceptions import ResourceException

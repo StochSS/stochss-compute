@@ -7,7 +7,7 @@ from threading import Thread
 from tests.gillespy2_models import LacOperon
 from tests.gillespy2_models import MichaelisMenten
 
-from stochss_compute import api
+from stochss_compute.server import app
 
 from stochss_compute import ComputeServer
 from stochss_compute import RemoteSimulation
@@ -36,7 +36,7 @@ class EnsembleTest(unittest.TestCase):
         if hasattr(delegate_config.cache_provider.config, "root_dir"):
             delegate_config.cache_provider.config.root_dir = cls.cache_dir.name
 
-        cls.api_process = Thread(daemon=False, target=api.start_api, kwargs=dict(host="127.0.0.1", port=29681, delegate_config=delegate_config))
+        cls.api_process = Thread(daemon=False, target=app.start_api, kwargs=dict(host="127.0.0.1", port=29681, delegate_config=delegate_config))
         cls.api_process.start()
 
         cls.compute_server = ComputeServer(host="127.0.0.1", port=29681)

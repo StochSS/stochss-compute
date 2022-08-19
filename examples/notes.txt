@@ -1,0 +1,3 @@
+sudo amazon-linux-extras install epel -y
+sudo yum install -y sshfs
+sudo sshfs ec2-user@172.31.0.105:/home/ec2-user /home/ec2-user/test -o IdentityFile=/home/ec2-user/key.pem -o allow_other

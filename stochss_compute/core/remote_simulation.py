@@ -1,20 +1,17 @@
-from compute_server import ComputeServer
-from server import Server
-from errors import RemoteSimulationError
+from stochss_compute.client.endpoint import Endpoint
+from stochss_compute.core.messages import SimulationRunRequest, SimulationRunResponse, SimStatus
+from stochss_compute.core.errors import RemoteSimulationError
 
-from gillespy2.core import GillesPySolver, Model
-
-from messages import SimulationRunRequest, SimulationRunResponse, SimStatus
-from server import Endpoint
+from gillespy2 import GillesPySolver, Model
 
 from tornado.escape import json_decode
 
 class RemoteSimulation:
     # TODO accept arguments in constructor, but override in run?
-
+    # removed type hinting for server due to circular import
     def __init__(self,
                  model: Model = None,
-                 server: Server = None,
+                 server = None,
                  host: str = None,
                  port: int = 29681,
                  solver: GillesPySolver = None,
@@ -28,6 +25,7 @@ class RemoteSimulation:
             raise RemoteSimulationError('Pass a ComputeServer/Cluster object or port.')
 
         if server is None:
+            from stochss_compute.client.compute_server import ComputeServer
             self.server = ComputeServer(host, port)
         else:
             self.server = server

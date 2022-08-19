@@ -31,6 +31,7 @@ with open(path.join(SETUP_DIR, "stochss_compute/__version__.py")) as f:
 
 setup(name=             version["__title__"],
       version=          version["__version__"],
+      scripts=          ['scripts/'],
       description=      version["__description__"],
       author=           version["__author__"],
       author_email=     version["__email__"],

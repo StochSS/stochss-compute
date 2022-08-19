@@ -1,5 +1,5 @@
 
-from stochss_compute.api import start_api
+from stochss_compute.server.app import start_api
 from stochss_compute.api.cache.simple_disk_cache import SimpleDiskCache, SimpleDiskCacheConfig
 from stochss_compute.api.delegate.dask_delegate import DaskDelegateConfig
 from argparse import ArgumentParser, Namespace
