@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from urllib import request
 from gillespy2 import Model, Results
 from enum import Enum
 from tornado.escape import json_encode, json_decode
@@ -40,8 +39,9 @@ class SimulationRunRequest(Request):
         return SimulationRunRequest(model, **kwargs_dict)
 
     def hash(self):
-        anon_model_string = self.model.to_anon().to_json()
-        request_string =  f'{anon_model_string}{self.kwargs.__str__}'
+        anon_model_string = self.model.to_anon().to_json(encode_private=False)
+        kwargs_string = json_encode(self.kwargs)
+        request_string =  f'{anon_model_string}{kwargs_string}'
         return md5(str.encode(request_string)).hexdigest()
 
 class SimulationRunResponse(Response):
