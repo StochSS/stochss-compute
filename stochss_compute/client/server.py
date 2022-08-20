@@ -25,7 +25,12 @@ class Server(ABC):
     def address(self):
         return NotImplemented
 
-    def post(self, endpoint: Endpoint, sub: str, request: Request = None) -> requests.Response:
+    def get(self, endpoint, sub):
+        url = f"{self.address}{self._endpoints[endpoint]}{sub}"
+        print(f"[GET] {url}")
+        return requests.get(url)
+
+    def post(self, endpoint: Endpoint, sub: str, request: Request = None):
 
         if self.address is NotImplemented:
             raise NotImplementedError
