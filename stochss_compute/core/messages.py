@@ -27,13 +27,19 @@ class Request(ABC):
     @abstractmethod
     def encode(self):
         pass
-    @classmethod
+    @staticmethod
     @abstractmethod
-    def parse(self, raw_request):
+    def parse(raw_request):
         pass
 
-class Response:
-    pass
+class Response(ABC):
+    @abstractmethod
+    def encode(self):
+        pass
+    @staticmethod
+    @abstractmethod
+    def parse(raw_response):
+        pass
 
 class SimulationRunRequest(Request):
     def __init__(self, model, **params):
@@ -44,8 +50,8 @@ class SimulationRunRequest(Request):
         return {'model': self.model.to_json(),
                 'kwargs': json_encode(self.kwargs)}
 
-    @classmethod
-    def parse(self, raw_request):
+    @staticmethod
+    def parse(raw_request):
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs_dict = json_decode(request_dict['kwargs'])
@@ -74,17 +80,36 @@ class SimulationRunResponse(Response):
                 'results_id': self.results_id,
                 'results': encode_results}
     
-    @classmethod
-    def parse(self, raw_response):
+    @staticmethod
+    def parse(raw_response):
         response_dict = json_decode(raw_response)
         status = SimStatus.from_str(response_dict['status'])
         results_id = response_dict['results_id']
-        if status == SimStatus.ERROR:
-            message = response_dict['message']
-        else:
-            message = ""
-        if status == SimStatus.READY:
-            results = Results.from_json(response_dict['results'])
-        else:
-            results = ""
+        message = response_dict['message']
+        results = Results.from_json(response_dict['results'])
         return SimulationRunResponse(status, message, results_id, results)
+
+class StatusRequest(Request):
+    def __init__(self, results_id):
+        self.results_id = results_id
+    def encode(self):
+        return self.__dict__
+    @staticmethod
+    def parse(raw_request):
+        request_dict = json_decode(raw_request)
+        return StatusRequest(request_dict['results_id'])
+
+class StatusResponse(Response):
+    def __init__(self, status, error_message = ''):
+        self.status = status
+        self.error_message = error_message
+    
+    def encode(self):
+        return {'status': self.status.name,
+                'error_message': self.error_message}
+    
+    @staticmethod
+    def parse(raw_response):
+        response_dict = json_decode(raw_response)
+        status = SimStatus.from_str(response_dict['status'])
+        return StatusResponse(status, response_dict['error_message'])
