@@ -28,13 +28,11 @@ class RunHandler(RequestHandler):
 
             file = open(self.results_path, 'r')
             results = file.read()
-            sim_response = SimulationRunResponse(SimStatus.READY, '', results = results)
+            sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = results)
             self.write(sim_response.encode())
         else:
             model = sim_request.model
-            print(model)
             kwargs = sim_request.kwargs
-            print(kwargs)
             if "solver" in kwargs:
                 from pydoc import locate
                 kwargs["solver"] = locate(kwargs["solver"])
@@ -48,6 +46,9 @@ class RunHandler(RequestHandler):
             print(client)
             # results = model.run(**kwargs)
             future: Future = client.submit(model.run)
+            print(future.status)
+            sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
+            self.write(sim_response.encode())
             self.finish()
             self.cache_results(future)
     
