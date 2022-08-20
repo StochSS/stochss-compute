@@ -6,6 +6,8 @@ from gillespy2 import GillesPySolver, Model
 
 from tornado.escape import json_decode
 
+from stochss_compute.core.remote_results import RemoteResults
+
 class RemoteSimulation:
     # TODO accept arguments in constructor, but override in run?
     # removed type hinting for server due to circular import
@@ -47,16 +49,19 @@ class RemoteSimulation:
 
         sim_request = SimulationRunRequest(model=self.model, kwargs=params)
         response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
-
         if not response_raw.ok:
             raise Exception(response_raw.reason)
 
-        sim_response: SimulationRunResponse = json_decode(response_raw.text)
-
+        sim_response = SimulationRunResponse.parse(response_raw.text)
+        
         if sim_response.status == SimStatus.ERROR:
             raise RemoteSimulationError(sim_response.message)
-
-        return sim_response.results
+        if sim_response.status == SimStatus.READY:
+            print('1')
+            return RemoteResults(id=sim_response.results_id, server=self.server, results=sim_response.results)
+        else:
+            print('2')
+            return RemoteResults(id=sim_response.results_id, server=self.server)
 
 
 
