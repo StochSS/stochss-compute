@@ -4,7 +4,6 @@ from enum import Enum
 from tornado.escape import json_encode, json_decode
 from hashlib import md5
 
-from stochss_compute.core.remote_results import RemoteResults
 
 class SimStatus(Enum):
     PENDING = 'The simulation is pending.'
@@ -64,30 +63,34 @@ class SimulationRunRequest(Request):
         return md5(str.encode(request_string)).hexdigest()
 
 class SimulationRunResponse(Response):
-    def __init__(self, status, message = "", results_id = "", results = ""):
+    def __init__(self, status, error_message = None, results_id = None, results = None):
         self.status = status
-        self.message = message
+        self.error_message = error_message
         self.results_id = results_id
         self.results = results
     
     def encode(self):
+        # TODO come back to this
         if isinstance(self.results, Results):
             encode_results = Results.from_json(self.results)
         else:
             encode_results = self.results
         return {'status': self.status.name,
-                'message': self.message,
-                'results_id': self.results_id,
-                'results': encode_results}
+                'error_message': self.error_message or '',
+                'results_id': self.results_id or '',
+                'results': encode_results or ''}
     
     @staticmethod
     def parse(raw_response):
         response_dict = json_decode(raw_response)
         status = SimStatus.from_str(response_dict['status'])
         results_id = response_dict['results_id']
-        message = response_dict['message']
-        results = Results.from_json(response_dict['results'])
-        return SimulationRunResponse(status, message, results_id, results)
+        error_message = response_dict['error_message']
+        if response_dict['results'] != '':
+            results = Results.from_json(response_dict['results'])
+        else:
+            results = None
+        return SimulationRunResponse(status, error_message, results_id, results)
 
 class StatusRequest(Request):
     def __init__(self, results_id):
