@@ -16,7 +16,6 @@ class RunHandler(RequestHandler):
     def initialize(self, scheduler_address, cache_dir):
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
-        self.running = {}
 
     async def post(self):
         sim_request = SimulationRunRequest.parse(self.request.body)
@@ -38,22 +37,15 @@ class RunHandler(RequestHandler):
                 kwargs["solver"] = locate(kwargs["solver"])
 
             client = Client(self.scheduler_address)
-            # if simulation_hash in self.running.keys():
-            #     # fetch status by key
-            #     key = self.running[simulation_hash]
-            #     task : TaskState = client.cluster.scheduler.tasks[key]
-            #     self.write(task.state)
-            print(client)
-            # results = model.run(**kwargs)
             future: Future = client.submit(model.run, key=sim_hash)
-            print(future.status)
             sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
             self.write(sim_response.encode())
             self.finish()
             self.cache_results(future)
     
-    def cache_results(self, future_results: Future):
-        results: Results = future_results.result()
+    async def cache_results(self, future_results: Future):
+        results: Results = yield future_results.result()
+        print('done')
         file = open(self.results_path, 'x')
         file.write(results.to_json())
         file.close()
