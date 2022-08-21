@@ -16,7 +16,7 @@ class RemoteSimulation:
                  server = None,
                  host: str = None,
                  port: int = 29681,
-                 solver: GillesPySolver = None,
+                 solver = None,
                  ) -> None:
 
         if server is not None and host is not None:
