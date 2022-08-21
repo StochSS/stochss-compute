@@ -10,7 +10,7 @@ class StatusHandler(RequestHandler):
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
 
-    def get(self, results_id = None):
+    async def get(self, results_id = None):
         if results_id is None:
             raise Exception('Malformed request')
         print(f'>>>>>>>>>>>ID:{results_id}')
@@ -22,8 +22,9 @@ class StatusHandler(RequestHandler):
             return
         
         client = Client(self.scheduler_address)
-        task = client.scheduler.tasks.get(results_id)
-        
+        print(client.scheduler.)
+        task = client.cluster.scheduler.tasks.get(results_id)
+        print(task)
         if task is None or task.state == 'forgotten' or task.state == 'released':
             future = client.futures.get(results_id)
             if future is None or future.done():
