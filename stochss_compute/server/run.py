@@ -45,7 +45,7 @@ class RunHandler(RequestHandler):
             #     self.write(task.state)
             print(client)
             # results = model.run(**kwargs)
-            future: Future = client.submit(model.run)
+            future: Future = client.submit(model.run, key=sim_hash)
             print(future.status)
             sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
             self.write(sim_response.encode())
