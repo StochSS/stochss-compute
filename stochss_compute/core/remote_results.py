@@ -7,7 +7,9 @@ from time import sleep
 
 from tornado.escape import json_decode
 
-class RemoteResults(Results):
+from stochss_compute.core.messages import SimStatus, StatusResponse
+
+class RemoteResults():
 
     def __init__(self, id, server, results = None):
         self.id = id
@@ -22,35 +24,26 @@ class RemoteResults(Results):
         return self._local
 
 
-    def status(self):
+    def _status(self):
         # Request the status of a running job.
         response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/status")
         if not response_raw.ok:
             raise Exception(response_raw.reason)
 
-        # status_response = json_decode(response_raw.text)
-
+        status_response = StatusResponse.parse(response_raw.text)
+        print(status_response.status)
+        print(status_response.error_message)
         # # Parse the body of the response into a JobStatusResponse object.
         # print(status.status_msg)
         # print(status.status_id)
+        return status_response
 
-        # return status.is_complete
+    def ready(self):
+        return self._status().status == SimStatus.READY
 
-    def fetch(self):
-        
-        return self._local
-
-    # def status(self) -> :
-    #     """
-    #     Get the status of the remote job.
-
-    #     :returns: JobStatusResponse
-    #     """
-
-    #     status_response = self.server.get(Endpoint.JOB, f"/{self.result_id}/status")
-    #     status: JobStatusResponse = unwrap_or_err(JobStatusResponse, status_response)
-
-    #     return status
+    def error(self):
+        status_response = self._status()
+        # raise error by grabbing error class from task and put into response object
 
 
     # def resolve(self) -> Results:
