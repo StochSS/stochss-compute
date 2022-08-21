@@ -7,29 +7,26 @@ from time import sleep
 
 from tornado.escape import json_decode
 
-class RemoteResults():
+class RemoteResults(Results):
 
-    def __init__(self, id, server, data = None):
+    def __init__(self, id, server, results = None):
         self.id = id
         self.server = server
-        self._data = data
+        self._local = results
 
-    # @property
-    # def data(self):
-    #     if self.local_data is None:
-    #         print('Fetching Results.......')
-    #         self.local_data = self.resolve().data
-    #     return self.local_data
+    @property
+    def local(self):
+        if self._local is None:
+            print('Fetching Results.......')
+            self.resolve()
+        return self._local
 
 
     def status(self):
         # Request the status of a running job.
-        # pass
-        # print(self.server)
-        self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/status")
-        # if not status_response.ok:
-        #     # TODO
-        #     pass
+        response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/status")
+        if not response_raw.ok:
+            raise Exception(response_raw.reason)
 
         # status_response = json_decode(response_raw.text)
 
@@ -39,6 +36,9 @@ class RemoteResults():
 
         # return status.is_complete
 
+    def fetch(self):
+        
+        return self._local
 
     # def status(self) -> :
     #     """
@@ -80,9 +80,9 @@ class RemoteResults():
 
     #     return results
 
-    # def cancel(self):
-    #     """
-    #     Cancels the remote job.
-    #     """
-    #     stop_response = self.server.post(Endpoint.JOB, f"/{self.result_id}/stop")
+    def cancel(self):
+        """
+        Cancels the remote job.
+        """
+        stop_response = self.server.post(Endpoint.JOB, f"/{self.result_id}/stop")
 
