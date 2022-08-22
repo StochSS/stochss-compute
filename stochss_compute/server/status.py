@@ -22,10 +22,20 @@ class StatusHandler(RequestHandler):
             return
         
         client = Client(self.scheduler_address)
-        print(client.scheduler.)
-        task = client.cluster.scheduler.tasks.get(results_id)
-        print(task)
-        if task is None or task.state == 'forgotten' or task.state == 'released':
+
+        def scheduler_job_state(dask_scheduler, results_id) -> TaskState:
+            # still need to handle exception if there is one
+            task = dask_scheduler.tasks.get(results_id)
+            if task is None:
+                return None
+            return task.state
+
+
+
+        state = client.run_on_scheduler(scheduler_job_state, results_id=results_id)
+        # task = client.cluster.scheduler.tasks.get(results_id)
+        # print(client.cluster.scheduler)
+        if state is None or state == 'forgotten' or state == 'released':
             future = client.futures.get(results_id)
             if future is None or future.done():
                 status_response = StatusResponse(SimStatus.ERROR, 'Unknown Error.')
@@ -43,11 +53,11 @@ class StatusHandler(RequestHandler):
             "forgotten": SimStatus.ERROR
         }
         
-        sim_status = status_mapping[task.state]
+        sim_status = status_mapping[state]
         
-        if task.state == 'erred':
-            error_message = task.exception_text
-        elif task.state == 'memory' or task.state == 'forgotten':
+        if state == 'erred':
+            error_message = exception_text
+        elif state == 'memory' or state == 'forgotten':
             error_message = 'Unknown Error.'
         else:
             error_message = ''
