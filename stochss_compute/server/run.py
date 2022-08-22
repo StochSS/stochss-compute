@@ -1,15 +1,9 @@
-import hashlib
-from time import sleep
 from tornado.web import RequestHandler
-from tornado.escape import json_decode, json_encode
-import json
-from gillespy2.core import Model
+from tornado.ioloop import IOLoop
 from stochss_compute.core.messages import SimStatus, SimulationRunRequest, SimulationRunResponse
 from gillespy2.core import Results
 from distributed import Client, Future
-from distributed.scheduler import TaskState
 import os
-import asyncio
 
 class RunHandler(RequestHandler):
 
@@ -37,15 +31,15 @@ class RunHandler(RequestHandler):
                 kwargs["solver"] = locate(kwargs["solver"])
 
             client = Client(self.scheduler_address)
-            future: Future = client.submit(model.run, key=sim_hash)
+            future = client.submit(model.run, key=sim_hash)
+            print(future)
             sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
             self.write(sim_response.encode())
             self.finish()
-            self.cache_results(future)
+            await IOLoop.current().run_in_executor(None, self.cache_results, future)
     
-    async def cache_results(self, future_results: Future):
-        results: Results = yield future_results.result()
-        print('done')
+    def cache_results(self, future_results: Future):
+        results: Results = future_results.result()
         file = open(self.results_path, 'x')
         file.write(results.to_json())
         file.close()
