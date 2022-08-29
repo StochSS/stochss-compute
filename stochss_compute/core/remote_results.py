@@ -6,22 +6,27 @@ from gillespy2 import Results
 from time import sleep
 
 from tornado.escape import json_decode
+from stochss_compute.core.errors import RemoteSimulationError
 
 from stochss_compute.core.messages import SimStatus, StatusResponse
 
-class RemoteResults():
+class RemoteResults(Results):
 
-    def __init__(self, id, server, results = None):
-        self.id = id
-        self.server = server
-        self._local = results
+    id = None
+    server = None
+
+    def __init__(self, data = None):
+
+        self.data = data
 
     @property
-    def local(self):
-        if self._local is None:
-            print('Fetching Results.......')
-            self.resolve()
-        return self._local
+    def data(self):
+        if self.id is None or self.server is None:
+            raise Exception('RemoteResults must have a self.id and a self.server.')
+
+            
+        self._resolve()
+        return self.data
 
 
     def _status(self):
@@ -37,6 +42,34 @@ class RemoteResults():
         # print(status.status_msg)
         # print(status.status_id)
         return status_response
+
+    def _resolve(self):
+        if self.data is None:
+            status = self._status()
+            if status == SimStatus.PENDING:
+                print('Simulation is pending (not running yet). Checking for status update....')
+                while True:
+                    sleep(5)
+                    status = self._status()
+                    if status != SimStatus.PENDING:
+                        break
+            if status == SimStatus.RUNNING:
+                print('Simulation is running. Downloading results when complete......')
+                while True:
+                    sleep(5)
+                    status = self._status()
+                    if status == SimStatus.PENDING:
+                        raise Exception('Unknown Error.')
+                    if status != SimStatus.RUNNING:
+                        break
+            if status == SimStatus.READY:
+                print('Results ready. Fetching.......')
+            if status == SimStatus.ERROR:
+                raise RemoteSimulationError(status.error_message)
+                
+        response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
+        if not response_raw.ok:
+            raise Exception(response_raw.reason)
 
     def ready(self):
         return self._status().status == SimStatus.READY
