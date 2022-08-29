@@ -106,6 +106,7 @@ class StatusResponse(Response):
     def __init__(self, status, error_message = ''):
         self.status = status
         self.error_message = error_message
+        # Add traceback eventually!
     
     def encode(self):
         return {'status': self.status.name,
