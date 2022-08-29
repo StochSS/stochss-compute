@@ -58,9 +58,10 @@ class RemoteSimulation:
             raise RemoteSimulationError(sim_response.message)
             # If sim throws an error, would we still need to be able to interact with it in any way? like to clear it from memory or restart a worker?
         if sim_response.status == SimStatus.READY:
-            return RemoteResults(id=sim_response.results_id, server=self.server, results=sim_response.results)
+            remote_results =  RemoteResults(data=sim_response.results.data)
         else:
-            return RemoteResults(id=sim_response.results_id, server=self.server)
+            remote_results =  RemoteResults()
+        remote_results.id = sim_response.results_id
+        remote_results.server = self.server
 
-
-
+        return remote_results
