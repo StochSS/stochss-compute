@@ -21,6 +21,7 @@ class RunHandler(RequestHandler):
 
             file = open(self.results_path, 'r')
             results = file.read()
+            file.close()
             sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = results)
             self.write(sim_response.encode())
         else:
@@ -43,9 +44,3 @@ class RunHandler(RequestHandler):
         file = open(self.results_path, 'x')
         file.write(results.to_json())
         file.close()
-
-        
-# class ResultsHandler(RequestHandler):
-#     def 
-        
-        
