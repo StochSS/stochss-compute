@@ -17,7 +17,7 @@ class RemoteResults(Results):
 
     def __init__(self, data = None):
 
-        self.data = data
+        self._data = data
 
     @property
     def data(self):
@@ -26,7 +26,7 @@ class RemoteResults(Results):
 
             
         self._resolve()
-        return self.data
+        return self._data
 
 
     def _status(self):
@@ -66,7 +66,7 @@ class RemoteResults(Results):
                 print('Results ready. Fetching.......')
             if status == SimStatus.ERROR:
                 raise RemoteSimulationError(status.error_message)
-                
+
         response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
         if not response_raw.ok:
             raise Exception(response_raw.reason)
