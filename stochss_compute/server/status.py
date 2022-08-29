@@ -23,18 +23,22 @@ class StatusHandler(RequestHandler):
         
         client = Client(self.scheduler_address)
 
-        def scheduler_job_state(dask_scheduler, results_id) -> TaskState:
+        def scheduler_job_state(dask_scheduler, results_id):
             # still need to handle exception if there is one
             task = dask_scheduler.tasks.get(results_id)
             if task is None:
                 return None
             return task.state
 
+        def scheduler_task_state(dask_scheduler, results_id):
+            return dask_scheduler.tasks.get(results_id)
 
+        task = client.run_on_scheduler(scheduler_task_state, results_id=results_id)
+        print(f'>>>>>>>>>>>>>>{type(task)}')
+        print(f'>>>>>>>>>>>>>>{task.state}')
+        print(f'>>>>>>>>>>>>>>{task.exception_text}')
 
         state = client.run_on_scheduler(scheduler_job_state, results_id=results_id)
-        # task = client.cluster.scheduler.tasks.get(results_id)
-        # print(client.cluster.scheduler)
         if state is None or state == 'forgotten' or state == 'released':
             future = client.futures.get(results_id)
             if future is None or future.done():
