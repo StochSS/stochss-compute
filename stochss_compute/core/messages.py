@@ -40,6 +40,7 @@ class Response(ABC):
     def parse(raw_response):
         pass
 
+
 class SimulationRunRequest(Request):
     def __init__(self, model, **params):
         self.model = model
@@ -70,11 +71,10 @@ class SimulationRunResponse(Response):
         self.results = results
     
     def encode(self):
-        # TODO come back to this
-        if isinstance(self.results, Results):
-            encode_results = Results.from_json(self.results)
-        else:
+        if self.results is None:
             encode_results = self.results
+        else:
+            encode_results = self.results.to_json()
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
                 'results_id': self.results_id or '',
@@ -116,3 +116,33 @@ class StatusResponse(Response):
         response_dict = json_decode(raw_response)
         status = SimStatus.from_str(response_dict['status'])
         return StatusResponse(status, response_dict['error_message'])
+
+class ResultsRequest(Request):
+    def __init__(self, results_id):
+        self.results_id = results_id
+    def encode(self):
+        return self.__dict__
+    @staticmethod
+    def parse(raw_request):
+        request_dict = json_decode(raw_request)
+        return ResultsRequest(request_dict['results_id'])
+
+class ResultsResponse(Response):
+    def __init__(self, results = None):
+        self.results = results
+    
+    def encode(self):
+        if self.results is None:
+            encode_results = self.results
+        else:
+            encode_results = self.results.to_json()
+        return {'results': encode_results or ''}
+    
+    @staticmethod
+    def parse(raw_response):
+        response_dict = json_decode(raw_response)
+        if response_dict['results'] != '':
+            results = Results.from_json(response_dict['results'])
+        else:
+            results = None
+        return ResultsResponse(results)
