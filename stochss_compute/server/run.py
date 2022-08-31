@@ -7,6 +7,7 @@ import os
 
 class RunHandler(RequestHandler):
 
+
     def initialize(self, scheduler_address, cache_dir):
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
@@ -14,17 +15,17 @@ class RunHandler(RequestHandler):
     async def post(self):
         sim_request = SimulationRunRequest.parse(self.request.body)
         sim_hash = sim_request.hash()
-        print(f'>>>>>>>HASH: {sim_hash}')
-        
+        log_string = f'[Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
         self.results_path = os.path.join(self.cache_dir, f'{sim_hash}.results')
         if os.path.exists(self.results_path):
-
+            print(self.log_string + 'Returning cached results.')
             file = open(self.results_path, 'r')
             results = file.read()
             file.close()
             sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = results)
             self.write(sim_response.encode())
         else:
+            print(self.log_string + 'Results not cached. Running simulation.')
             model = sim_request.model
             kwargs = sim_request.kwargs
             if "solver" in kwargs:
@@ -33,7 +34,6 @@ class RunHandler(RequestHandler):
 
             client = Client(self.scheduler_address)
             future = client.submit(model.run, key=sim_hash)
-            print(future)
             sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
             self.write(sim_response.encode())
             self.finish()
@@ -41,6 +41,7 @@ class RunHandler(RequestHandler):
     
     def cache_results(self, future_results: Future):
         results: Results = future_results.result()
+        print(f'Simulation ID: <{future_results.key}> | Simulation finished. Caching results.')
         file = open(self.results_path, 'x')
         file.write(results.to_json())
         file.close()
