@@ -24,8 +24,8 @@ class RemoteResults(Results):
         if self.id is None or self.server is None:
             raise Exception('RemoteResults must have a self.id and a self.server.')
 
-            
-        self._resolve()
+        if self._data is None:
+            self._resolve()
         return self._data
 
 
@@ -44,28 +44,27 @@ class RemoteResults(Results):
         return status_response
 
     def _resolve(self):
-        if self.data is None:
-            status = self._status()
-            if status == SimStatus.PENDING:
-                print('Simulation is pending (not running yet). Checking for status update....')
-                while True:
-                    sleep(5)
-                    status = self._status()
-                    if status != SimStatus.PENDING:
-                        break
-            if status == SimStatus.RUNNING:
-                print('Simulation is running. Downloading results when complete......')
-                while True:
-                    sleep(5)
-                    status = self._status()
-                    if status == SimStatus.PENDING:
-                        raise Exception('Unknown Error.')
-                    if status != SimStatus.RUNNING:
-                        break
-            if status == SimStatus.READY:
-                print('Results ready. Fetching.......')
-            if status == SimStatus.ERROR:
-                raise RemoteSimulationError(status.error_message)
+        status = self._status()
+        if status == SimStatus.PENDING:
+            print('Simulation is pending (not running yet). Checking for status update....')
+            while True:
+                sleep(5)
+                status = self._status()
+                if status != SimStatus.PENDING:
+                    break
+        if status == SimStatus.RUNNING:
+            print('Simulation is running. Downloading results when complete......')
+            while True:
+                sleep(5)
+                status = self._status()
+                if status == SimStatus.PENDING:
+                    raise Exception('Unknown Error.')
+                if status != SimStatus.RUNNING:
+                    break
+        if status == SimStatus.READY:
+            print('Results ready. Fetching.......')
+        if status == SimStatus.ERROR:
+            raise RemoteSimulationError(status.error_message)
 
         response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
         if not response_raw.ok:
