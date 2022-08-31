@@ -64,6 +64,12 @@ class SimulationRunRequest(Request):
         return md5(str.encode(request_string)).hexdigest()
 
 class SimulationRunResponse(Response):
+    '''
+    :type status: SimStatus
+    :type error_message: str | None
+    :type results_id: str | None
+    :type results: str | None
+    '''
     def __init__(self, status, error_message = None, results_id = None, results = None):
         self.status = status
         self.error_message = error_message
@@ -71,15 +77,10 @@ class SimulationRunResponse(Response):
         self.results = results
     
     def encode(self):
-        # re-think this check maybe?
-        if self.results is None or isinstance(self.results, str):
-            encode_results = self.results
-        else:
-            encode_results = self.results.to_json()
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
                 'results_id': self.results_id or '',
-                'results': encode_results or ''}
+                'results': self.results or ''}
     
     @staticmethod
     def parse(raw_response):
@@ -130,15 +131,14 @@ class ResultsRequest(Request):
         return ResultsRequest(request_dict['results_id'])
 
 class ResultsResponse(Response):
+    '''
+    :type results: str | None
+    '''
     def __init__(self, results = None):
         self.results = results
     
     def encode(self):
-        if self.results is None:
-            encode_results = self.results
-        else:
-            encode_results = self.results.to_json()
-        return {'results': encode_results or ''}
+        return {'results': self.results or ''}
     
     @staticmethod
     def parse(raw_response):
