@@ -12,8 +12,10 @@ class StatusHandler(RequestHandler):
     async def get(self, results_id = None):
         if results_id is None:
             raise Exception('Malformed request')
+
         print(f'[Status Request] | Source: <{self.request.remote_ip}> | Results ID: <{results_id}>')
         self.results_path = os.path.join(self.cache_dir, f'{results_id}.results')
+
         if os.path.exists(self.results_path):
             status_response = StatusResponse(SimStatus.READY)
             self.write(status_response.encode())
@@ -67,3 +69,5 @@ class StatusHandler(RequestHandler):
         status_response = StatusResponse(sim_status, error_message)
         self.write(status_response.encode())
         self.finish()
+
+
