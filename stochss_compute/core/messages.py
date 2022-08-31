@@ -71,7 +71,8 @@ class SimulationRunResponse(Response):
         self.results = results
     
     def encode(self):
-        if self.results is None:
+        # re-think this check maybe?
+        if self.results is None or isinstance(self.results, str):
             encode_results = self.results
         else:
             encode_results = self.results.to_json()
