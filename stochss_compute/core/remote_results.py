@@ -8,7 +8,7 @@ from time import sleep
 from tornado.escape import json_decode
 from stochss_compute.core.errors import RemoteSimulationError
 
-from stochss_compute.core.messages import SimStatus, StatusResponse
+from stochss_compute.core.messages import ResultsResponse, SimStatus, StatusResponse
 
 class RemoteResults(Results):
 
@@ -36,39 +36,43 @@ class RemoteResults(Results):
             raise Exception(response_raw.reason)
 
         status_response = StatusResponse.parse(response_raw.text)
-        print(status_response.status)
-        print(status_response.error_message)
-        # # Parse the body of the response into a JobStatusResponse object.
-        # print(status.status_msg)
-        # print(status.status_id)
         return status_response
 
     def _resolve(self):
-        status = self._status()
+        status_response = self._status()
+        status = status_response.status
         if status == SimStatus.PENDING:
             print('Simulation is pending (not running yet). Checking for status update....')
             while True:
                 sleep(5)
-                status = self._status()
+                status_response = self._status()
+                status = status_response.status
                 if status != SimStatus.PENDING:
                     break
+
         if status == SimStatus.RUNNING:
             print('Simulation is running. Downloading results when complete......')
             while True:
                 sleep(5)
-                status = self._status()
+                status_response = self._status()
+                status = status_response.status
                 if status == SimStatus.PENDING:
                     raise Exception('Unknown Error.')
                 if status != SimStatus.RUNNING:
                     break
+
+        if status == SimStatus.ERROR:
+            raise RemoteSimulationError(status_response.error_message)
+
         if status == SimStatus.READY:
             print('Results ready. Fetching.......')
-        if status == SimStatus.ERROR:
-            raise RemoteSimulationError(status.error_message)
+            response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
+            if not response_raw.ok:
+                raise Exception(response_raw.reason)
 
-        response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
-        if not response_raw.ok:
-            raise Exception(response_raw.reason)
+            response = ResultsResponse.parse(response_raw.text)
+            self._data = response.results.data
+
 
     def ready(self):
         return self._status().status == SimStatus.READY
