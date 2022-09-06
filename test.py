@@ -1,7 +1,10 @@
+import hashlib
 import gillespy2
 import numpy
 
 from stochss_compute import RemoteSimulation
+from stochss_compute.client.endpoint import Endpoint
+from stochss_compute.core.messages import SimStatus
 # from stochss_compute.core.messages import SimulationRunRequest
 
 class MichaelisMenten(gillespy2.Model):
@@ -37,10 +40,12 @@ class MichaelisMenten(gillespy2.Model):
             self.add_reaction([r1,r2,r3])
             
             # Set timespan of model
-            self.timespan(numpy.linspace(0,1000,101))
+            self.timespan(numpy.linspace(0,10000,10001))
 
 model = MichaelisMenten()
-
 simulation = RemoteSimulation(model=model, host='localhost')
-results = simulation.run(algorithm = 'SSA')
-print(results)
+results = simulation.run()
+# print(results.id)
+results._status()
+# print(results.data)
+# results.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{results.id}/status")
