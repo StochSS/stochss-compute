@@ -41,7 +41,7 @@ class RunHandler(RequestHandler):
     
     def cache_results(self, future_results: Future):
         results: Results = future_results.result()
-        print(f'Simulation ID: <{future_results.key}> | Simulation finished. Caching results.')
+        print(f'[Simulation Finished] | Simulation ID: <{future_results.key}> | Caching results.')
         file = open(self.results_path, 'x')
         file.write(results.to_json())
         file.close()
