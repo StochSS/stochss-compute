@@ -9,10 +9,27 @@ from tornado.escape import json_decode
 from stochss_compute.core.remote_results import RemoteResults
 
 class RemoteSimulation:
-    # TODO accept arguments in constructor, but override in run?
     # removed type hinting for server due to circular import
+    '''
+    :param model: The model to simulate.
+    :type model: gillespy2.Model
+
+    :param server: A server to run the simulation. Optional if host is provided.
+    :type server: stochss_compute.ComputeServer
+
+    :param host: The address of a running instance of StochSS-Compute. Optional if server is provided.
+    :type host: str
+
+    :param port: The port to use when connecting to the host. Only needed if default server port is changed. Defaults to 29681.
+    :type port: int
+
+    :param solver: The type of solver to use or the name of a solver. Does not accept instantiated solvers.
+    :type solver: Type[gillespy2.GillesPySolver]
+
+
+    '''
     def __init__(self,
-                 model: Model = None,
+                 model,
                  server = None,
                  host: str = None,
                  port: int = 29681,
@@ -33,6 +50,11 @@ class RemoteSimulation:
             self.server = server
 
         self.model = model
+
+        if solver is not None:
+            if hasattr(solver, 'is_instantiated'):
+                raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
+        self.solver = solver
         
 
     def run(self, **params):
@@ -46,6 +68,8 @@ class RemoteSimulation:
     
         if "solver" in params:
             params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
+        if self.solver is not None:
+            params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
 
         sim_request = SimulationRunRequest(model=self.model, kwargs=params)
         response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
@@ -61,6 +85,7 @@ class RemoteSimulation:
             remote_results =  RemoteResults(data=sim_response.results.data)
         else:
             remote_results =  RemoteResults()
+            
         remote_results.id = sim_response.results_id
         remote_results.server = self.server
 
