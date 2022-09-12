@@ -18,6 +18,9 @@ from setuptools import setup, find_packages
 
 SETUP_DIR = path.dirname(path.abspath(__file__))
 
+with open(path.join(SETUP_DIR, 'requirements.txt')) as f:
+    reqs = f.read().rstrip().splitlines()
+
 with open(path.join(SETUP_DIR, "README.md"), "r", errors="ignore") as f:
     readme = f.read()
 
@@ -31,13 +34,19 @@ with open(path.join(SETUP_DIR, "stochss_compute/__version__.py")) as f:
 
 setup(name=             version["__title__"],
       version=          version["__version__"],
-      scripts=          ['scripts/stochss-compute', 'scripts/stochss-compute-cluster'],
+    #   scripts=          ['scripts/stochss-compute', 'scripts/stochss-compute-cluster'],
       description=      version["__description__"],
       author=           version["__author__"],
       author_email=     version["__email__"],
       url=              version["__url__"],
       license=          version["__license__"],
       packages=         find_packages("."),
+      entry_points={
+            'console_scripts': [
+                'stochss-compute = stochss-compute',
+            ]
+        },
+      install_requires= reqs,
       long_description= readme,
       long_description_content_type= "text/markdown",
       classifiers=      [
