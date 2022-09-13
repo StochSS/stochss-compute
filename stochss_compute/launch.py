@@ -61,8 +61,9 @@ def launch_with_cluster():
         dask.add_argument('--dask-processes', default=None, required=False, type=bool, help='Whether to use processes (True) or threads (False). Defaults to True, unless worker_class=Worker, in which case it defaults to False.')
         dask.add_argument('-D', '--dask-dashboard-address', default=':8787', required=False, help='Address on which to listen for the Bokeh diagnostics server like ‘localhost:8787’ or ‘0.0.0.0:8787’. Defaults to ‘:8787’. Set to None to disable the dashboard. Use ‘:0’ for a random port.')
         dask.add_argument('-N', '--dask-name', default=None, required=False, help='A name to use when printing out the cluster, defaults to type name.')
+        args =  parser.parse_args()
+        return args
 
-        return parser.parse_args()
 
     args = parse_args()
 
@@ -85,3 +86,12 @@ def launch_with_cluster():
         asyncio.run(start_api(port=args.port, cache=args.cache, dask_host=dask_host, dask_scheduler_port=dask_port))
     except KeyboardInterrupt:
         cluster.close()
+
+import sys
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'cluster':
+            del sys.argv[1]
+            launch_with_cluster()
+    launch_server()
