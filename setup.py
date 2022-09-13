@@ -43,7 +43,8 @@ setup(name=             version["__title__"],
       packages=         find_packages("."),
       entry_points={
             'console_scripts': [
-                'stochss-compute = stochss-compute',
+                'stochss-compute=stochss_compute.scripts:launch_server',
+                'stochss-compute-cluster=stochss_compute.scripts:launch_with_cluster',
             ]
         },
       install_requires= reqs,
