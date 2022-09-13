@@ -40,8 +40,12 @@ async def start_api(
         pass
     else:
         os.mkdir(cache)
+    path = os.path.abspath(cache)
         
     app = make_app(dask_host, dask_scheduler_port, cache)
     app.listen(port)
+    print(f'StochSS-Compute listening on: {port}')
+    print(f'Cache directory: {path}')
+    print(f'Connecting to Dask scheduler at: {dask_host}:{dask_scheduler_port}')
     await asyncio.Event().wait()
 
