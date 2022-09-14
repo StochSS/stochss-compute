@@ -1,4 +1,5 @@
 import asyncio
+import subprocess
 import time
 import unittest
 import tempfile
@@ -24,11 +25,13 @@ class ApiTest(unittest.TestCase):
         cls.worker_dir = tempfile.TemporaryDirectory(prefix="stochss-compute_")
 
         # Set up the Dask client and stochss-compute instance.
-        cls.cluster = LocalCluster("127.0.0.1:9797", local_directory=cls.worker_dir.name)
-        cls.client = Client(address=cls.cluster.scheduler_address, set_as_default=False)
+        # cls.cluster = LocalCluster("127.0.0.1:9797", local_directory=cls.worker_dir.name)
+        # cls.client = Client(address=cls.cluster.scheduler_address, set_as_default=False)
 
-        cls.host, port = cls.client.scheduler.address.replace("tcp://", "").split(":")
-        asyncio.run(api.start_api(port=29681, cache=cls.cache_dir.name, dask_host = cls.host, dask_scheduler_port = int(port)))
+        # cls.host, port = cls.client.scheduler.address.replace("tcp://", "").split(":")
+        cmd = ["stochss-compute-cluster"]
+        cls.api_server = subprocess.Popen(cmd)
+        # asyncio.run(api.start_api(port=29681, cache=cls.cache_dir.name, dask_host = cls.host, dask_scheduler_port = int(port)))
         # cls.loop = asyncio.get_event_loop()
         # cls.loop.run_until_complete()
         # cls.api_process = Thread(daemon=False, target=api.start_api, kwargs=dict())
@@ -47,13 +50,14 @@ class ApiTest(unittest.TestCase):
         cls.cache_dir.cleanup()
         cls.worker_dir.cleanup()
         
-        loop = asyncio.get_event_loop()
-        loop.close()
+        # loop = asyncio.get_event_loop()
+        # loop.close()
+        cls.api_server.terminate()
         # cls.loop.close()
 
     def test_run(self):
         model = create_robust_model()
-        sim = RemoteSimulation(model, host=self.host)
+        sim = RemoteSimulation(model, host='localhost')
         results = sim.run()
         assert(results.server != None)
     # def test_run_model_consistency(self):
