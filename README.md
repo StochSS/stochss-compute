@@ -9,17 +9,17 @@ StochSS-Compute is a compute delegation server for the [StochSS](https://github.
 
 ***
 ## Example Tutorial
-### 1. Run this Docker command:
+#### 1. Run this Docker command:
 ```
 docker run -it --rm -p 8888:8888 -p 8787:8787 stochss/stochss-compute:examples jupyter notebook
 ```
-### 2. Open the link provided by the Jupyter Notebook server in your browser.
-### 3. Open and run the self-contained `Tutorial-1.ipynb`
+#### 2. Open the link provided by the Jupyter Notebook server in your browser.
+#### 3. Open and run the self-contained `Tutorial-1.ipynb`
 ***
 ## Installation 
 
-### 1. Installing dependencies & `stochss_compute`
-### PyPI Install and Run Instructions:
+#### 1. Installing dependencies & `stochss_compute`
+#### PyPI Install:
 ```
 pip install stochss_compute
 ```
@@ -31,6 +31,7 @@ stochss-compute-cluster
 ```
 stochss-compute
 ```
+***
 ### Git Clone Install
 #### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
 ```
