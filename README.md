@@ -19,43 +19,45 @@ docker run -it --rm -p 8888:8888 -p 8787:8787 stochss/stochss-compute:examples j
 ## Installation 
 
 ### 1. Installing dependencies & `stochss_compute`
+### PyPI Install and Run Instructions:
+```
+pip install stochss_compute
+```
+#### Start up the server along with dask cluster:
+```
+stochss-compute-cluster
+```
+#### If you already have a dask cluster running on localhost:8786:
+```
+stochss-compute
+```
+### Git Clone Install
 #### Using a python virtual environment ([documentation](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)):
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
-python3 -m venv venv 
+python -m venv venv 
 source venv/bin/activate
-pip3 install -r requirements.txt
+pip install requirements.txt
 ```
 ### OR
 #### Global install of dependencies:
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
-pip3 install -r requirements.txt
-```
-### PyPI:
-```
-pip3 install stochss_compute
+pip install requirements.txt
 ```
 
 ### 2. Start up the server and compute backend
 #### Using the startup script, which starts up a dask cluster, along with scheduler and workers:
 ```
-python3 startup.py
+python -m stochss_compute.launch cluster 
 ```
 #### If you already have a dask cluster running on localhost:8786:
 ```
-python3 app.py
+python -m stochss_compute.launch
 ```
 
-### 3. An example is contained in `./examples/StartHere.ipynb`:
-```
-# source venv/bin/activate # Uncomment if using a virtual environment
-jupyter notebook --port 9999 examples/StartHere.ipynb
-```
-- Jupyter should launch automatically. If not, open the URL provided by the Jupyter Notebook server in your browser.
-***
 ## Docker
 ### 1. As an alternative to the above steps, you can use Docker.
 
@@ -64,13 +66,9 @@ docker run -it --rm --network host stochss/stochss-compute:latest
 ```
 
 - Stochss-compute is now running on localhost:29681.
-- The cache defaults to the current working directory under `sd-cache`. To set a new path for the cache, you can pass one to `docker run`:
+- The cache defaults to the current working directory under `cache`. To set a new path for the cache, you can pass one to `docker run`:
 ```
-docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/sd-cache stochss/stochss-compute
-```
-### 2. To test out `StartHere.ipynb` using this StochSS-Compute server, in another terminal, run:
-```
-docker run -it --rm --network host stochss/stochss-compute:examples jupyter notebook
+docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/cache stochss/stochss-compute
 ```
 
 <!-- #### Minikube
