@@ -148,3 +148,28 @@ class ResultsResponse(Response):
         else:
             results = None
         return ResultsResponse(results)
+
+class SourceIpRequest(Request):
+    def __init__(self, cloud_key):
+        self.cloud_key = cloud_key
+    def encode(self):
+        return self.__dict__
+    @staticmethod
+    def parse(raw_request):
+        request_dict = json_decode(raw_request)
+        return SourceIpRequest(request_dict['cloud_key'])
+
+class SourceIpResponse(Response):
+    '''
+    :type results: str | None
+    '''
+    def __init__(self, source_ip):
+        self.source_ip = source_ip
+    
+    def encode(self):
+        return self.__dict__
+    
+    @staticmethod
+    def parse(raw_response):
+        response_dict = json_decode(raw_response)
+        return SourceIpResponse(response_dict['source_ip'])
