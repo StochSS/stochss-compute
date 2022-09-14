@@ -1,4 +1,4 @@
-FROM python:3.8.10-buster
+FROM python:3.9.14-buster
 
 LABEL authors="Ethan Green <egreen4@unca.edu>, Matthew Dippel <mdip226@gmail.com>"
 
@@ -13,16 +13,10 @@ VOLUME [ "/opt/venv" ]
 
 WORKDIR /usr/src/app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY stochss_compute /usr/src/app/stochss_compute
-COPY *.py *.md *.dockerfile *.cfg /usr/src/app/
-
-ARG FLASK_ENV="production"
-ENV FLASK_ENV="${FLASK_ENV}" \
-    PYTHONUNBUFFERED="true"
+COPY *.txt *.py *.md *.dockerfile *.cfg /usr/src/app/
+RUN pip install .
 
 EXPOSE 29681
 
-CMD [ "python", "startup.py", "--host", "0.0.0.0"]
+CMD [ "stochss-compute-cluster"]
