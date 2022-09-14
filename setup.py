@@ -34,7 +34,6 @@ with open(path.join(SETUP_DIR, "stochss_compute/__version__.py")) as f:
 
 setup(name=             version["__title__"],
       version=          version["__version__"],
-    #   scripts=          ['scripts/stochss-compute', 'scripts/stochss-compute-cluster'],
       description=      version["__description__"],
       author=           version["__author__"],
       author_email=     version["__email__"],
@@ -43,8 +42,8 @@ setup(name=             version["__title__"],
       packages=         find_packages("."),
       entry_points={
             'console_scripts': [
-                'stochss-compute=stochss_compute.scripts:launch_server',
-                'stochss-compute-cluster=stochss_compute.scripts:launch_with_cluster',
+                'stochss-compute=stochss_compute.launch:launch_server',
+                'stochss-compute-cluster=stochss_compute.launch:launch_with_cluster',
             ]
         },
       install_requires= reqs,
