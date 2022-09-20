@@ -98,7 +98,7 @@ class RemoteResults(Results):
             style="default", title=None, show_title=False, show_legend=True, multiple_graphs=False,
             included_species_list=[], save_png=False, figsize=(18, 10)):
         """
-        Plots the Results using matplotlib.
+        Plots the Results using matplotlib. If Results do not exist locally, first fetches them from the server.
 
         :param index: If not none, the index of the Trajectory to be plotted.
         :type index: int
