@@ -9,8 +9,10 @@ from tornado.escape import json_decode
 from stochss_compute.core.remote_results import RemoteResults
 
 class RemoteSimulation:
-    # removed type hinting for server due to circular import
     '''
+    An object representing a remote gillespy2 simulation. Requires a model and a host address.
+    A solver type may be provided, but does not accept instantiated solvers. 
+
     :param model: The model to simulate.
     :type model: gillespy2.Model
 
@@ -34,7 +36,7 @@ class RemoteSimulation:
                  host: str = None,
                  port: int = 29681,
                  solver = None,
-                 ) -> None:
+                 ):
 
         if server is not None and host is not None:
             raise RemoteSimulationError('Pass a ComputeServer/Cluster object or host but not both.')
@@ -63,7 +65,7 @@ class RemoteSimulation:
 
         :param **params: Arguments to pass directly to the Model#run call on the server.
         
-        :returns: Results
+        :returns: stochss_compute.RemoteResults
         """
     
         if "solver" in params:
