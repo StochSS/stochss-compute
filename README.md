@@ -66,7 +66,7 @@ python -m stochss_compute.launch
 docker run -it --rm --network host stochss/stochss-compute:latest
 ```
 
-- Stochss-compute is now running on localhost:29681.
+- Stochss-Compute is now running on localhost:29681.
 - The cache defaults to the current working directory under `cache`. To set a new path for the cache, you can pass one to `docker run`:
 ```
 docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/cache stochss/stochss-compute
