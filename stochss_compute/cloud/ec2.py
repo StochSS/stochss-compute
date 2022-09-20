@@ -24,6 +24,8 @@ _KEY_NAME = 'sssc-root'
 _KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
 _AMIS = {
+    # TODO Remove when done developing
+    'AL2': 'ami-05fa00d4c63e32376',
     'us-east-1': 'ami-0ef9fe14ea1c5c979',
     'us-east-2': 'ami-04268eeed853eaa55',
     'us-west-1': 'ami-0a8c547cd139d4672',
@@ -45,14 +47,18 @@ class Cluster(Server):
     _server = None
     _ami = None
 
-    def __init__(self) -> None:
+    def __init__(self, develop=True) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
          """
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
         region = get_session().get_config_variable('region')
-        self._ami = _AMIS[region]
+        # TODO remove when done developing new AMIs
+        if develop:
+            self._ami = _AMIS['AL2']
+        else:
+            self._ami = _AMIS[region]
         self._load_cluster()
 
     @property
