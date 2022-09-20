@@ -90,8 +90,8 @@ class RemoteResults(Results):
     def ready(self):
         return self._status().status == SimStatus.READY
 
-    def error(self):
-        status_response = self._status()
+    # def error(self):
+    #     status_response = self._status()
         # raise error by grabbing error class from task and put into response object
 
     def plot(self, index=None, xaxis_label="Time", xscale='linear', yscale='linear', yaxis_label="Value",
@@ -126,6 +126,6 @@ class RemoteResults(Results):
         :param figsize: The size of the graph. A tuple of the form (width,height). Is (18,10) by default.
         :type figsize: tuple of ints (x,y)
         """
-        super.plot(index=index, xaxis_label=xaxis_label, xscale=xscale, yscale=yscale, yaxis_label=yaxis_label,
+        super().plot(index=index, xaxis_label=xaxis_label, xscale=xscale, yscale=yscale, yaxis_label=yaxis_label,
              style=style, title=title, show_title=show_title, show_legend=show_legend, multiple_graphs=multiple_graphs,
              included_species_list=included_species_list, save_png=save_png, figsize=figsize)
