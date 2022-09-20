@@ -1,6 +1,7 @@
 import asyncio
 from tornado.web import Application
 from stochss_compute.server.run import RunHandler
+from stochss_compute.server.sourceip import SourceIpHandler
 from stochss_compute.server.status import StatusHandler
 from stochss_compute.server.results import ResultsHandler
 import os
@@ -11,6 +12,7 @@ def make_app(dask_host, dask_scheduler_port, cache):
         (r"/api/v2/simulation/gillespy2/run", RunHandler, {'scheduler_address': scheduler_address, 'cache_dir': cache}),
         (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/status", StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': cache}),
         (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/results", ResultsHandler, {'cache_dir': cache}),
+        (r"/api/v2/cloud/sourceip", SourceIpHandler),
     ])
 
 async def start_api(
