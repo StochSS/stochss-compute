@@ -44,8 +44,8 @@ class ApiTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.cluster.close()
-        cls.client.close()
+        # cls.cluster.close()
+        # cls.client.close()
 
         cls.cache_dir.cleanup()
         cls.worker_dir.cleanup()
