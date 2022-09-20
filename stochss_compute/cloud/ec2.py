@@ -47,7 +47,7 @@ class Cluster(Server):
 
     def __init__(self) -> None:
         """ 
-        Attempts to load a StochSS-Compute cluster.
+        Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
          """
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
@@ -69,6 +69,9 @@ class Cluster(Server):
     def launch_single_node_instance(self, instanceType):
         """ 
         Launches a single node StochSS-Compute instance.
+
+        :param instanceType: Example: 't3.micro' https://aws.amazon.com/ec2/instance-types/ 
+        :type instanceType: str
          """
         self._launch_network()
         self._create_root_key()
@@ -77,7 +80,7 @@ class Cluster(Server):
     def clean_up(self):
         """ 
         Deletes all cluster resources.
-         """
+        """
         vpc_search_filter = [
             {
                 'Name': 'tag:Name',
@@ -133,7 +136,7 @@ class Cluster(Server):
     def _launch_network(self):
         """ 
         Launches required network resources.
-         """
+        """
         print("Launching Network.......")
         self._create_sssc_vpc()
         self._create_sssc_subnet(public=True)
@@ -272,7 +275,7 @@ class Cluster(Server):
     def _restrict_ingress(self, ipAddress: str = ''):
         """ 
         Modifies the security group API ingress rule to only allow access on port 29681 from the given ip address.
-         """
+        """
         ruleFilter=[
             {
                 'Name': 'group-id',
@@ -304,10 +307,10 @@ class Cluster(Server):
         self._client.modify_security_group_rules(GroupId=self._server_security_group.id, SecurityGroupRules=newSecurityGroupRules)
         self._server_security_group.reload()
 
-    def _launch_head_node(self, instanceType='t3.micro'):
+    def _launch_head_node(self, instanceType):
         """ 
         Launches a StochSS-Compute server instance.
-         """
+        """
         cloud_key = token_hex(32)
 
         launch_commands = f'''#!/bin/bash
@@ -351,10 +354,13 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         self._restrict_ingress(source_ip)
         print('StochSS-Compute ready to go!')
 
-    def _poll_launch_progress(self, containerNames: list):
+    def _poll_launch_progress(self, containerNames):
         """ 
         Polls the instance to see if the Docker container is running.
-         """
+
+        :param containerNames: A list of Docker container names to check against.
+        :type containerNames: List[str]
+        """
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy())
         sshtries = 0
@@ -393,6 +399,12 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         ssh.close()
 
     def _get_source_ip(self, cloud_key):
+        """
+        Ping the server to find the IP address associated with the request.
+
+        :param cloud_key: A secret key which must match the random key used to launch the instance.
+        :type cloud_key: str
+        """
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
         source_ip_response = unwrap_or_err(SourceIpResponse, self.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
         return source_ip_response.source_ip

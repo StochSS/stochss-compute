@@ -11,6 +11,19 @@ from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import ResultsResponse, SimStatus, StatusResponse
 
 class RemoteResults(Results):
+    """
+    Wrapper for a gillespy2.Results object that exists on a remote server and which is then downloaded locally.
+    A Results object is: A List of Trajectory objects created by a gillespy2 solver, extends the UserList object.
+
+    :param data: A list of trajectory objects.
+    :type data: UserList
+
+    :param id: ID of the cached Results object.
+    :type id: str
+
+    :param server: The remote instance of StochSS-Compute where the Results are cached.
+    :type server: stochss_compute.ComputeServer
+    """
 
     id = None
     server = None
@@ -81,33 +94,41 @@ class RemoteResults(Results):
         status_response = self._status()
         # raise error by grabbing error class from task and put into response object
 
+    def plot(self, index=None, xaxis_label="Time", xscale='linear', yscale='linear', yaxis_label="Value",
+            style="default", title=None, show_title=False, show_legend=True, multiple_graphs=False,
+            included_species_list=[], save_png=False, figsize=(18, 10)):
+        """
+        Plots the Results using matplotlib.
 
-    # def resolve(self) -> Results:
-    #     """
-    #     Finish the remote job and return the results.
-    #     This function will block until the remote job is complete.
+        :param index: If not none, the index of the Trajectory to be plotted.
+        :type index: int
 
-    #     :returns: Results
-    #     """
+        :param xaxis_label: The label for the x-axis
+        :type xaxis_label: str
 
-    #     # Poll the job status until it finishes.
-    #     while not self.__poll_job_status():
-    #         sleep(5)
-
-    #     # Request the results of the finished job.
-    #     results_response = self.server.get(Endpoint.RESULT, f"/{self.result_id}/get")
-
-    #     if not results_response.ok:
-    #         raise Exception(ErrorResponse.parse_raw(results_response.text).msg)
-
-    #     print(f"Results size: {sys.getsizeof(results_response.content)}")
-    #     results_json = bz2.decompress(results_response.content).decode()
-    #     print(f"Expanded to: {sys.getsizeof(results_json)}")
-
-    #     # Parse and return the response body into a valid Results object.
-    #     results = Results.from_json(results_json)
-
-    #     return results
+        :param yaxis_label: The label for the y-axis
+        :type yaxis_label: str
+        
+        :param title: The title of the graph
+        :type title: str
+        
+        :param multiple_graphs: IF each trajectory should have its own graph or if they should overlap.
+        :type multiple_graphs: bool
+        
+        :param included_species_list: A list of strings describing which species to include. By default displays all
+            species.
+        :type included_species_list: list
+        
+        :param save_png: Should the graph be saved as a png file. If True, File name is title of graph. If a string is
+            given, file is named after that string.
+        :type save_png: bool or str
+        
+        :param figsize: The size of the graph. A tuple of the form (width,height). Is (18,10) by default.
+        :type figsize: tuple of ints (x,y)
+        """
+        super.plot(index=index, xaxis_label=xaxis_label, xscale=xscale, yscale=yscale, yaxis_label=yaxis_label,
+             style=style, title=title, show_title=show_title, show_legend=show_legend, multiple_graphs=multiple_graphs,
+             included_species_list=included_species_list, save_png=save_png, figsize=figsize)
 
     def cancel(self):
         """
