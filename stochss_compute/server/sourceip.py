@@ -4,7 +4,7 @@ import os
 
 class SourceIpHandler(RequestHandler):
 
-    def get(self):
+    def post(self):
         source_ip = self.request.remote_ip
         print(f'[SourceIp Request] | Source: <{source_ip}>')
         source_ip_request = SourceIpRequest.parse(self.request.body)
