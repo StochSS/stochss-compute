@@ -24,6 +24,7 @@ class RunHandler(RequestHandler):
             file.close()
             sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = results)
             self.write(sim_response.encode())
+            self.finish()
         else:
             print(log_string + 'Results not cached. Running simulation.')
             model = sim_request.model
