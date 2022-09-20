@@ -129,10 +129,3 @@ class RemoteResults(Results):
         super.plot(index=index, xaxis_label=xaxis_label, xscale=xscale, yscale=yscale, yaxis_label=yaxis_label,
              style=style, title=title, show_title=show_title, show_legend=show_legend, multiple_graphs=multiple_graphs,
              included_species_list=included_species_list, save_png=save_png, figsize=figsize)
-
-    def cancel(self):
-        """
-        Cancels the remote job.
-        """
-        stop_response = self.server.post(Endpoint.JOB, f"/{self.result_id}/stop")
-
