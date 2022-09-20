@@ -6,6 +6,9 @@ from hashlib import md5
 
 
 class SimStatus(Enum):
+    '''
+    Status describing a remote simulation.
+    '''
     PENDING = 'The simulation is pending.'
     RUNNING = 'The simulation is still running.'
     READY = 'Simulation is done and results exist locally.'
@@ -42,6 +45,9 @@ class Response(ABC):
 
 
 class SimulationRunRequest(Request):
+    '''
+    :type model: gillespy2.Model
+    '''
     def __init__(self, model, **params):
         self.model = model
         self.kwargs = params
@@ -95,6 +101,9 @@ class SimulationRunResponse(Response):
         return SimulationRunResponse(status, error_message, results_id, results)
 
 class StatusRequest(Request):
+    '''
+    :type results_id: str
+    '''
     def __init__(self, results_id):
         self.results_id = results_id
     def encode(self):
@@ -105,6 +114,10 @@ class StatusRequest(Request):
         return StatusRequest(request_dict['results_id'])
 
 class StatusResponse(Response):
+    '''
+    :type status: SimStatus
+    :type error_message: str
+    '''
     def __init__(self, status, error_message = ''):
         self.status = status
         self.error_message = error_message
@@ -121,6 +134,9 @@ class StatusResponse(Response):
         return StatusResponse(status, response_dict['error_message'])
 
 class ResultsRequest(Request):
+    '''
+    :type results_id: str
+    '''
     def __init__(self, results_id):
         self.results_id = results_id
     def encode(self):
@@ -150,6 +166,9 @@ class ResultsResponse(Response):
         return ResultsResponse(results)
 
 class SourceIpRequest(Request):
+    '''
+    :type cloud_key: str
+    '''
     def __init__(self, cloud_key):
         self.cloud_key = cloud_key
     def encode(self):
