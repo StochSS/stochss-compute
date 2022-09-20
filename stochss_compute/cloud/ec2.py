@@ -1,6 +1,7 @@
 from stochss_compute.client.server import Server
-from stochss_compute.core.messages import SourceIpRequest
+from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
 from stochss_compute.cloud.exceptions import ResourceException
+from stochss_compute.client.endpoint import Endpoint
 
 import boto3
 from botocore.session import get_session
@@ -406,8 +407,11 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         :type cloud_key: str
         """
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
-        source_ip_response = unwrap_or_err(SourceIpResponse, self.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request))
-        return source_ip_response.source_ip
+        response_raw = self.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request.encode())
+        if not response_raw.ok:
+            raise Exception(response_raw.reason)
+        response = SourceIpResponse.parse(response_raw.text)
+        return response.source_ip
 
     def _load_cluster(self):
         '''
