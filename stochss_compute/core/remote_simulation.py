@@ -2,10 +2,6 @@ from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.messages import SimulationRunRequest, SimulationRunResponse, SimStatus
 from stochss_compute.core.errors import RemoteSimulationError
 
-from gillespy2 import GillesPySolver, Model
-
-from tornado.escape import json_decode
-
 from stochss_compute.core.remote_results import RemoteResults
 
 class RemoteSimulation:
@@ -17,7 +13,7 @@ class RemoteSimulation:
     :type model: gillespy2.Model
 
     :param server: A server to run the simulation. Optional if host is provided.
-    :type server: stochss_compute.ComputeServer
+    :type server: stochss_compute.Server
 
     :param host: The address of a running instance of StochSS-Compute. Optional if server is provided.
     :type host: str
