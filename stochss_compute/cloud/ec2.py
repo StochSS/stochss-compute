@@ -21,6 +21,7 @@ _API_PORT = 29681
 _AMIS = {
     # TODO Remove when done developing
     'AL2': 'ami-0568773882d492fc8',
+    'TEST': 'ami-01c3caf2ffa6a6c5a',
     'us-east-1': 'ami-0ef9fe14ea1c5c979',
     'us-east-2': 'ami-04268eeed853eaa55',
     'us-west-1': 'ami-0a8c547cd139d4672',
@@ -51,7 +52,7 @@ class Cluster(Server):
         region = get_session().get_config_variable('region')
         # TODO remove when done developing new AMIs
         if develop:
-            self._ami = _AMIS['AL2']
+            self._ami = _AMIS['TEST']
         else:
             self._ami = _AMIS[region]
         self._load_cluster()
@@ -348,12 +349,13 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                     ]
                 },
             ],
-            'UserData': DEV_launch_commands,
+            'UserData': launch_commands,
             }
         print(f'Launching StochSS-Compute server instance. This might take a minute.......')
         response = self._client.run_instances(**kwargs)
         instance_id = response['Instances'][0]['InstanceId']
         self._server = self._resources.Instance(instance_id)
+        self._server.wait_until_exists()
         self._server.wait_until_running()
 
         print(f'Instance "{instance_id}" is running.')
@@ -400,7 +402,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 if rc == 1 or rc == 127:
                     print('Waiting on Docker daemon.')
                     sshtries += 1
-                    if sshtries >= 20:
+                    if sshtries >= 5:
                         ssh.close()
                         raise Exception("Something went wrong with Docker. Max retry attempts exceeded.")
                 if rc == 0:
