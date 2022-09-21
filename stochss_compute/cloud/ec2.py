@@ -19,13 +19,10 @@ _KEY_NAME = 'sssc-root'
 _KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
 _AMIS = {
-    # TODO Remove when done developing
-    'AL2': 'ami-0568773882d492fc8',
-    'TEST': 'ami-01c3caf2ffa6a6c5a',
-    'us-east-1': 'ami-0ef9fe14ea1c5c979',
-    'us-east-2': 'ami-04268eeed853eaa55',
-    'us-west-1': 'ami-0a8c547cd139d4672',
-    'us-west-2': 'ami-0e385035e7d059820',
+    # 'us-east-1': 'ami-0ef9fe14ea1c5c979',
+    'us-east-2': 'ami-07e25c5bf81f82a4d',
+    # 'us-west-1': 'ami-0a8c547cd139d4672',
+    # 'us-west-2': 'ami-0e385035e7d059820',
 }
 
 class Cluster(Server):
@@ -43,18 +40,14 @@ class Cluster(Server):
     _server = None
     _ami = None
 
-    def __init__(self, develop=True) -> None:
+    def __init__(self, develop=False) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
          """
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
         region = get_session().get_config_variable('region')
-        # TODO remove when done developing new AMIs
-        if develop:
-            self._ami = _AMIS['TEST']
-        else:
-            self._ami = _AMIS[region]
+        self._ami = _AMIS[region]
         self._load_cluster()
 
     @property
@@ -66,13 +59,13 @@ class Cluster(Server):
         if self._server.public_ip_address is None:
             raise Exception('No public address found.')
 
-        return f'http://{self._server.public_ip_address}/{_API_PORT}'
+        return f'http://{self._server.public_ip_address}:{_API_PORT}'
 
     def launch_single_node_instance(self, instanceType):
         """ 
         Launches a single node StochSS-Compute instance.
 
-        :param instanceType: Example: 't3.micro' https://aws.amazon.com/ec2/instance-types/ 
+        :param instanceType: Example: 't3.micro' See full list here: https://aws.amazon.com/ec2/instance-types/ 
         :type instanceType: str
          """
         self._launch_network()
@@ -317,18 +310,9 @@ class Cluster(Server):
         """
         cloud_key = token_hex(32)
 
-        DEV_launch_commands = f'''#!/bin/bash
-sudo yum update -y
-sudo yum -y install docker
-sudo usermod -a -G docker ec2-user
-sudo chmod 666 /var/run/docker.sock
-sudo service docker start
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
-'''
-
         launch_commands = f'''#!/bin/bash
 sudo service docker start
-docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
+docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         kwargs = {
             'ImageId': self._ami, 
@@ -395,7 +379,8 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 sleep(10)
                 stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' " + f'{container}')
                 rc = stdout.channel.recv_exit_status()
-                out = stdout.readline()
+                out = stdout.readlines()
+                err = stderr.readlines()
                 if rc == -1:
                     ssh.close()
                     raise Exception("Something went wrong connecting to the server. No exit status provided by the server.")
@@ -404,9 +389,9 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                     sshtries += 1
                     if sshtries >= 5:
                         ssh.close()
-                        raise Exception("Something went wrong with Docker. Max retry attempts exceeded.")
+                        raise Exception(f"Something went wrong with Docker. Max retry attempts exceeded.\nError:\n{''.join(err)}")
                 if rc == 0:
-                    if out == 'true\n':
+                    if 'true\n' in out:
                         sleep(10)
                         print(f'Container "{container}" is running.')
                         break
@@ -420,7 +405,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
         :type cloud_key: str
         """
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
-        response_raw = self.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request.encode())
+        response_raw = self.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request)
         if not response_raw.ok:
             raise Exception(response_raw.reason)
         response = SourceIpResponse.parse(response_raw.text)
