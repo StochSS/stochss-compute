@@ -20,7 +20,7 @@ _KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
 _AMIS = {
     # TODO Remove when done developing
-    'AL2': 'ami-05fa00d4c63e32376',
+    'AL2': 'ami-0568773882d492fc8',
     'us-east-1': 'ami-0ef9fe14ea1c5c979',
     'us-east-2': 'ami-04268eeed853eaa55',
     'us-west-1': 'ami-0a8c547cd139d4672',
@@ -190,8 +190,10 @@ class Cluster(Server):
 
         vpc_response = self._client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
         vpc_id = vpc_response['Vpc']['VpcId']
-        vpc_waiter = self._client.get_waiter('vpc_available')
-        vpc_waiter.wait(VpcIds=[vpc_id])
+        vpc_waiter_exist = self._client.get_waiter('vpc_exists')
+        vpc_waiter_exist.wait(VpcIds=[vpc_id])
+        vpc_waiter_avail = self._client.get_waiter('vpc_available')
+        vpc_waiter_avail.wait(VpcIds=[vpc_id])
         self._vpc = self._resources.Vpc(vpc_id)
         self._default_security_group = list(sg for sg in self._vpc.security_groups.all())[0]
 
@@ -314,6 +316,15 @@ class Cluster(Server):
         """
         cloud_key = token_hex(32)
 
+        DEV_launch_commands = f'''#!/bin/bash
+sudo yum update -y
+sudo yum -y install docker
+sudo usermod -a -G docker ec2-user
+sudo chmod 666 /var/run/docker.sock
+sudo service docker start
+docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
+'''
+
         launch_commands = f'''#!/bin/bash
 sudo service docker start
 docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
@@ -337,7 +348,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                     ]
                 },
             ],
-            'UserData': launch_commands,
+            'UserData': DEV_launch_commands,
             }
         print(f'Launching StochSS-Compute server instance. This might take a minute.......')
         response = self._client.run_instances(**kwargs)
@@ -389,7 +400,7 @@ docker run --network host --rm -e CLOUD_LOCK={cloud_key} --name sssc stochss/sto
                 if rc == 1 or rc == 127:
                     print('Waiting on Docker daemon.')
                     sshtries += 1
-                    if sshtries >= 5:
+                    if sshtries >= 20:
                         ssh.close()
                         raise Exception("Something went wrong with Docker. Max retry attempts exceeded.")
                 if rc == 0:
