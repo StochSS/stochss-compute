@@ -35,5 +35,7 @@ class ApiTest(unittest.TestCase):
         server = ComputeServer('localhost')
         sim = RemoteSimulation(model, server=server)
         self.results = sim.run()
-        assert(self.results._status().status == SimStatus.RUNNING)
+        status_response = self.results._status()
+        assert(status_response.status == SimStatus.RUNNING)
+        assert(status_response.error_message == None)
         # assert(self.results.server == server)
