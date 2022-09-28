@@ -1,21 +1,12 @@
-import asyncio
 import subprocess
 import time
 import unittest
 import tempfile
 
-from threading import Thread
+from stochss_compute import RemoteSimulation, ComputeServer
 
-from stochss_compute.server import api
-
-from stochss_compute import RemoteSimulation
-
-from distributed import Client
-from distributed import Future
-from distributed import LocalCluster
-
-from stochss_compute import launch
 from gillespy2_models import create_robust_model
+from stochss_compute.core.messages import SimStatus
 
 class ApiTest(unittest.TestCase):
 
@@ -36,10 +27,13 @@ class ApiTest(unittest.TestCase):
         cls.worker_dir.cleanup()
         
         cls.api_server.terminate()
+        cls.api_server.wait()
 
 
-    def test_run(self):
+    def test_run_status(self):
         model = create_robust_model()
-        sim = RemoteSimulation(model, host='localhost')
-        results = sim.run()
-        assert(results.server != None)
+        server = ComputeServer('localhost')
+        sim = RemoteSimulation(model, server=server)
+        self.results = sim.run()
+        assert(self.results._status().status == SimStatus.RUNNING)
+        # assert(self.results.server == server)
