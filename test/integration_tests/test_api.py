@@ -12,8 +12,6 @@ class ApiTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.cache_dir = tempfile.TemporaryDirectory(prefix="stochss-compute_")
-        cls.worker_dir = tempfile.TemporaryDirectory(prefix="stochss-compute_")
 
         cmd = ["stochss-compute-cluster"]
         cls.api_server = subprocess.Popen(cmd)
@@ -22,19 +20,17 @@ class ApiTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-
-        cls.cache_dir.cleanup()
-        cls.worker_dir.cleanup()
         
         cls.api_server.terminate()
-        cls.api_server.wait()
 
 
-    def test_run_status(self):
+    def test_run_and_resolve(self):
         model = create_robust_model()
         server = ComputeServer('localhost')
         sim = RemoteSimulation(model, server=server)
-        self.results = sim.run()
-        status_response = self.results._status()
+        results = sim.run()
+        status_response = results._status()
         assert(status_response.status == SimStatus.RUNNING)
         assert(status_response.error_message == None)
+        results._resolve()
+        assert(results.ready())
