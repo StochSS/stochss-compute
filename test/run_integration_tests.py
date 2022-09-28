@@ -12,10 +12,10 @@ if __name__ == '__main__':
         print('Running tests in develop mode. Appending repository directory to system path.')
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-    from integration_tests import test_run
+    from integration_tests import test_api
 
     modules = [
-        test_run,
+        test_api,
     ]
 
     for module in modules:

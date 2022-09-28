@@ -38,4 +38,3 @@ class ApiTest(unittest.TestCase):
         status_response = self.results._status()
         assert(status_response.status == SimStatus.RUNNING)
         assert(status_response.error_message == None)
-        # assert(self.results.server == server)
