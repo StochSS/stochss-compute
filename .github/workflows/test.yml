@@ -32,3 +32,7 @@ jobs:
       run: |
         cd test
         python run_integration_tests.py
+    - name: Run integration tests
+      run: |
+        cd test
+        python run_unit_tests.py
