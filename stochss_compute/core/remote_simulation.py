@@ -58,6 +58,7 @@ class RemoteSimulation:
     def run(self, **params):
         """
         Simulate the Model on the target ComputeServer, returning the results once complete.
+        See: https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run
 
         :param **params: Arguments to pass directly to the Model#run call on the server.
         
