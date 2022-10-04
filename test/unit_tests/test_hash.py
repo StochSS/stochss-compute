@@ -8,9 +8,10 @@ class HashTest(unittest.TestCase):
 
     def test_all_models(self):
         for create_model in gillespy2_models.__all__:
-            model1 = gillespy2_models.__dict__[create_model]()
-            model2 = gillespy2_models.__dict__[create_model]()
-            sim_request1 = SimulationRunRequest(model1)
-            sim_request2 = SimulationRunRequest(model2)
-            print(create_model)
-            assert(sim_request1.hash() == sim_request2.hash())
+            with self.subTest(create_model=create_model):
+                model1 = gillespy2_models.__dict__[create_model]()
+                model2 = gillespy2_models.__dict__[create_model]()
+                sim_request1 = SimulationRunRequest(model1)
+                sim_request2 = SimulationRunRequest(model2)
+
+                assert(sim_request1.hash() == sim_request2.hash())
