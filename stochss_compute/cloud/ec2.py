@@ -1,12 +1,14 @@
 from stochss_compute.client.server import Server
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
-from stochss_compute.cloud.exceptions import ResourceException
+from stochss_compute.cloud.exceptions import EC2ImportException, ResourceException
 from stochss_compute.client.endpoint import Endpoint
 
-import boto3
-from botocore.session import get_session
-from paramiko import SSHClient, AutoAddPolicy
-
+try:
+    import boto3
+    from botocore.session import get_session
+    from paramiko import SSHClient, AutoAddPolicy
+except ImportError as err:
+    raise EC2ImportException
 import os
 from time import sleep
 from secrets import token_hex
