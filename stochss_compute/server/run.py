@@ -18,50 +18,29 @@ class RunHandler(RequestHandler):
         log_string = f'[Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
         self.results_path = os.path.join(self.cache_dir, f'{sim_hash}.results')
         if os.path.exists(self.results_path):
-            # Check length results
+            file = open(self.results_path, 'r')
+            results_json = file.read()
+            results = Results.from_json(results_json)
+            file.close()
+
             n_traj = sim_request.kwargs.get('number_of_trajectories', 1)
+            n_cached_traj = len(results)
             if n_traj > 1 and sim_request.kwargs.get('seed', None) is None:
-                print('seed is none')
-                file = open(self.results_path, 'r')
-                results = Results.from_json(file.read())
-                print(f'Length of cached Results: {len(results)}')
-                print(f'Length of request: {n_traj}')
-                if n_traj > len(results):
-                    sim_request.kwargs['number_of_trajectories'] -= len(results)
-                    print('combine and return')
-                    model = sim_request.model
-                    kwargs = sim_request.kwargs
-                    if "solver" in kwargs:
-                        from pydoc import locate
-                        kwargs["solver"] = locate(kwargs["solver"])
-                    client = Client(self.scheduler_address)
-                    future = client.submit(model.run, **kwargs, key=sim_hash)
-                    sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
+                if n_traj > n_cached_traj:
+                    sim_request.kwargs['number_of_trajectories'] -= n_cached_traj
+                    new_traj = sim_request.kwargs['number_of_trajectories']
+                    print(log_string + f'Partial cache. Running {new_traj} new trajectories.')
+                    future = self.process(sim_request, sim_hash)
+                    await IOLoop.current().run_in_executor(None, self.cache_add_results, future)
+                else:
+                    print(log_string + 'Returning cached results.')
+                    # Can return a single trajectory here? It would mean reading from disk every time....
+                    sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = results_json)
                     self.write(sim_response.encode())
                     self.finish()
-                    await IOLoop.current().run_in_executor(None, self.cache_add_results, future)
-                    return
-            else:
-                print(log_string + 'Returning cached results.')
-                file = open(self.results_path, 'r')
-                results = file.read()
-                file.close()
-                sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = results)
-                self.write(sim_response.encode())
-                self.finish()
         else:
             print(log_string + 'Results not cached. Running simulation.')
-            model = sim_request.model
-            kwargs = sim_request.kwargs
-            if "solver" in kwargs:
-                from pydoc import locate
-                kwargs["solver"] = locate(kwargs["solver"])
-
-            client = Client(self.scheduler_address)
-            future = client.submit(model.run, **kwargs, key=sim_hash)
-            sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
-            self.write(sim_response.encode())
-            self.finish()
+            future = self.process(sim_request, sim_hash)
             await IOLoop.current().run_in_executor(None, self.cache_results, future)
     
     def cache_results(self, future_results: Future):
@@ -81,3 +60,17 @@ class RunHandler(RequestHandler):
         file = open(self.results_path,'w')
         file.write(combined_results.to_json())
         file.close()
+
+    def process(self, sim_request, sim_hash):
+        model = sim_request.model
+        kwargs = sim_request.kwargs
+        if "solver" in kwargs:
+            from pydoc import locate
+            kwargs["solver"] = locate(kwargs["solver"])
+
+        client = Client(self.scheduler_address)
+        future = client.submit(model.run, **kwargs, key=sim_hash)
+        sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
+        self.write(sim_response.encode())
+        self.finish()
+        return future
