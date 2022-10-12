@@ -5,9 +5,6 @@ name: Tests
 
 on:
   push:
-    branches: [ "mdip/tornado-1" ]
-  # pull_request:
-  #   branches: [ "main" ]
 
 jobs:
   build:
