@@ -48,24 +48,25 @@ class SimulationRunRequest(Request):
     '''
     :type model: gillespy2.Model
     '''
-    def __init__(self, model, **params):
+    def __init__(self, model, **kwargs):
         self.model = model
-        self.kwargs = params
+        self.kwargs = kwargs
 
     def encode(self):
         return {'model': self.model.to_json(),
-                'kwargs': json_encode(self.kwargs)}
+                **self.kwargs}
 
     @staticmethod
     def parse(raw_request):
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
-        kwargs_dict = json_decode(request_dict['kwargs'])
-        return SimulationRunRequest(model, **kwargs_dict)
+        kwargs = request_dict['kwargs']
+        return SimulationRunRequest(model, **kwargs)
 
     def hash(self):
         anon_model_string = self.model.to_anon().to_json(encode_private=False)
-        kwargs_string = json_encode(self.kwargs)
+        popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
+        kwargs_string = json_encode(popped_kwargs)
         request_string =  f'{anon_model_string}{kwargs_string}'
         return md5(str.encode(request_string)).hexdigest()
 
