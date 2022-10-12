@@ -4,6 +4,7 @@ from stochss_compute.core.messages import SimStatus, SimulationRunRequest, Simul
 from gillespy2.core import Results
 from distributed import Client, Future
 import os
+import random
 
 class RunHandler(RequestHandler):
 
@@ -25,7 +26,7 @@ class RunHandler(RequestHandler):
 
             n_traj = sim_request.kwargs.get('number_of_trajectories', 1)
             n_cached_traj = len(results)
-            if n_traj > 1 and sim_request.kwargs.get('seed', None) is None:
+            if sim_request.kwargs.get('seed', None) is None:
                 if n_traj > n_cached_traj:
                     sim_request.kwargs['number_of_trajectories'] -= n_cached_traj
                     new_traj = sim_request.kwargs['number_of_trajectories']
@@ -34,9 +35,10 @@ class RunHandler(RequestHandler):
                     await IOLoop.current().run_in_executor(None, self.cache_add_results, future)
                 else:
                     print(log_string + 'Returning cached results.')
-                    # Can return a random selection of trajectories here?
-                    
-                    sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = results_json)
+                    ret_traj = random.sample(results, n_traj)
+                    new_results = Results(ret_traj)
+                    new_results_json = new_results.to_json()
+                    sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = new_results_json)
                     self.write(sim_response.encode())
                     self.finish()
         else:
@@ -53,11 +55,11 @@ class RunHandler(RequestHandler):
 
     def cache_add_results(self, future_results: Future):
         new_results: Results = future_results.result()
+        print(f'[Simulation Finished] | Simulation ID: <{future_results.key}> | Caching results.')
         file = open(self.results_path,'r')
         old_results = Results.from_json(file.read())
         file.close()
         combined_results = new_results + old_results
-        print(type(combined_results))
         file = open(self.results_path,'w')
         file.write(combined_results.to_json())
         file.close()
