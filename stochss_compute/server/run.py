@@ -34,7 +34,8 @@ class RunHandler(RequestHandler):
                     await IOLoop.current().run_in_executor(None, self.cache_add_results, future)
                 else:
                     print(log_string + 'Returning cached results.')
-                    # Can return a single trajectory here? It would mean reading from disk every time....
+                    # Can return a random selection of trajectories here?
+                    
                     sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = results_json)
                     self.write(sim_response.encode())
                     self.finish()
