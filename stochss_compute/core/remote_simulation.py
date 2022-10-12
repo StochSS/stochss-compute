@@ -21,7 +21,7 @@ class RemoteSimulation:
     :param port: The port to use when connecting to the host. Only needed if default server port is changed. Defaults to 29681.
     :type port: int
 
-    :param solver: The type of solver to use or the name of a solver. Does not accept instantiated solvers.
+    :param solver: The type of solver to use. Does not accept instantiated solvers.
     :type solver: Type[gillespy2.GillesPySolver]
 
 
