@@ -42,7 +42,7 @@ class Cluster(Server):
     _server = None
     _ami = None
 
-    def __init__(self, develop=False) -> None:
+    def __init__(self) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
          """
