@@ -2,6 +2,7 @@ from stochss_compute.server.api import start_api
 from argparse import ArgumentParser, Namespace
 import asyncio
 from distributed import LocalCluster
+import sys
 
 def launch_server():
     def parse_args() -> Namespace:
@@ -11,9 +12,6 @@ def launch_server():
         parser = ArgumentParser(description=desc, add_help=True, conflict_handler='resolve')
 
         server = parser.add_argument_group('Server')
-        # Will have to make sure this works in docker
-        # server.add_argument("-h", "--host", default='127.0.0.1', required=False,
-        #                     help="The host to use for the flask server. Defaults to localhost.")
         server.add_argument("-p", "--port", default=29681, type=int, required=False,
                             help="The port to use for the server. Defaults to 29681.")
 
@@ -86,8 +84,6 @@ def launch_with_cluster():
         asyncio.run(start_api(port=args.port, cache=args.cache, dask_host=dask_host, dask_scheduler_port=dask_port))
     except KeyboardInterrupt:
         cluster.close()
-
-import sys
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
