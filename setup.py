@@ -47,6 +47,13 @@ setup(name=             version["__title__"],
             ]
         },
       install_requires= reqs,
+      extras_requires = {
+          'aws': [
+              'boto3 == 1.24.71',
+              'paramiko == 2.11.0',
+              'python-dotenv == 0.21.0'
+          ],
+      },
       long_description= readme,
       long_description_content_type= "text/markdown",
       classifiers=      [

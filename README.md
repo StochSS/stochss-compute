@@ -8,14 +8,6 @@ StochSS-Compute is a compute delegation server for the [StochSS](https://github.
 </td></tr></table>
 
 ***
-## Example Tutorial
-#### 1. Run this Docker command:
-```
-docker run -it --rm -p 8888:8888 -p 8787:8787 stochss/stochss-compute:examples jupyter notebook
-```
-#### 2. Open the link provided by the Jupyter Notebook server in your browser.
-#### 3. Open and run the self-contained `Tutorial-1.ipynb`
-***
 ## Installation 
 
 #### 1. Installing dependencies & `stochss_compute`
@@ -39,14 +31,14 @@ git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
 python -m venv venv 
 source venv/bin/activate
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 ### OR
 #### Global install of dependencies:
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 2. Start up the server and compute backend
@@ -60,7 +52,17 @@ python -m stochss_compute.launch
 ```
 
 ## Docker
-### 1. As an alternative to the above steps, you can use Docker.
+### As an alternative to the above steps, you can use Docker.
+***
+## Example Tutorial
+#### 1. Run this Docker command:
+```
+docker run -it --rm -p 8888:8888 -p 8787:8787 stochss/stochss-compute:examples jupyter notebook
+```
+#### 2. Open the link provided by the Jupyter Notebook server in your browser.
+#### 3. Open and run the self-contained `Tutorial-1.ipynb`
+***
+## Starting a server
 
 ```
 docker run -it --rm --network host stochss/stochss-compute:latest

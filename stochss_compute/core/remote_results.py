@@ -90,6 +90,3 @@ class RemoteResults(Results):
     def ready(self):
         return self._status().status == SimStatus.READY
 
-    # def error(self):
-    #     status_response = self._status()
-        # raise error by grabbing error class from task and put into response object

@@ -21,10 +21,7 @@ _KEY_NAME = 'sssc-root'
 _KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
 _AMIS = {
-    # 'us-east-1': 'ami-0ef9fe14ea1c5c979',
     'us-east-2': 'ami-07e25c5bf81f82a4d',
-    # 'us-west-1': 'ami-0a8c547cd139d4672',
-    # 'us-west-2': 'ami-0e385035e7d059820',
 }
 
 class Cluster(Server):
@@ -45,7 +42,7 @@ class Cluster(Server):
     def __init__(self) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
-         """
+        """
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
         region = get_session().get_config_variable('region')
@@ -57,6 +54,9 @@ class Cluster(Server):
 
     @property
     def address(self):
+        """
+
+        """
         if self._server is None:
             raise Exception('No server found. First launch a cluster.')
         if self._server.public_ip_address is None:
@@ -237,7 +237,6 @@ class Cluster(Server):
         self._subnets[label] = self._vpc.create_subnet(CidrBlock=subnet_cidrBlock, TagSpecifications=subnet_tag)
         waiter = self._client.get_waiter('subnet_available')
         waiter.wait(SubnetIds=[self._subnets[label].id])
-        # if public is True:
         self._client.modify_subnet_attribute(SubnetId=self._subnets[label].id, MapPublicIpOnLaunch={'Value': True})
         self._subnets[label].reload()
 
