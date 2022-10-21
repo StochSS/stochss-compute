@@ -1,7 +1,7 @@
 class ResourceException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
-        print('Missing or misconfigured resources. You need to call clean_up().')
+        print('Missing or misconfigured resources.')
 
 class EC2ImportException(Exception):
     def __init__(self, *args: object) -> None:

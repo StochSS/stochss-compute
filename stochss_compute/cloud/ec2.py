@@ -50,7 +50,10 @@ class Cluster(Server):
         self._resources = boto3.resource('ec2')
         region = get_session().get_config_variable('region')
         self._ami = _AMIS[region]
-        self._load_cluster()
+        try:
+            self._load_cluster()
+        except ResourceException:
+            self.clean_up()
 
     @property
     def address(self):
@@ -427,16 +430,14 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             }
         ]
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
-        print(vpc_response)
         if len(vpc_response['Vpcs']) == 0:
             if os.path.exists(_KEY_PATH):
                 raise ResourceException
             else:
                 try:
                     self._client.describe_key_pairs(KeyNames=[_KEY_NAME]) 
-                    raise ResourceException
                 except:
-                    pass              
+                    raise ResourceException
             return False
         if len(vpc_response['Vpcs']) == 2:
             print(f'More than one VPC named "{_VPC_NAME}".')
@@ -476,3 +477,4 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             raise ResourceException
         else:
             print('Cluster loaded.')
+            return True
