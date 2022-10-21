@@ -39,14 +39,14 @@ git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
 python -m venv venv 
 source venv/bin/activate
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 ### OR
 #### Global install of dependencies:
 ```
 git clone https://github.com/StochSS/stochss-compute.git
 cd stochss-compute
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 2. Start up the server and compute backend
