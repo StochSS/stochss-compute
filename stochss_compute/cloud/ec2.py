@@ -21,7 +21,10 @@ _KEY_NAME = 'sssc-root'
 _KEY_PATH = f'./{_KEY_NAME}.pem'
 _API_PORT = 29681
 _AMIS = {
-    'us-east-2': 'ami-07e25c5bf81f82a4d',
+    'us-east-1': 'ami-09d3b3274b6c5d4aa',
+    'us-east-2': 'ami-089a545a9ed9893b6',
+    'us-west-1': 'ami-017c001a88dd93847',
+    'us-west-2': 'ami-0d593311db5abb72b',
 }
 
 class Cluster(Server):
@@ -315,7 +318,11 @@ class Cluster(Server):
         cloud_key = token_hex(32)
 
         launch_commands = f'''#!/bin/bash
+sudo yum update -y
+sudo yum -y install docker
+sudo usermod -a -G docker ec2-user
 sudo service docker start
+sudo chmod 666 /var/run/docker.sock 
 docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         kwargs = {
@@ -380,7 +387,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         for container in containerNames:
             sshtries = 0
             while True:
-                sleep(10)
+                sleep(30)
                 stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' " + f'{container}')
                 rc = stdout.channel.recv_exit_status()
                 out = stdout.readlines()
