@@ -427,6 +427,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             }
         ]
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
+        print(vpc_response)
         if len(vpc_response['Vpcs']) == 0:
             if os.path.exists(_KEY_PATH):
                 raise ResourceException
