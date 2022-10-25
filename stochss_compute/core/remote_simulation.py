@@ -66,6 +66,8 @@ class RemoteSimulation:
         """
     
         if "solver" in params:
+            if hasattr(params['solver'], 'is_instantiated'):
+                raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
             params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
