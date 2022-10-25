@@ -73,6 +73,14 @@ docker run -it --rm --network host stochss/stochss-compute:latest
 ```
 docker run -it --rm --network host -v $PWD/MyCache:/usr/src/app/cache stochss/stochss-compute
 ```
+***
+## Cache Behavior
+- Simulation results are given a unique identifier based upon the type of solver/algorithm, the model itself, and any other arguments passed to that simulation's `run()` call.
+- Results are stored on disk in json format. 
+- Results are 'anonymized', that is, variables and parameter names are converted to unique alphanumeric identifiers.
+- Subsequent requests that match to cached results will automatically return the cached results.
+- All other factors being the same, requests that differ only in the `number_of_trajectories` are associated with the same results object.
+***
 
 License
 -------
