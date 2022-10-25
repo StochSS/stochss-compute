@@ -1,11 +1,12 @@
 from stochss_compute.client.server import Server
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
-from stochss_compute.cloud.exceptions import EC2ImportException, ResourceException
+from stochss_compute.cloud.exceptions import EC2ImportException, ResourceException, EC2Exception
 from stochss_compute.client.endpoint import Endpoint
 
 try:
     import boto3
     from botocore.session import get_session
+    from botocore.exceptions import ClientError
     from paramiko import SSHClient, AutoAddPolicy
 except ImportError as err:
     raise EC2ImportException
@@ -61,11 +62,11 @@ class Cluster(Server):
 
         """
         if self._server is None:
-            raise Exception('No server found. First launch a cluster.')
+            raise EC2Exception('No server found. First launch a cluster.')
         if self._server.public_ip_address is None:
             self._server.reload()
         if self._server.public_ip_address is None:
-            raise Exception('No public address found.')
+            raise EC2Exception('No public address found.')
 
         return f'http://{self._server.public_ip_address}:{_API_PORT}'
 
@@ -347,7 +348,10 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             'UserData': launch_commands,
             }
         print(f'Launching StochSS-Compute server instance. This might take a minute.......')
-        response = self._client.run_instances(**kwargs)
+        try:
+            response = self._client.run_instances(**kwargs)
+        except ClientError as e:
+            raise EC2Exception(e)
         instance_id = response['Instances'][0]['InstanceId']
         self._server = self._resources.Instance(instance_id)
         self._server.wait_until_exists()
@@ -394,14 +398,14 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                 err = stderr.readlines()
                 if rc == -1:
                     ssh.close()
-                    raise Exception("Something went wrong connecting to the server. No exit status provided by the server.")
+                    raise EC2Exception("Something went wrong connecting to the server. No exit status provided by the server.")
                 # Wait for yum update, docker install, container download
                 if rc == 1 or rc == 127:
                     print('Waiting on Docker daemon.')
                     sshtries += 1
                     if sshtries >= 5:
                         ssh.close()
-                        raise Exception(f"Something went wrong with Docker. Max retry attempts exceeded.\nError:\n{''.join(err)}")
+                        raise EC2Exception(f"Something went wrong with Docker. Max retry attempts exceeded.\nError:\n{''.join(err)}")
                 if rc == 0:
                     if 'true\n' in out:
                         sleep(10)
@@ -419,7 +423,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
         response_raw = self.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request)
         if not response_raw.ok:
-            raise Exception(response_raw.reason)
+            raise EC2Exception(response_raw.reason)
         response = SourceIpResponse.parse(response_raw.text)
         return response.source_ip
 
