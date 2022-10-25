@@ -395,6 +395,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                 if rc == -1:
                     ssh.close()
                     raise Exception("Something went wrong connecting to the server. No exit status provided by the server.")
+                # Wait for yum update, docker install, container download
                 if rc == 1 or rc == 127:
                     print('Waiting on Docker daemon.')
                     sshtries += 1
