@@ -14,8 +14,8 @@ class RunHandler(RequestHandler):
         self.cache_dir = cache_dir
 
     async def post(self):
-        sim_request = SimulationRunRequest.parse(self.request.body)
-        sim_hash = sim_request.hash()
+        sim_request = SimulationRunRequest._parse(self.request.body)
+        sim_hash = sim_request._hash()
         log_string = f'[Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
         self.results_path = os.path.join(self.cache_dir, f'{sim_hash}.results')
         if os.path.exists(self.results_path):
@@ -39,7 +39,7 @@ class RunHandler(RequestHandler):
                     new_results = Results(ret_traj)
                     new_results_json = new_results.to_json()
                     sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = new_results_json)
-                    self.write(sim_response.encode())
+                    self.write(sim_response._encode())
                     self.finish()
         else:
             print(log_string + 'Results not cached. Running simulation.')
@@ -74,6 +74,6 @@ class RunHandler(RequestHandler):
         client = Client(self.scheduler_address)
         future = client.submit(model.run, **kwargs, key=sim_hash)
         sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=sim_hash)
-        self.write(sim_response.encode())
+        self.write(sim_response._encode())
         self.finish()
         return future

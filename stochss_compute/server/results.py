@@ -17,7 +17,7 @@ class ResultsHandler(RequestHandler):
             results = file.read()
             file.close()
             results_response = ResultsResponse(results)
-            self.write(results_response.encode())
+            self.write(results_response._encode())
         else:
             # This should not happen!
             self.set_status(404, f'Results "{results_id}" not found.')

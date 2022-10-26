@@ -14,4 +14,4 @@ class HashTest(unittest.TestCase):
                 sim_request1 = SimulationRunRequest(model1)
                 sim_request2 = SimulationRunRequest(model2)
 
-                assert(sim_request1.hash() == sim_request2.hash())
+                assert(sim_request1._hash() == sim_request2._hash())

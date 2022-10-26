@@ -17,6 +17,9 @@ class ComputeServer(Server):
 
     @property
     def address(self):
+        """
+        The server's IP address and port.
+        """
         return self._address
     
 

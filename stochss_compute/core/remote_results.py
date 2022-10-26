@@ -34,6 +34,9 @@ class RemoteResults(Results):
 
     @property
     def data(self):
+        """
+        The trajectory data.
+        """
         if self.id is None or self.server is None:
             raise Exception('RemoteResults must have a self.id and a self.server.')
 
@@ -43,12 +46,12 @@ class RemoteResults(Results):
 
 
     def _status(self):
-        # Request the status of a running job.
-        response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/status")
+        # Request the status of a submitted simulation.
+        response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/status")
         if not response_raw.ok:
-            raise Exception(response_raw.reason)
+            raise RemoteSimulationError(response_raw.reason)
 
-        status_response = StatusResponse.parse(response_raw.text)
+        status_response = StatusResponse._parse(response_raw.text)
         return status_response
 
     def _resolve(self):
@@ -70,7 +73,7 @@ class RemoteResults(Results):
                 status_response = self._status()
                 status = status_response.status
                 if status == SimStatus.PENDING:
-                    raise Exception('Unknown Error.')
+                    raise RemoteSimulationError('Unknown Error.')
                 if status != SimStatus.RUNNING:
                     break
 
@@ -79,14 +82,17 @@ class RemoteResults(Results):
 
         if status == SimStatus.READY:
             print('Results ready. Fetching.......')
-            response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
+            response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
             if not response_raw.ok:
-                raise Exception(response_raw.reason)
+                raise RemoteSimulationError(response_raw.reason)
 
-            response = ResultsResponse.parse(response_raw.text)
+            response = ResultsResponse._parse(response_raw.text)
             self._data = response.results.data
 
 
     def ready(self):
+        """
+        True if results exist in cache on the server.
+        """
         return self._status().status == SimStatus.READY
 

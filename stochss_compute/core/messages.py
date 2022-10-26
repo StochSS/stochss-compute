@@ -15,7 +15,7 @@ class SimStatus(Enum):
     ERROR = 'The Simulation has encountered an error.'
 
     @staticmethod
-    def from_str(name):
+    def _from_str(name):
         if name == 'PENDING':
             return SimStatus.PENDING
         if name == 'RUNNING':
@@ -27,20 +27,20 @@ class SimStatus(Enum):
     
 class Request(ABC):
     @abstractmethod
-    def encode(self):
+    def _encode(self):
         pass
     @staticmethod
     @abstractmethod
-    def parse(raw_request):
+    def _parse(raw_request):
         pass
 
 class Response(ABC):
     @abstractmethod
-    def encode(self):
+    def _encode(self):
         pass
     @staticmethod
     @abstractmethod
-    def parse(raw_response):
+    def _parse(raw_response):
         pass
 
 
@@ -52,18 +52,18 @@ class SimulationRunRequest(Request):
         self.model = model
         self.kwargs = kwargs
 
-    def encode(self):
+    def _encode(self):
         return {'model': self.model.to_json(),
                 **self.kwargs}
 
     @staticmethod
-    def parse(raw_request):
+    def _parse(raw_request):
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs = request_dict['kwargs']
         return SimulationRunRequest(model, **kwargs)
 
-    def hash(self):
+    def _hash(self):
         anon_model_string = self.model.to_anon().to_json(encode_private=False)
         popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
         kwargs_string = json_encode(popped_kwargs)
@@ -83,16 +83,16 @@ class SimulationRunResponse(Response):
         self.results_id = results_id
         self.results = results
     
-    def encode(self):
+    def _encode(self):
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
                 'results_id': self.results_id or '',
                 'results': self.results or ''}
     
     @staticmethod
-    def parse(raw_response):
+    def _parse(raw_response):
         response_dict = json_decode(raw_response)
-        status = SimStatus.from_str(response_dict['status'])
+        status = SimStatus._from_str(response_dict['status'])
         results_id = response_dict['results_id']
         error_message = response_dict['error_message']
         if response_dict['results'] != '':
@@ -107,10 +107,10 @@ class StatusRequest(Request):
     '''
     def __init__(self, results_id):
         self.results_id = results_id
-    def encode(self):
+    def _encode(self):
         return self.__dict__
     @staticmethod
-    def parse(raw_request):
+    def _parse(raw_request):
         request_dict = json_decode(raw_request)
         return StatusRequest(request_dict['results_id'])
 
@@ -124,14 +124,14 @@ class StatusResponse(Response):
         self.error_message = error_message
         # Add traceback eventually!
     
-    def encode(self):
+    def _encode(self):
         return {'status': self.status.name,
                 'error_message': self.error_message or ''}
     
     @staticmethod
-    def parse(raw_response):
+    def _parse(raw_response):
         response_dict = json_decode(raw_response)
-        status = SimStatus.from_str(response_dict['status'])
+        status = SimStatus._from_str(response_dict['status'])
         error_message = response_dict['error_message']
         if not error_message:
             return StatusResponse(status)
@@ -144,10 +144,10 @@ class ResultsRequest(Request):
     '''
     def __init__(self, results_id):
         self.results_id = results_id
-    def encode(self):
+    def _encode(self):
         return self.__dict__
     @staticmethod
-    def parse(raw_request):
+    def _parse(raw_request):
         request_dict = json_decode(raw_request)
         return ResultsRequest(request_dict['results_id'])
 
@@ -158,11 +158,11 @@ class ResultsResponse(Response):
     def __init__(self, results = None):
         self.results = results
     
-    def encode(self):
+    def _encode(self):
         return {'results': self.results or ''}
     
     @staticmethod
-    def parse(raw_response):
+    def _parse(raw_response):
         response_dict = json_decode(raw_response)
         if response_dict['results'] != '':
             results = Results.from_json(response_dict['results'])
@@ -176,10 +176,10 @@ class SourceIpRequest(Request):
     '''
     def __init__(self, cloud_key):
         self.cloud_key = cloud_key
-    def encode(self):
+    def _encode(self):
         return self.__dict__
     @staticmethod
-    def parse(raw_request):
+    def _parse(raw_request):
         request_dict = json_decode(raw_request)
         return SourceIpRequest(request_dict['cloud_key'])
 
@@ -190,10 +190,10 @@ class SourceIpResponse(Response):
     def __init__(self, source_ip):
         self.source_ip = source_ip
     
-    def encode(self):
+    def _encode(self):
         return self.__dict__
     
     @staticmethod
-    def parse(raw_response):
+    def _parse(raw_response):
         response_dict = json_decode(raw_response)
         return SourceIpResponse(response_dict['source_ip'])

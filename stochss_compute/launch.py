@@ -5,7 +5,7 @@ from distributed import LocalCluster
 import sys
 
 def launch_server():
-    def parse_args() -> Namespace:
+    def _parse_args() -> Namespace:
         desc = '''
             StochSS-Compute is a server and cache that anonymizes StochSS simulation data.
         '''
@@ -25,13 +25,13 @@ def launch_server():
                             help="The port to use for the dask scheduler. Defaults to 8786.")
         return parser.parse_args()
 
-    args = parse_args()
+    args = _parse_args()
     asyncio.run(start_api(**args.__dict__))
 
 
 def launch_with_cluster():
 
-    def parse_args() -> Namespace:
+    def _parse_args() -> Namespace:
         usage = '''
             stochss-compute-cluster -p PORT
         '''
@@ -63,7 +63,7 @@ def launch_with_cluster():
         return args
 
 
-    args = parse_args()
+    args = _parse_args()
 
     dask_args = {}
     for (arg, value) in vars(args).items():

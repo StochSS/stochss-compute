@@ -18,7 +18,7 @@ class StatusHandler(RequestHandler):
 
         if os.path.exists(self.results_path):
             status_response = StatusResponse(SimStatus.READY)
-            self.write(status_response.encode())
+            self.write(status_response._encode())
             self.finish()
             return
         
@@ -43,7 +43,7 @@ class StatusHandler(RequestHandler):
             future = client.futures.get(results_id)
             if future is None or future.done():
                 status_response = StatusResponse(SimStatus.ERROR, 'Unknown Error.')
-                self.write(status_response.encode())
+                self.write(status_response._encode())
                 self.finish()
                 return
                 
@@ -67,7 +67,7 @@ class StatusHandler(RequestHandler):
             error_message = ''
         
         status_response = StatusResponse(sim_status, error_message)
-        self.write(status_response.encode())
+        self.write(status_response._encode())
         self.finish()
 
 

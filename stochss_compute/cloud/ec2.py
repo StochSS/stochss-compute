@@ -59,7 +59,7 @@ class Cluster(Server):
     @property
     def address(self):
         """
-
+        The server's IP address and port.
         """
         if self._server is None:
             raise EC2Exception('No server found. First launch a cluster.')
@@ -421,10 +421,10 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         :type cloud_key: str
         """
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
-        response_raw = self.post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request)
+        response_raw = self._post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request)
         if not response_raw.ok:
             raise EC2Exception(response_raw.reason)
-        response = SourceIpResponse.parse(response_raw.text)
+        response = SourceIpResponse._parse(response_raw.text)
         return response.source_ip
 
     def _load_cluster(self):
