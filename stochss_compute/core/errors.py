@@ -1,0 +1,2 @@
+class RemoteSimulationError(Exception):
+    pass

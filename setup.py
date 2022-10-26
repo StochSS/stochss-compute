@@ -18,6 +18,9 @@ from setuptools import setup, find_packages
 
 SETUP_DIR = path.dirname(path.abspath(__file__))
 
+with open(path.join(SETUP_DIR, 'requirements.txt')) as f:
+    reqs = f.read().rstrip().splitlines()
+
 with open(path.join(SETUP_DIR, "README.md"), "r", errors="ignore") as f:
     readme = f.read()
 
@@ -35,8 +38,22 @@ setup(name=             version["__title__"],
       author=           version["__author__"],
       author_email=     version["__email__"],
       url=              version["__url__"],
-      licence=          version["__license__"],
+      license=          version["__license__"],
       packages=         find_packages("."),
+      entry_points={
+            'console_scripts': [
+                'stochss-compute=stochss_compute.launch:launch_server',
+                'stochss-compute-cluster=stochss_compute.launch:launch_with_cluster',
+            ]
+        },
+      install_requires= reqs,
+      extras_requires = {
+          'aws': [
+              'boto3 == 1.24.71',
+              'paramiko == 2.11.0',
+              'python-dotenv == 0.21.0'
+          ],
+      },
       long_description= readme,
       long_description_content_type= "text/markdown",
       classifiers=      [

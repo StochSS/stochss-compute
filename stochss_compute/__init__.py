@@ -1,1 +1,3 @@
-from stochss_compute.remote_simulation import RemoteSimulation, ComputeServer
+from stochss_compute.client import *
+from stochss_compute.core import *
+from stochss_compute.server import *

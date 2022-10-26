@@ -3,6 +3,13 @@
 .venv
 .vscode
 dist
+env/
 **/*__pycache__
-.ipynb_checkpoints/
-examples/
+**/.ipynb_checkpoints/
+tests/
+kubernetes/
+docker/
+.github/
+docker-compose.yml
+**/dask-worker-space
+docker-build.sh
