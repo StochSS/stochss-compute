@@ -6,7 +6,7 @@ from stochss_compute.server.status import StatusHandler
 from stochss_compute.server.results import ResultsHandler
 import os
 
-def make_app(dask_host, dask_scheduler_port, cache):
+def _make_app(dask_host, dask_scheduler_port, cache):
     scheduler_address = f'{dask_host}:{dask_scheduler_port}'
     return Application([
         (r"/api/v2/simulation/gillespy2/run", RunHandler, {'scheduler_address': scheduler_address, 'cache_dir': cache}),
@@ -44,7 +44,7 @@ async def start_api(
         os.mkdir(cache)
     path = os.path.abspath(cache)
         
-    app = make_app(dask_host, dask_scheduler_port, cache)
+    app = _make_app(dask_host, dask_scheduler_port, cache)
     app.listen(port)
     print(f'StochSS-Compute listening on: {port}')
     print(f'Cache directory: {path}')
