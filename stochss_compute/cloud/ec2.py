@@ -96,6 +96,7 @@ class Cluster(Server):
                 ]
             }
         ]
+        self._init = False
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
         for vpc_dict in vpc_response['Vpcs']:
             vpc_id = vpc_dict['VpcId']
