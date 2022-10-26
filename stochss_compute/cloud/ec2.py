@@ -30,6 +30,7 @@ _AMIS = {
 
 class Cluster(Server):
 
+    _init = False
     _client = None
     _resources = None
     _restricted: bool = False
@@ -77,6 +78,8 @@ class Cluster(Server):
         :param instanceType: Example: 't3.micro' See full list here: https://aws.amazon.com/ec2/instance-types/ 
         :type instanceType: str
          """
+        if self._init is True:
+            return
         self._launch_network()
         self._create_root_key()
         self._launch_head_node(instanceType=instanceType)
@@ -365,6 +368,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         source_ip = self._get_source_ip(cloud_key)
 
         self._restrict_ingress(source_ip)
+        self._init = True
         print('StochSS-Compute ready to go!')
 
     def _poll_launch_progress(self, containerNames):
@@ -446,9 +450,11 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                 raise ResourceException
             else:
                 try:
-                    self._client.describe_key_pairs(KeyNames=[_KEY_NAME]) 
+                    keypair = self._client.describe_key_pairs(KeyNames=[_KEY_NAME]) 
+                    if keypair is not None:
+                        raise ResourceException
                 except:
-                    raise ResourceException
+                    pass
             return False
         if len(vpc_response['Vpcs']) == 2:
             print(f'More than one VPC named "{_VPC_NAME}".')
@@ -487,5 +493,6 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         if errors is True:
             raise ResourceException
         else:
+            self._init = True
             print('Cluster loaded.')
             return True
