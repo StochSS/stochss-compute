@@ -2,7 +2,6 @@ from stochss_compute.client.server import Server
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
 from stochss_compute.cloud.exceptions import EC2ImportException, ResourceException, EC2Exception
 from stochss_compute.client.endpoint import Endpoint
-
 try:
     import boto3
     from botocore.session import get_session
@@ -11,6 +10,7 @@ try:
 except ImportError as err:
     raise EC2ImportException
 import os
+import logging
 from time import sleep
 from secrets import token_hex
 
@@ -44,18 +44,37 @@ class Cluster(Server):
     _server = None
     _ami = None
 
-    def __init__(self) -> None:
+    def __init__(self, statusFile=None) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
+
+        :param statusFile: Optional. If provided, status updates will be written to a file with this path and name.
+        :type str:
+
         """
+        self.statusFile = statusFile
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
         region = get_session().get_config_variable('region')
         self._ami = _AMIS[region]
+        # try catch
+        # if something fails, write status else nothing
         try:
-            self._load_cluster()
+            
+            if self._load_cluster() is True:
+                if self.statusFile is not None:
+                    self._write_status(self._server.state['Name'])
+
         except ResourceException:
+            if self.statusFile is not None:
+                self._write_status('terminating')
             self.clean_up()
+            if self.statusFile is not None:
+                self._write_status('terminated')
+
+    def _write_status(self, status):
+        with open(self.statusFile, 'w') as file:
+            file.write(status)
 
     @property
     def address(self):
@@ -79,10 +98,16 @@ class Cluster(Server):
         :type instanceType: str
          """
         if self._init is True:
-            return
+            raise EC2Exception('You cannot launch more than one StochSS-Compute cluster instance per account')
+        # write pending
+        if self.statusFile is not None:
+            self._write_status('pending')
+
         self._launch_network()
         self._create_root_key()
         self._launch_head_node(instanceType=instanceType)
+        if self.statusFile is not None:
+            self._write_status(self._server.state['Name'])
 
     def clean_up(self):
         """ 
@@ -103,40 +128,40 @@ class Cluster(Server):
             vpc = self._resources.Vpc(vpc_id)
             for instance in vpc.instances.all():
                 instance.terminate()
-                print(f'Terminating "{instance.id}". This might take a minute.......')
+                logging.info(f'Terminating "{instance.id}". This might take a minute.......')
                 instance.wait_until_terminated()
                 self._server = None
-                print(f'Instance {instance.id}" terminated.')
+                logging.info(f'Instance {instance.id}" terminated.')
             for sg in vpc.security_groups.all():
                 if sg.group_name == _SECURITY_GROUP_NAME:
-                    print(f'Deleting {sg.id}.......')
+                    logging.info(f'Deleting {sg.id}.......')
                     sg.delete()
                     self._server_security_group = None
-                    print(f'Security group {sg.id} deleted.')
+                    logging.info(f'Security group {sg.id} deleted.')
                 elif sg.group_name == 'default':
                     self._default_security_group = None
             for subnet in vpc.subnets.all():
-                print(f'Deleting {subnet.id}.......')
+                logging.info(f'Deleting {subnet.id}.......')
                 subnet.delete()
                 self._subnets['public'] = None
-                print(f'Subnet {subnet.id} deleted.')
+                logging.info(f'Subnet {subnet.id} deleted.')
             for igw in vpc.internet_gateways.all():
-                print(f'Detaching {igw.id}.......')
+                logging.info(f'Detaching {igw.id}.......')
                 igw.detach_from_vpc(VpcId=vpc.vpc_id)
-                print(f'Gateway {igw.id} detached.')
-                print(f'Deleting {igw.id}.......')
+                logging.info(f'Gateway {igw.id} detached.')
+                logging.info(f'Deleting {igw.id}.......')
                 igw.delete()
-                print(f'Gateway {igw.id} deleted.')
-            print(f'Deleting {vpc.id}.......')
+                logging.info(f'Gateway {igw.id} deleted.')
+            logging.info(f'Deleting {vpc.id}.......')
             vpc.delete()
             self._vpc = None
-            print(f'VPC {vpc.id} deleted.')
+            logging.info(f'VPC {vpc.id} deleted.')
         try:
             self._client.describe_key_pairs(KeyNames=[_KEY_NAME])
             key_pair = self._resources.KeyPair(_KEY_NAME)
-            print(f'Deleting "{_KEY_NAME}".')
+            logging.info(f'Deleting "{_KEY_NAME}".')
             key_pair.delete()
-            print(f'Key Pair "{_KEY_NAME}" deleted.')
+            logging.info(f'Key Pair "{_KEY_NAME}" deleted.')
         except:
             pass
         self._delete_root_key()
@@ -145,7 +170,7 @@ class Cluster(Server):
         """ 
         Launches required network resources.
         """
-        print("Launching Network.......")
+        logging.info("Launching Network.......")
         self._create_sssc_vpc()
         self._create_sssc_subnet(public=True)
         self._create_sssc_subnet(public=False)
@@ -174,9 +199,9 @@ class Cluster(Server):
         Deletes {_KEY_PATH} if it exists. 
         """
         if os.path.exists(_KEY_PATH):
-            print(f'Deleting "{_KEY_PATH}".')
+            logging.info(f'Deleting "{_KEY_PATH}".')
             os.remove(_KEY_PATH)
-            print(f'Root key deleted.')
+            logging.info(f'Root key deleted.')
 
     def _create_sssc_vpc(self):
         f"""
@@ -351,7 +376,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             ],
             'UserData': launch_commands,
             }
-        print(f'Launching StochSS-Compute server instance. This might take a minute.......')
+        logging.info(f'Launching StochSS-Compute server instance. This might take a minute.......')
         try:
             response = self._client.run_instances(**kwargs)
         except ClientError as e:
@@ -361,16 +386,16 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         self._server.wait_until_exists()
         self._server.wait_until_running()
 
-        print(f'Instance "{instance_id}" is running.')
+        logging.info(f'Instance "{instance_id}" is running.')
 
         self._poll_launch_progress(['sssc'])
 
-        print('Restricting server access to only your ip.')
+        logging.info('Restricting server access to only your ip.')
         source_ip = self._get_source_ip(cloud_key)
 
         self._restrict_ingress(source_ip)
         self._init = True
-        print('StochSS-Compute ready to go!')
+        logging.info('StochSS-Compute ready to go!')
 
     def _poll_launch_progress(self, containerNames):
         """ 
@@ -406,7 +431,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                     raise EC2Exception("Something went wrong connecting to the server. No exit status provided by the server.")
                 # Wait for yum update, docker install, container download
                 if rc == 1 or rc == 127:
-                    print('Waiting on Docker daemon.')
+                    logging.info('Waiting on Docker daemon.')
                     sshtries += 1
                     if sshtries >= 5:
                         ssh.close()
@@ -414,7 +439,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                 if rc == 0:
                     if 'true\n' in out:
                         sleep(10)
-                        print(f'Container "{container}" is running.')
+                        logging.info(f'Container "{container}" is running.')
                         break
         ssh.close()
 
@@ -458,7 +483,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                     pass
             return False
         if len(vpc_response['Vpcs']) == 2:
-            print(f'More than one VPC named "{_VPC_NAME}".')
+            logging.info(f'More than one VPC named "{_VPC_NAME}".')
             raise ResourceException
         vpc_id = vpc_response['Vpcs'][0]['VpcId']
         self._vpc = self._resources.Vpc(vpc_id)
@@ -469,7 +494,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                 if tag['Key'] == 'Name' and tag['Value'] == _SERVER_NAME:
                     self._server = instance
         if self._server is None:
-            print(f'No instances named "{_SERVER_NAME}".')
+            logging.info(f'No instances named "{_SERVER_NAME}".')
             errors = True
         for sg in vpc.security_groups.all():
             if sg.group_name == 'default':
@@ -480,7 +505,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                         errors = True
                 self._server_security_group = sg
         if self._server_security_group is None:
-            print(f'No security group named "{_SECURITY_GROUP_NAME}".')
+            logging.info(f'No security group named "{_SECURITY_GROUP_NAME}".')
             errors = True
         for subnet in vpc.subnets.all():
             for tag in subnet.tags:
@@ -489,11 +514,11 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                 if tag['Key'] == 'Name' and tag['Value'] == f'{_SUBNET_PREFIX}private':
                     self._subnets['private'] = subnet
         if None in self._subnets.values():
-            print('Missing or misconfigured subnet.')
+            logging.info('Missing or misconfigured subnet.')
             errors = True
         if errors is True:
             raise ResourceException
         else:
             self._init = True
-            print('Cluster loaded.')
+            logging.info('Cluster loaded.')
             return True
