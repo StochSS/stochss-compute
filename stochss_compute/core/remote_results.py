@@ -90,6 +90,16 @@ class RemoteResults(Results):
             self._data = response.results.data
 
 
+    def get_gillespy2_results(self):
+        """
+        Get the GillesPy2 results object from the remote results.
+
+        :returns: The generated GillesPy2 results object.
+        :rtype: gillespy.Results
+        """
+        return Results(self.data)
+
+
     def ready(self):
         """
         True if results exist in cache on the server.
