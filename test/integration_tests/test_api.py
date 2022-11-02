@@ -34,6 +34,7 @@ class ApiTest(unittest.TestCase):
         sim1 = RemoteSimulation(model1, server)
         results1 = sim1.run()
         status_response = results1._status()
+        print(status_response.status.name)
         assert(status_response.status != SimStatus.ERROR)
         assert(status_response.error_message == None)
         results1._resolve()
