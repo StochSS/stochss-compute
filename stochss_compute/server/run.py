@@ -16,6 +16,7 @@ class RunHandler(RequestHandler):
     async def post(self):
         sim_request = SimulationRunRequest._parse(self.request.body)
         sim_hash = sim_request._hash()
+            
         log_string = f'[Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
         self.results_path = os.path.join(self.cache_dir, f'{sim_hash}.results')
         if os.path.exists(self.results_path):
@@ -66,7 +67,7 @@ class RunHandler(RequestHandler):
 
     def process(self, sim_request, sim_hash):
         model = sim_request.model
-        kwargs = sim_request.kwargs
+        kwargs = sim_request.kwargs['kwargs']
         if "solver" in kwargs:
             from pydoc import locate
             kwargs["solver"] = locate(kwargs["solver"])

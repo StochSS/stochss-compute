@@ -37,7 +37,10 @@ class StatusHandler(RequestHandler):
             }
 
         task_dict = client.run_on_scheduler(scheduler_task_state, results_id=results_id)
-        state = task_dict['state']
+        if task_dict is not None:
+            state = task_dict['state']
+        else:
+            state = None
 
         if state is None or state == 'forgotten' or state == 'released':
             future = client.futures.get(results_id)

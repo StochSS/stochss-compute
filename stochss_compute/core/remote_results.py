@@ -5,7 +5,6 @@ from gillespy2 import Results
 
 from time import sleep
 
-from tornado.escape import json_decode
 from stochss_compute.core.errors import RemoteSimulationError
 
 from stochss_compute.core.messages import ResultsResponse, SimStatus, StatusResponse
@@ -43,6 +42,10 @@ class RemoteResults(Results):
         if self._data is None:
             self._resolve()
         return self._data
+
+    @property
+    def simStatus(self):
+        return self._status().status.name
 
 
     def _status(self):
@@ -100,7 +103,8 @@ class RemoteResults(Results):
         return Results(self.data)
 
 
-    def ready(self):
+    @property
+    def isReady(self):
         """
         True if results exist in cache on the server.
         """
