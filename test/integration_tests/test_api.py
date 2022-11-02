@@ -45,7 +45,7 @@ class ApiTest(unittest.TestCase):
         assert(results2._data != None)
         assert(results2.id == results1.id)
 
-    @unittest.skip('fix this')
+    # @unittest.skip('fix this')
     def test_isCached(self):
         model = create_michaelis_menten()
         server = ComputeServer('localhost')
