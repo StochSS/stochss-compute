@@ -11,7 +11,7 @@ class SimStatus(Enum):
     '''
     PENDING = 'The simulation is pending.'
     RUNNING = 'The simulation is still running.'
-    READY = 'Simulation is done and results exist locally.'
+    READY = 'Simulation is done and results exist in the cache.'
     ERROR = 'The Simulation has encountered an error.'
 
     @staticmethod
@@ -54,7 +54,7 @@ class SimulationRunRequest(Request):
 
     def _encode(self):
         return {'model': self.model.to_json(),
-                **self.kwargs}
+                'kwargs': self.kwargs}
 
     @staticmethod
     def _parse(raw_request):
