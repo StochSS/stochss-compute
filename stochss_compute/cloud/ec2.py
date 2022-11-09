@@ -14,6 +14,19 @@ import logging
 from time import sleep
 from secrets import token_hex
 
+def _ec2Logger():
+    log = logging.getLogger("EC2Cluster")
+    log.setLevel(logging.INFO)
+    log.propagate = False
+
+    if not log.handlers:
+        _formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        _handler = logging.StreamHandler()
+        _handler.setFormatter(_formatter)
+        log.addHandler(_handler)
+    
+    return log
+
 _VPC_NAME = 'sssc-vpc'
 _SUBNET_PREFIX = 'sssc-subnet-'
 _SECURITY_GROUP_NAME = 'sssc-sg'
@@ -28,17 +41,9 @@ _AMIS = {
     'us-west-2': 'ami-0d593311db5abb72b',
 }
 
-class Cluster(Server):
+class EC2Cluster(Server):
 
-    log = logging.getLogger("EC2Cluster")
-    log.setLevel(logging.INFO)
-    log.propagate = False
-
-    if not log.handlers:
-        _formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        _handler = logging.StreamHandler()
-        _handler.setFormatter(_formatter)
-        log.addHandler(_handler)
+    log = _ec2Logger()
 
     _init = False
     _client = None
@@ -66,25 +71,20 @@ class Cluster(Server):
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
         region = get_session().get_config_variable('region')
-        self._ami = _AMIS[region]
-        # try catch
-        # if something fails, write status else nothing
         try:
-            
-            if self._load_cluster() is True:
-                if self.statusFile is not None:
-                    self._write_status(self._server.state['Name'])
+            self._ami = _AMIS[region]
+        except KeyError:
+            self._set_status('region error')
+            raise EC2Exception(f'Unsupported region. Currently Supported: {list(_AMIS.keys())}')
 
+        try:
+            self._load_cluster()      
+        except ClientError as ce:
+            self._set_status(ce.response['Error']['Code'])
+            raise EC2Exception(ce.response['Error']['Message'])
         except ResourceException:
-            if self.statusFile is not None:
-                self._write_status('terminating')
             self.clean_up()
-            if self.statusFile is not None:
-                self._write_status('terminated')
 
-    def _write_status(self, status):
-        with open(self.statusFile, 'w') as file:
-            file.write(status)
 
     @property
     def address(self):
@@ -107,29 +107,39 @@ class Cluster(Server):
         else:
             return self._server.state['Name']
 
+    def _set_status(self, status):
+        self._status = status
+        if self.statusFile is not None:
+            with open(self.statusFile, 'w') as file:
+                file.write(status)
+
     def launch_single_node_instance(self, instanceType):
         """ 
-        Launches a single node StochSS-Compute instance.
+        Launches a single node StochSS-Compute instance. Make sure to check instanceType pricing before launching. 
 
-        :param instanceType: Example: 't3.micro' See full list here: https://aws.amazon.com/ec2/instance-types/ 
+        :param instanceType: Example: 't3.nano' See full list here: https://aws.amazon.com/ec2/instance-types/ 
         :type instanceType: str
          """
         if self._init is True:
             raise EC2Exception('You cannot launch more than one StochSS-Compute cluster instance per account')
-        # write pending
-        if self.statusFile is not None:
-            self._write_status('launching')
-
-        self._launch_network()
-        self._create_root_key()
-        self._launch_head_node(instanceType=instanceType)
-        if self.statusFile is not None:
-            self._write_status(self._server.state['Name'])
+        
+        self._set_status('launching')
+        try:
+            self._launch_network()
+            self._create_root_key()
+            self._launch_head_node(instanceType=instanceType)
+        except ClientError as ce:
+            self._set_status(ce.response['Error']['Code'])
+            raise EC2Exception(ce.response['Error']['Message'])        
+        self._set_status(self._server.state['Name'])
 
     def clean_up(self):
         """ 
         Deletes all cluster resources.
         """
+        self._set_status('terminating')
+        self._init = False
+
         vpc_search_filter = [
             {
                 'Name': 'tag:Name',
@@ -138,50 +148,55 @@ class Cluster(Server):
                 ]
             }
         ]
-        self._init = False
-        vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
-        for vpc_dict in vpc_response['Vpcs']:
-            vpc_id = vpc_dict['VpcId']
-            vpc = self._resources.Vpc(vpc_id)
-            for instance in vpc.instances.all():
-                instance.terminate()
-                self.log.info(f'Terminating "{instance.id}". This might take a minute.......')
-                instance.wait_until_terminated()
-                self._server = None
-                self.log.info(f'Instance {instance.id}" terminated.')
-            for sg in vpc.security_groups.all():
-                if sg.group_name == _SECURITY_GROUP_NAME:
-                    self.log.info(f'Deleting {sg.id}.......')
-                    sg.delete()
-                    self._server_security_group = None
-                    self.log.info(f'Security group {sg.id} deleted.')
-                elif sg.group_name == 'default':
-                    self._default_security_group = None
-            for subnet in vpc.subnets.all():
-                self.log.info(f'Deleting {subnet.id}.......')
-                subnet.delete()
-                self._subnets['public'] = None
-                self.log.info(f'Subnet {subnet.id} deleted.')
-            for igw in vpc.internet_gateways.all():
-                self.log.info(f'Detaching {igw.id}.......')
-                igw.detach_from_vpc(VpcId=vpc.vpc_id)
-                self.log.info(f'Gateway {igw.id} detached.')
-                self.log.info(f'Deleting {igw.id}.......')
-                igw.delete()
-                self.log.info(f'Gateway {igw.id} deleted.')
-            self.log.info(f'Deleting {vpc.id}.......')
-            vpc.delete()
-            self._vpc = None
-            self.log.info(f'VPC {vpc.id} deleted.')
         try:
-            self._client.describe_key_pairs(KeyNames=[_KEY_NAME])
-            key_pair = self._resources.KeyPair(_KEY_NAME)
-            self.log.info(f'Deleting "{_KEY_NAME}".')
-            key_pair.delete()
-            self.log.info(f'Key Pair "{_KEY_NAME}" deleted.')
-        except:
-            pass
+            vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
+            for vpc_dict in vpc_response['Vpcs']:
+                vpc_id = vpc_dict['VpcId']
+                vpc = self._resources.Vpc(vpc_id)
+                for instance in vpc.instances.all():
+                    instance.terminate()
+                    self.log.info(f'Terminating "{instance.id}". This might take a minute.......')
+                    instance.wait_until_terminated()
+                    self._server = None
+                    self.log.info(f'Instance {instance.id}" terminated.')
+                for sg in vpc.security_groups.all():
+                    if sg.group_name == _SECURITY_GROUP_NAME:
+                        self.log.info(f'Deleting {sg.id}.......')
+                        sg.delete()
+                        self._server_security_group = None
+                        self.log.info(f'Security group {sg.id} deleted.')
+                    elif sg.group_name == 'default':
+                        self._default_security_group = None
+                for subnet in vpc.subnets.all():
+                    self.log.info(f'Deleting {subnet.id}.......')
+                    subnet.delete()
+                    self._subnets['public'] = None
+                    self.log.info(f'Subnet {subnet.id} deleted.')
+                for igw in vpc.internet_gateways.all():
+                    self.log.info(f'Detaching {igw.id}.......')
+                    igw.detach_from_vpc(VpcId=vpc.vpc_id)
+                    self.log.info(f'Gateway {igw.id} detached.')
+                    self.log.info(f'Deleting {igw.id}.......')
+                    igw.delete()
+                    self.log.info(f'Gateway {igw.id} deleted.')
+                self.log.info(f'Deleting {vpc.id}.......')
+                vpc.delete()
+                self._vpc = None
+                self.log.info(f'VPC {vpc.id} deleted.')
+            try:
+                self._client.describe_key_pairs(KeyNames=[_KEY_NAME])
+                key_pair = self._resources.KeyPair(_KEY_NAME)
+                self.log.info(f'Deleting "{_KEY_NAME}".')
+                key_pair.delete()
+                self.log.info(f'Key Pair "{_KEY_NAME}" deleted.')
+            except:
+                # be more specific here
+                pass
+        except ClientError as ce:
+            self._set_status(ce.response['Error']['Code'])
+            raise EC2Exception(ce.response['Error']['Message'])
         self._delete_root_key()
+        self._set_status('terminated')
 
     def _launch_network(self):
         """ 
@@ -488,19 +503,25 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             }
         ]
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
+
         if len(vpc_response['Vpcs']) == 0:
             if os.path.exists(_KEY_PATH):
+                self._set_status('key error')
+                
                 raise ResourceException
             else:
                 try:
                     keypair = self._client.describe_key_pairs(KeyNames=[_KEY_NAME]) 
                     if keypair is not None:
+                        
+                        self._set_status('key error')
                         raise ResourceException
                 except:
                     pass
             return False
         if len(vpc_response['Vpcs']) == 2:
             self.log.warn(f'More than one VPC named "{_VPC_NAME}".')
+            self._set_status('VPC error')
             raise ResourceException
         vpc_id = vpc_response['Vpcs'][0]['VpcId']
         self._vpc = self._resources.Vpc(vpc_id)
@@ -512,6 +533,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                     self._server = instance
         if self._server is None:
             self.log.warn(f'No instances named "{_SERVER_NAME}".')
+            self._set_status('server error')
             errors = True
         for sg in vpc.security_groups.all():
             if sg.group_name == 'default':
@@ -519,10 +541,13 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             if sg.group_name == _SECURITY_GROUP_NAME:
                 for rule in sg.ip_permissions:
                     if rule['FromPort'] == 29681 and rule['ToPort'] == 29681 and rule['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
+                        self.log.warn(f'Security Group rule error.')
+                        self._set_status('security group error')
                         errors = True
                 self._server_security_group = sg
         if self._server_security_group is None:
             self.log.warn(f'No security group named "{_SECURITY_GROUP_NAME}".')
+            self._set_status('security group error')
             errors = True
         for subnet in vpc.subnets.all():
             for tag in subnet.tags:
@@ -532,10 +557,13 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                     self._subnets['private'] = subnet
         if None in self._subnets.values():
             self.log.warn('Missing or misconfigured subnet.')
+            self._set_status('subnet error')
             errors = True
         if errors is True:
             raise ResourceException
         else:
             self._init = True
             self.log.info('Cluster loaded.')
+            self._set_status(self._server.state['Name'])
             return True
+
