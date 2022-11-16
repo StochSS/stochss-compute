@@ -1,4 +1,6 @@
 import asyncio
+import signal
+import sys
 from tornado.web import Application
 from stochss_compute.server.run import RunHandler
 from stochss_compute.server.sourceip import SourceIpHandler
@@ -37,6 +39,11 @@ async def start_api(
     :param dask_scheduler_port: The port the dask cluster.
     :type dask_scheduler_port: int
     """
+    def sigterm_handler(signal, frame):
+        print('booyah! bye bye')
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, sigterm_handler)
     if os.path.exists(cache):
         # load cache ?
         pass
@@ -50,5 +57,6 @@ async def start_api(
     print(f'Cache directory: {path}')
     print(f'Connecting to Dask scheduler at: {dask_host}:{dask_scheduler_port}\n')
     await asyncio.Event().wait()
+    
     
 
