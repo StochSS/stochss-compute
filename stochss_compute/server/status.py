@@ -24,7 +24,14 @@ class StatusHandler(RequestHandler):
             self.respond_ready()
             return
 
-        state = self.check_with_scheduler()
+        task_dict = self.check_with_scheduler()
+
+        if task_dict is None:
+            state = None
+        else:
+            state = task_dict['state']
+        if state == 'erred':
+            error_message = task_dict['exception_text']
     
         if state == 'released':
             # Not on disk, but either just about to start, or just finished
@@ -45,26 +52,29 @@ class StatusHandler(RequestHandler):
             self.respond_running()
             return
 
+        if state is 'memory':
+            self.respond_pending()
+            return
+
         if state == 'forgotten':
             # Either it JUST finished (unlikely)
             sleep(1)
             if self.is_in_cache():
                 self.respond_ready()
                 return
-            # Or something messed up (but it was definitely sent)
+            # Or something seriously messed up (but it was definitely sent)
             else:
                 self.error_message = "If this is your error message please file a bug report on github. Sorry."
                 self.respond_error()
                 return
         
-        if state is None or state is 'memory':
+        if state is None:
             # The scheduler doesn't know, just to be sure, check if there is a future.
             client = Client(self.scheduler_address)
             future = client.futures.get(results_id)
             if future is None:
                 # Don't know about anything!
-                self.error_message = "If this is your error message please file a bug report on github. Sorry."
-                self.respond_error()
+                self.respond_DNE()
                 return
             if future.done():
                 # Apparently, it just finished so maybe go back and check disk once more?
@@ -73,22 +83,21 @@ class StatusHandler(RequestHandler):
                     self.respond_ready()
                     return
                 # Something broke.
-                self.error_message = "If this is your error message please file a bug report on github. Sorry."
+                self.error_message = "The simulation has finished but cannot locate results. If this is your error message please file a bug report on github. Sorry."
                 self.respond_error()
                 return
                 
         
         if state == 'erred':
             # error message is already set.
-            self.respond_error()
+            self.respond_error(error_message)
             return
 
         if state == 'waiting' or state == 'no-worker' or state == 'queued':
             self.respond_pending()
             return
 
-        self.error_message = 'Simulation does not exist.'
-        self.respond_error()
+        self.respond_DNE()
         return
 
 
@@ -104,19 +113,24 @@ class StatusHandler(RequestHandler):
         self.write(status_response._encode())
         self.finish()
     
-    def respond_error(self):
-        status_response = StatusResponse(SimStatus.ERROR, self.error_message)
+    def respond_error(self, error_message):
+        status_response = StatusResponse(SimStatus.ERROR, error_message)
         self.write(status_response._encode())
         self.finish()
 
-    def is_in_cache(self):
-        return os.path.exists(self.results_path)
+    def respond_DNE(self):
+        status_response = StatusResponse(SimStatus.DOES_NOT_EXIST)
+        self.write(status_response._encode())
+        self.finish()
+
 
     def respond_running(self):
         status_response = StatusResponse(SimStatus.RUNNING)
         self.write(status_response._encode())
         self.finish()
 
+    def is_in_cache(self):
+        return os.path.exists(self.results_path)
 
     def check_with_scheduler(self):
         client = Client(self.scheduler_address)
@@ -134,10 +148,6 @@ class StatusHandler(RequestHandler):
         
         # results are not on disk, so ask the scheduler about the task
         task_dict = client.run_on_scheduler(scheduler_task_state, results_id=self.results_id)
-        if task_dict is None:
-            return None
-        state = task_dict['state']
-        if state == 'erred':
-            self.error_message = task_dict['exception_text']
-        return state
+        return task_dict
+
 

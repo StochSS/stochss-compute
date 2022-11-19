@@ -3,29 +3,27 @@ import subprocess
 import time
 import unittest
 
-from stochss_compute import RemoteSimulation, ComputeServer
+from stochss_compute import RemoteSimulation, ComputeServer, start_api
+
 
 from gillespy2_models import create_michaelis_menten
 from stochss_compute.core.messages import SimStatus
 
 from distributed import Client
+import asyncio
 
 class ApiTest(unittest.IsolatedAsyncioTestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.client = Client()
-        dask_scheduler_port = cls.client.scheduler.addr.split(":")[2]
-        # asyncio.run(start_api())
-        cmd = ["stochss-compute", "--dask-scheduler-port", dask_scheduler_port]
-        cls.api_server = subprocess.Popen(cmd)
-        print(cls.api_server.pid)
+        cls.api_server = subprocess.Popen('stochss-compute-cluster')
 
         time.sleep(3)
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.tear_down()
+        cls.api_server.terminate()
+        cls.api_server.wait()
 
     def tearDown(self) -> None:
         for filename in os.listdir('cache'):
@@ -48,10 +46,4 @@ class ApiTest(unittest.IsolatedAsyncioTestCase):
         results._resolve()
         assert(sim.isCached() is True)
 
-    @classmethod
-    async def tear_down(cls):
-        cls.api_server.kill()
-        await cls.api_server.wait()
-        await cls.client.shutdown()
-        await cls.client.close()
 

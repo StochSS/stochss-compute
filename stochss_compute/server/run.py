@@ -16,6 +16,7 @@ class RunHandler(RequestHandler):
     async def post(self):
         sim_request = SimulationRunRequest._parse(self.request.body)
         sim_hash = sim_request._hash()
+        # write a blank file
             
         log_string = f'[Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
         self.results_path = os.path.join(self.cache_dir, f'{sim_hash}.results')

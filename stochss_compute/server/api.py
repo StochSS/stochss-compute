@@ -39,11 +39,7 @@ async def start_api(
     :param dask_scheduler_port: The port the dask cluster.
     :type dask_scheduler_port: int
     """
-    def sigterm_handler(signal, frame):
-        print('booyah! bye bye')
-        sys.exit(0)
 
-    signal.signal(signal.SIGTERM, sigterm_handler)
     if os.path.exists(cache):
         # load cache ?
         pass

@@ -13,6 +13,7 @@ class SimStatus(Enum):
     RUNNING = 'The simulation is still running.'
     READY = 'Simulation is done and results exist in the cache.'
     ERROR = 'The Simulation has encountered an error.'
+    DOES_NOT_EXIST = 'There is no evidence of this simulation either running or on disk.'
 
     @staticmethod
     def _from_str(name):
@@ -24,6 +25,8 @@ class SimStatus(Enum):
             return SimStatus.READY
         if name == 'ERROR':
             return SimStatus.ERROR
+        if name == 'DOES_NOT_EXIST':
+            return SimStatus.DOES_NOT_EXIST
     
 class Request(ABC):
     @abstractmethod

@@ -1,8 +1,11 @@
+import signal
 from stochss_compute.server.api import start_api
 from argparse import ArgumentParser, Namespace
 import asyncio
 from distributed import LocalCluster
 import sys
+
+
 
 def launch_server():
     def _parse_args() -> Namespace:
@@ -79,6 +82,13 @@ def launch_with_cluster():
         print(f'Worker {i}: {worker}')
     
     print(f'Dashboard Link: <{cluster.dashboard_link}>\n')
+
+    def sigterm_handler(signal, frame):
+            print('Shutting down.')
+            cluster.close()
+            sys.exit(0)
+
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
     try:
         asyncio.run(start_api(port=args.port, cache=args.cache, dask_host=dask_host, dask_scheduler_port=dask_port))

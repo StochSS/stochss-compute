@@ -60,7 +60,7 @@ class RemoteResults(Results):
     def _resolve(self):
         status_response = self._status()
         status = status_response.status
-        if status == SimStatus.PENDING:
+        if status == SimStatus.PENDING or status == SimStatus.DOES_NOT_EXIST:
             print('Simulation is pending (not running yet). Checking for status update....')
             while True:
                 sleep(5)
@@ -76,7 +76,7 @@ class RemoteResults(Results):
                 status_response = self._status()
                 status = status_response.status
                 if status == SimStatus.PENDING:
-                    raise RemoteSimulationError('Unknown Error.')
+                    continue
                 if status != SimStatus.RUNNING:
                     break
 
