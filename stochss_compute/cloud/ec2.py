@@ -1,4 +1,5 @@
 from stochss_compute.client.server import Server
+from stochss_compute.cloud.ec2_config import EC2Config
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
 from stochss_compute.cloud.exceptions import EC2ImportException, ResourceException, EC2Exception
 from stochss_compute.client.endpoint import Endpoint
@@ -27,13 +28,6 @@ def _ec2Logger():
     
     return log
 
-_VPC_NAME = 'sssc-vpc'
-_SUBNET_PREFIX = 'sssc-subnet-'
-_SECURITY_GROUP_NAME = 'sssc-sg'
-_SERVER_NAME = 'sssc-server'
-_KEY_NAME = 'sssc-root'
-_KEY_PATH = f'./{_KEY_NAME}.pem'
-_API_PORT = 29681
 _AMIS = {
     'us-east-1': 'ami-09d3b3274b6c5d4aa',
     'us-east-2': 'ami-089a545a9ed9893b6',
@@ -59,12 +53,18 @@ class EC2Cluster(Server):
     _server = None
     _ami = None
 
-    def __init__(self, status_file=None) -> None:
+    def __init__(self, status_file=None, config=EC2Config()) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
 
         :param status_file: Optional. If provided, status updates will be written to a file with this path and name.
         :type str:
+
+        :param remote_config: Optional. Allows configuration of remote cluster resource identifiers.
+        :type EC2RemoteConfig:
+
+        :param local_config: Optional. Allows configuration of local cluster resources.
+        :type EC2LocalConfig:
 
         """
         self.status_file = status_file
