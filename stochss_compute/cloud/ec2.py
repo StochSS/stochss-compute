@@ -1,5 +1,5 @@
 from stochss_compute.client.server import Server
-from stochss_compute.cloud.ec2_config import EC2Config
+from stochss_compute.cloud.ec2_config import EC2LocalConfig, EC2RemoteConfig
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
 from stochss_compute.cloud.exceptions import EC2ImportException, ResourceException, EC2Exception
 from stochss_compute.client.endpoint import Endpoint
@@ -28,13 +28,6 @@ def _ec2Logger():
     
     return log
 
-_AMIS = {
-    'us-east-1': 'ami-09d3b3274b6c5d4aa',
-    'us-east-2': 'ami-089a545a9ed9893b6',
-    'us-west-1': 'ami-017c001a88dd93847',
-    'us-west-2': 'ami-0d593311db5abb72b',
-}
-
 class EC2Cluster(Server):
 
     log = _ec2Logger()
@@ -53,7 +46,10 @@ class EC2Cluster(Server):
     _server = None
     _ami = None
 
-    def __init__(self, status_file=None, config=EC2Config()) -> None:
+    _local_config = EC2LocalConfig()
+    _remote_config = EC2RemoteConfig()
+
+    def __init__(self, local_config=None, remote_config=None) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
 
@@ -67,15 +63,27 @@ class EC2Cluster(Server):
         :type EC2LocalConfig:
 
         """
-        self.status_file = status_file
+
+        if local_config is not None:
+            self._local_config = local_config
+        if remote_config is not None:
+            self._remote_config = remote_config
+
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
+
+        if remote_config.region is not None:
+            get_session().set_config_variable('region', remote_config.region) #Overrides any underlying configuration
         region = get_session().get_config_variable('region')
-        try:
-            self._ami = _AMIS[region]
-        except KeyError:
-            self._set_status('region error')
-            raise EC2Exception(f'Unsupported region. Currently Supported: {list(_AMIS.keys())}')
+
+        if remote_config.ami is not None:
+            self._ami = remote_config.ami
+        else:
+            try:
+                self._ami = remote_config._AMIS[region]
+            except KeyError:
+                self._set_status('region error')
+                raise EC2Exception(f'Unsupported region. Currently Supported: {list(remote_config._AMIS.keys())}. Try providing an AMI identifier.')
 
         try:
             self._load_cluster()      
@@ -109,7 +117,7 @@ class EC2Cluster(Server):
 
     def _set_status(self, status):
         self._status = status
-        if self.status_file is not None:
+        if self.local_config.status_file is not None:
             with open(self.status_file, 'w') as file:
                 file.write(status)
 

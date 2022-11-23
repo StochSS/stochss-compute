@@ -13,7 +13,7 @@ class EC2RemoteConfig:
                 key_name='sssc-root',
                 key_path='./',
                 api_port=29681,
-                # region=None,
+                region=None,
                 ami=None,
                 ):
         self.vpc_name = vpc_name
@@ -24,7 +24,7 @@ class EC2RemoteConfig:
         self.key_path = key_path
         self.api_port = api_port
         
-        # self.region = region
+        self.region = region
         self.ami = ami
 
 class EC2LocalConfig:
