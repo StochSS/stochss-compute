@@ -59,15 +59,15 @@ class EC2Cluster(Server):
     _server = None
     _ami = None
 
-    def __init__(self, statusFile=None) -> None:
+    def __init__(self, status_file=None) -> None:
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
 
-        :param statusFile: Optional. If provided, status updates will be written to a file with this path and name.
+        :param status_file: Optional. If provided, status updates will be written to a file with this path and name.
         :type str:
 
         """
-        self.statusFile = statusFile
+        self.status_file = status_file
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
         region = get_session().get_config_variable('region')
@@ -109,8 +109,8 @@ class EC2Cluster(Server):
 
     def _set_status(self, status):
         self._status = status
-        if self.statusFile is not None:
-            with open(self.statusFile, 'w') as file:
+        if self.status_file is not None:
+            with open(self.status_file, 'w') as file:
                 file.write(status)
 
     def launch_single_node_instance(self, instanceType):
