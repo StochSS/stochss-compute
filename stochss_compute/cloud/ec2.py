@@ -103,7 +103,7 @@ class EC2Cluster(Server):
         if self._server.public_ip_address is None:
             raise EC2Exception('No public address found.')
 
-        return f'{self._server.public_ip_address}:{self._remote_config.api_port}'
+        return f'http://{self._server.public_ip_address}:{self._remote_config.api_port}'
 
     @property
     def status(self):
