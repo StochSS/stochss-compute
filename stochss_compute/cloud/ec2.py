@@ -53,9 +53,6 @@ class EC2Cluster(Server):
         """ 
         Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
 
-        :param status_file: Optional. If provided, status updates will be written to a file with this path and name.
-        :type str:
-
         :param remote_config: Optional. Allows configuration of remote cluster resource identifiers.
         :type EC2RemoteConfig:
 
@@ -129,7 +126,7 @@ class EC2Cluster(Server):
         :type instanceType: str
          """
         if self._init is True:
-            raise EC2Exception('You cannot launch more than one StochSS-Compute cluster instance per account')
+            raise EC2Exception('You cannot launch more than one StochSS-Compute cluster instance per EC2Cluster object.')
         
         self._set_status('launching')
         try:
@@ -152,7 +149,7 @@ class EC2Cluster(Server):
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    _VPC_NAME
+                    self._remote_config.vpc_name
                 ]
             }
         ]
@@ -168,7 +165,7 @@ class EC2Cluster(Server):
                     self._server = None
                     self.log.info(f'Instance {instance.id}" terminated.')
                 for sg in vpc.security_groups.all():
-                    if sg.group_name == _SECURITY_GROUP_NAME:
+                    if sg.group_name == self._remote_config.security_group_name:
                         self.log.info(f'Deleting {sg.id}.......')
                         sg.delete()
                         self._server_security_group = None
@@ -192,11 +189,11 @@ class EC2Cluster(Server):
                 self._vpc = None
                 self.log.info(f'VPC {vpc.id} deleted.')
             try:
-                self._client.describe_key_pairs(KeyNames=[_KEY_NAME])
-                key_pair = self._resources.KeyPair(_KEY_NAME)
-                self.log.info(f'Deleting "{_KEY_NAME}".')
+                self._client.describe_key_pairs(KeyNames=[self._remote_config.key_name])
+                key_pair = self._resources.KeyPair(self._remote_config.key_name)
+                self.log.info(f'Deleting "{self._remote_config.key_name}".')
+                self.log.info(f'Key "{self._remote_config.key_name}" deleted.')
                 key_pair.delete()
-                self.log.info(f'Key Pair "{_KEY_NAME}" deleted.')
             except:
                 # be more specific here
                 pass
@@ -221,31 +218,29 @@ class EC2Cluster(Server):
         """ 
         Creates a key pair for SSH login and instance launch.
         """
-        keyType='ed25519'
-        keyFormat='pem'
 
-        response = self._client.create_key_pair(KeyName=_KEY_NAME, KeyType=keyType, KeyFormat=keyFormat)
+        response = self._client.create_key_pair(KeyName=self._remote_config.key_name, KeyType=keyType, KeyFormat=keyFormat)
 
         waiter = self._client.get_waiter('key_pair_exists')
-        waiter.wait(KeyNames=[_KEY_NAME])
+        waiter.wait(KeyNames=[self._remote_config.key_name])
 
-        key = open(_KEY_PATH, 'x')
+        key = open(self._local_config.key_path, 'x')
         key.write(response['KeyMaterial'])
         key.close()
-        os.chmod(_KEY_PATH, 0o400)
+        os.chmod(self._local_config.key_path, 0o400)
 
     def _delete_root_key(self) -> None:
         f"""
-        Deletes {_KEY_PATH} if it exists. 
+        Deletes key from local filesystem if it exists. 
         """
-        if os.path.exists(_KEY_PATH):
-            self.log.info(f'Deleting "{_KEY_PATH}".')
-            os.remove(_KEY_PATH)
-            self.log.info(f'Root key deleted.')
+        if os.path.exists(self._local_config.key_path):
+            self.log.info(f'Deleting "{self._local_config.key_path}".')
+            os.remove(self._local_config.key_path)
+            self.log.info(f'"{self._local_config.key_path}" deleted.')
 
     def _create_sssc_vpc(self):
         f"""
-        Creates a vpc named {_VPC_NAME}. 
+        Creates a vpc. 
         """
         vpc_cidrBlock = '172.31.0.0/16'
         vpc_tag = [
@@ -254,7 +249,7 @@ class EC2Cluster(Server):
                 'Tags': [
                     {
                         'Key': 'Name',
-                        'Value': _VPC_NAME
+                        'Value': self._remote_config.vpc_name
                     }
                 ]
             }
@@ -267,7 +262,7 @@ class EC2Cluster(Server):
         vpc_waiter_avail = self._client.get_waiter('vpc_available')
         vpc_waiter_avail.wait(VpcIds=[vpc_id])
         self._vpc = self._resources.Vpc(vpc_id)
-        self._default_security_group = list(sg for sg in self._vpc.security_groups.all())[0]
+        self._default_security_group = list(sg for sg in self._vpc.security_groups.all())[0] 
 
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsSupport={'Value': True})
         self._client.modify_vpc_attribute( VpcId = vpc_id , EnableDnsHostnames={'Value': True})
@@ -287,7 +282,7 @@ class EC2Cluster(Server):
 
     def _create_sssc_subnet(self, public: bool):
         f""" 
-        Creates a public or private subnet prefixed {_SUBNET_PREFIX}.
+        Creates a public or private subnet prefixed {self._remote_config.subnet_name}.
         """
         if public is True:
             label = 'public'
@@ -302,7 +297,7 @@ class EC2Cluster(Server):
                 'Tags': [
                     {
                         'Key': 'Name',
-                        'Value': f'{_SUBNET_PREFIX}{label}'
+                        'Value': f'{self._remote_config.subnet_name}-{label}'
                     }
                 ]
             }
@@ -315,10 +310,10 @@ class EC2Cluster(Server):
 
     def _create_sssc_security_group(self):
         f"""
-        Creates a security group named {_SECURITY_GROUP_NAME} for SSH and StochSS-Compute API access.
+        Creates a security group named {self._remote_config.security_group_name} for SSH and StochSS-Compute API access.
         """
         description = 'Default Security Group for StochSS-Compute.'
-        self._server_security_group = self._vpc.create_security_group(Description=description, GroupName=_SECURITY_GROUP_NAME)
+        self._server_security_group = self._vpc.create_security_group(Description=description, GroupName=self._remote_config.security_group_name)
         sshargs = {
             'CidrIp': '0.0.0.0/0',
             'FromPort': 22,
@@ -328,8 +323,8 @@ class EC2Cluster(Server):
         self._server_security_group.authorize_ingress(**sshargs)
         sgargs = {
             'CidrIp': '0.0.0.0/0',
-            'FromPort': _API_PORT,
-            'ToPort': _API_PORT,
+            'FromPort': self._remote_config.api_port,
+            'ToPort': self._remote_config.api_port,
             'IpProtocol': 'tcp',
             'TagSpecifications': [
                 {
@@ -371,8 +366,8 @@ class EC2Cluster(Server):
                 'SecurityGroupRuleId': sgr_id,
                 'SecurityGroupRule': {
                     'IpProtocol': 'tcp',
-                    'FromPort': _API_PORT,
-                    'ToPort': _API_PORT,
+                    'FromPort': self._remote_config.api_port,
+                    'ToPort': self._remote_config.api_port,
                     'CidrIpv4': f'{ipAddress}/32',
                     'Description': 'Restricts cluster access.'
                 }
@@ -393,12 +388,12 @@ sudo yum -y install docker
 sudo usermod -a -G docker ec2-user
 sudo service docker start
 sudo chmod 666 /var/run/docker.sock 
-docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
+docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud -p {self._remote_config.api_port} > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         kwargs = {
             'ImageId': self._ami, 
             'InstanceType': instanceType,
-            'KeyName': _KEY_NAME,
+            'KeyName': self._remote_config.key_name,
             'MinCount': 1, 
             'MaxCount': 1,
             'SubnetId': self._subnets['public'].id,
@@ -409,19 +404,22 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                     'Tags': [
                         {
                             'Key': 'Name',
-                            'Value': _SERVER_NAME
+                            'Value': self._remote_config.server_name
                         },
                     ]
                 },
             ],
             'UserData': launch_commands,
             }
+
         self.log.info(f'Launching StochSS-Compute server instance. This might take a minute.......')
         try:
             response = self._client.run_instances(**kwargs)
         except ClientError as e:
             raise EC2Exception(e)
+
         instance_id = response['Instances'][0]['InstanceId']
+        # try catch
         self._server = self._resources.Instance(instance_id)
         self._server.wait_until_exists()
         self._server.wait_until_running()
@@ -449,7 +447,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         sshtries = 0
         while True:
             try:
-                ssh.connect(self._server.public_ip_address, username='ec2-user', key_filename=_KEY_PATH, look_for_keys=False)
+                ssh.connect(self._server.public_ip_address, username='ec2-user', key_filename=self._local_config.key_path, look_for_keys=False)
                 break
             except Exception as e:
                 if sshtries >= 5:
@@ -506,29 +504,28 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    _VPC_NAME
+                    self._remote_config.vpc_name
                 ]
             }
         ]
         vpc_response = self._client.describe_vpcs(Filters=vpc_search_filter)
 
         if len(vpc_response['Vpcs']) == 0:
-            if os.path.exists(_KEY_PATH):
+            # TODO question: should we delete the user's cluster keyfile if they terminate their cluster?
+            if os.path.exists(self._local_config.key_path):
                 self._set_status('key error')
-                
                 raise ResourceException
             else:
                 try:
-                    keypair = self._client.describe_key_pairs(KeyNames=[_KEY_NAME]) 
+                    keypair = self._client.describe_key_pairs(KeyNames=[self._remote_config.key_name]) 
                     if keypair is not None:
-                        
                         self._set_status('key error')
                         raise ResourceException
                 except:
                     pass
             return False
         if len(vpc_response['Vpcs']) == 2:
-            self.log.warn(f'More than one VPC named "{_VPC_NAME}".')
+            self.log.error(f'More than one VPC named "{self._remote_config.vpc_name}".')
             self._set_status('VPC error')
             raise ResourceException
         vpc_id = vpc_response['Vpcs'][0]['VpcId']
@@ -537,31 +534,31 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         errors = False
         for instance in vpc.instances.all():
             for tag in instance.tags:
-                if tag['Key'] == 'Name' and tag['Value'] == _SERVER_NAME:
+                if tag['Key'] == 'Name' and tag['Value'] == self._remote_config.server_name:
                     self._server = instance
         if self._server is None:
-            self.log.warn(f'No instances named "{_SERVER_NAME}".')
+            self.log.warn(f'No instances named "{self._remote_config.server_name}".')
             self._set_status('server error')
             errors = True
         for sg in vpc.security_groups.all():
             if sg.group_name == 'default':
                 self._default_security_group = sg
-            if sg.group_name == _SECURITY_GROUP_NAME:
+            if sg.group_name == self._remote_config.security_group_name:
                 for rule in sg.ip_permissions:
-                    if rule['FromPort'] == 29681 and rule['ToPort'] == 29681 and rule['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
+                    if rule['FromPort'] == self._remote_config.api_port and rule['ToPort'] == self._remote_config.api_port and rule['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
                         self.log.warn(f'Security Group rule error.')
                         self._set_status('security group error')
                         errors = True
                 self._server_security_group = sg
         if self._server_security_group is None:
-            self.log.warn(f'No security group named "{_SECURITY_GROUP_NAME}".')
+            self.log.warn(f'No security group named "{self._remote_config.security_group_name}".')
             self._set_status('security group error')
             errors = True
         for subnet in vpc.subnets.all():
             for tag in subnet.tags:
-                if tag['Key'] == 'Name' and tag['Value'] == f'{_SUBNET_PREFIX}public':
+                if tag['Key'] == 'Name' and tag['Value'] == f'{self._remote_config.subnet_name}-public':
                     self._subnets['public'] = subnet
-                if tag['Key'] == 'Name' and tag['Value'] == f'{_SUBNET_PREFIX}private':
+                if tag['Key'] == 'Name' and tag['Value'] == f'{self._remote_config.subnet_name}-private':
                     self._subnets['private'] = subnet
         if None in self._subnets.values():
             self.log.warn('Missing or misconfigured subnet.')
