@@ -69,18 +69,18 @@ class EC2Cluster(Server):
         self._client = boto3.client('ec2')
         self._resources = boto3.resource('ec2')
 
-        if remote_config.region is not None:
-            get_session().set_config_variable('region', remote_config.region) #Overrides any underlying configuration
+        if self._remote_config.region is not None:
+            get_session().set_config_variable('region', self._remote_config.region) #Overrides any underlying configuration
         region = get_session().get_config_variable('region')
 
-        if remote_config.ami is not None:
-            self._ami = remote_config.ami
+        if self._remote_config.ami is not None:
+            self._ami = self._remote_config.ami
         else:
             try:
-                self._ami = remote_config._AMIS[region]
+                self._ami = self._remote_config._AMIS[region]
             except KeyError:
                 self._set_status('region error')
-                raise EC2Exception(f'Unsupported region. Currently Supported: {list(remote_config._AMIS.keys())}. Try providing an AMI identifier.')
+                raise EC2Exception(f'Unsupported region. Currently Supported: {list(self._remote_config._AMIS.keys())}. Try providing an AMI identifier.')
 
         try:
             self._load_cluster()      
@@ -103,7 +103,7 @@ class EC2Cluster(Server):
         if self._server.public_ip_address is None:
             raise EC2Exception('No public address found.')
 
-        return f'http://{self._server.public_ip_address}:{_API_PORT}'
+        return f'http://{self._server.public_ip_address}:{self._remote_config.api_port}'
 
     @property
     def status(self):
@@ -219,7 +219,7 @@ class EC2Cluster(Server):
         Creates a key pair for SSH login and instance launch.
         """
 
-        response = self._client.create_key_pair(KeyName=self._remote_config.key_name, KeyType=keyType, KeyFormat=keyFormat)
+        response = self._client.create_key_pair(KeyName=self._remote_config.key_name, KeyType=self._local_config.key_type, KeyFormat=self._local_config.key_format)
 
         waiter = self._client.get_waiter('key_pair_exists')
         waiter.wait(KeyNames=[self._remote_config.key_name])
@@ -342,8 +342,8 @@ class EC2Cluster(Server):
         self._server_security_group.reload()
 
     def _restrict_ingress(self, ipAddress: str = ''):
-        """ 
-        Modifies the security group API ingress rule to only allow access on port 29681 from the given ip address.
+        f""" 
+        Modifies the security group API ingress rule to only allow access on port {self._remote_config.api_port} from the given ip address.
         """
         ruleFilter=[
             {
