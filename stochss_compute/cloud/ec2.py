@@ -70,6 +70,7 @@ class EC2Cluster(Server):
         self._resources = boto3.resource('ec2')
 
         if self._remote_config.region is not None:
+            # self._client.
             get_session().set_config_variable('region', self._remote_config.region) #Overrides any underlying configuration
         region = get_session().get_config_variable('region')
 
@@ -115,7 +116,8 @@ class EC2Cluster(Server):
     def _set_status(self, status):
         self._status = status
         if self._local_config.status_file is not None:
-            os.makedirs(self._local_config.status_file, exist_ok=True)
+            # handle path?
+            # os.makedirs(self._local_config.status_file, exist_ok=True)
             with open(self._local_config.status_file, 'w') as file:
                 file.write(status)
 
