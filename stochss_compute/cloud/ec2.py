@@ -103,7 +103,7 @@ class EC2Cluster(Server):
         if self._server.public_ip_address is None:
             raise EC2Exception('No public address found.')
 
-        return f'http://{self._server.public_ip_address}:{self._remote_config.api_port}'
+        return f'{self._server.public_ip_address}:{self._remote_config.api_port}'
 
     @property
     def status(self):
@@ -114,8 +114,9 @@ class EC2Cluster(Server):
 
     def _set_status(self, status):
         self._status = status
-        if self.local_config.status_file is not None:
-            with open(self.status_file, 'w') as file:
+        if self._local_config.status_file is not None:
+            os.makedirs(self._local_config.status_file, exist_ok=True)
+            with open(self._local_config.status_file, 'w') as file:
                 file.write(status)
 
     def launch_single_node_instance(self, instanceType):
@@ -223,7 +224,7 @@ class EC2Cluster(Server):
 
         waiter = self._client.get_waiter('key_pair_exists')
         waiter.wait(KeyNames=[self._remote_config.key_name])
-
+        os.makedirs(self._local_config._key_dir, exist_ok=True)
         key = open(self._local_config.key_path, 'x')
         key.write(response['KeyMaterial'])
         key.close()
@@ -388,7 +389,7 @@ sudo yum -y install docker
 sudo usermod -a -G docker ec2-user
 sudo service docker start
 sudo chmod 666 /var/run/docker.sock 
-docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud -p {self._remote_config.api_port} > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
+docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/stochss-compute:cloud stochss-compute-cluster -p {self._remote_config.api_port} > /home/ec2-user/sssc-out 2> /home/ec2-user/sssc-err &
 '''
         kwargs = {
             'ImageId': self._ami, 
