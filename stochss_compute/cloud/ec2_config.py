@@ -19,12 +19,16 @@ class EC2RemoteConfig:
                 region=None,
                 ami=None,
                 ):
-        suffix = suffix or ''
-        self.vpc_name = vpc_name + f'-{suffix}'
-        self.subnet_name = subnet_name + f'-{suffix}'
-        self.security_group_name = security_group_name + f'-{suffix}'
-        self.server_name = server_name + f'-{suffix}'
-        self.key_name = key_name + f'-{suffix}'
+        if suffix is not None:
+            suffix = f'-{suffix}'
+        else:
+            suffix = ''
+            
+        self.vpc_name = vpc_name + suffix
+        self.subnet_name = subnet_name + suffix
+        self.security_group_name = security_group_name + suffix
+        self.server_name = server_name + suffix
+        self.key_name = key_name + suffix
         self.api_port = api_port
         
         self.region = region
