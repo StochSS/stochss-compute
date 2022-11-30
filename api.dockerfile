@@ -14,7 +14,7 @@ VOLUME [ "/opt/venv" ]
 WORKDIR /usr/src/app
 
 COPY stochss_compute /usr/src/app/stochss_compute
-COPY *.txt *.py *.md *.dockerfile *.cfg /usr/src/app/
+COPY requirements.txt *.py *.md *.dockerfile *.cfg /usr/src/app/
 RUN pip install .
 
 EXPOSE 29681
