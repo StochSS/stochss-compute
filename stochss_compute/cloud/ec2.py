@@ -5,6 +5,7 @@ from stochss_compute.cloud.exceptions import EC2ImportException, ResourceExcepti
 from stochss_compute.client.endpoint import Endpoint
 try:
     import boto3
+    from botocore.config import Config
     from botocore.session import get_session
     from botocore.exceptions import ClientError
     from paramiko import SSHClient, AutoAddPolicy
@@ -66,13 +67,16 @@ class EC2Cluster(Server):
         if remote_config is not None:
             self._remote_config = remote_config
 
-        self._client = boto3.client('ec2')
-        self._resources = boto3.resource('ec2')
-
         if self._remote_config.region is not None:
-            # self._client.
-            get_session().set_config_variable('region', self._remote_config.region) #Overrides any underlying configuration
-        region = get_session().get_config_variable('region')
+            config = Config(region_name=self._remote_config.region)
+            region = self._remote_config.region
+            #Overrides any underlying configurationz
+            self._client = boto3.client('ec2', config=config)
+            self._resources = boto3.resource('ec2', config= config)
+        else:
+            region = get_session().get_config_variable('region')
+            self._client = boto3.client('ec2')
+            self._resources = boto3.resource('ec2')
 
         if self._remote_config.ami is not None:
             self._ami = self._remote_config.ami
@@ -462,7 +466,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         for container in containerNames:
             sshtries = 0
             while True:
-                sleep(30)
+                sleep(60)
                 stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' " + f'{container}')
                 rc = stdout.channel.recv_exit_status()
                 out = stdout.readlines()
