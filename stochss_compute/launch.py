@@ -84,9 +84,9 @@ def launch_with_cluster():
     print(f'Dashboard Link: <{cluster.dashboard_link}>\n')
 
     def sigterm_handler(signal, frame):
-            print('Shutting down.')
-            cluster.close()
-            sys.exit(0)
+        print('Shutting down.')
+        cluster.close()
+        sys.exit(0)
 
     signal.signal(signal.SIGTERM, sigterm_handler)
 
