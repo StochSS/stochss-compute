@@ -17,98 +17,94 @@ class StatusHandler(RequestHandler):
     async def get(self, results_id = None, n_traj = None):
         if None in (results_id, n_traj):
             raise RemoteSimulationError('Malformed request')
-        self.results_id = results_id
-
+        cache = Cache(self.cache_dir, results_id)
         print(f'[Status Request] | Source: <{self.request.remote_ip}> | Results ID: <{results_id}>')
-        self.results_path = os.path.join(self.cache_dir, f'{results_id}.results')
-        self.error_message = None
         # First check if results are on disk
-        exists = self._exists()
-        if not exists:
-            self._respond_DNE()
-            return
+        exists = cache.exists()
         if exists:
-            results = Cache.open(self.results_path)
-            # check length
-        if self.is_in_cache():
-            self.respond_ready()
-            return
-
-        task_dict = self.check_with_scheduler()
-
-        if task_dict is None:
-            state = None
-        else:
-            state = task_dict['state']
-        if state == 'erred':
-            error_message = task_dict['exception_text']
-    
-        if state == 'released':
-            # Not on disk, but either just about to start, or just finished
-            sleep(1)
-            # give it a sec and try again
-            state = self.check_with_scheduler()
-            if state == 'released':
-                if self.is_in_cache():
-                    # Turns out it just finished
-                    self.respond_ready()
-                    return
-                # Either it's lost or was never sent
-                self.error_message = "Cannot locate simulation. It is not on disk and does not appear to be running."
-                self.respond_error()
-                return
-
-        if state == 'processing':
-            self.respond_running()
-            return
-
-        if state == 'memory':
-            self.respond_pending()
-            return
-
-        if state == 'forgotten':
-            # Either it JUST finished (unlikely)
-            sleep(1)
-            if self.is_in_cache():
-                self.respond_ready()
-                return
-            # Or something seriously messed up (but it was definitely sent)
+            ready = cache.is_ready(n_traj)
+            if ready:
+                self._respond_ready()
             else:
-                self.error_message = "If this is your error message please file a bug report on github. Sorry."
-                self.respond_error()
-                return
+                self._respond_running()
+        else:
+            self._respond_DNE()
+
+        # task_dict = self.check_with_scheduler()
+
+        # if task_dict is None:
+        #     state = None
+        # else:
+        #     state = task_dict['state']
+        # if state == 'erred':
+        #     error_message = task_dict['exception_text']
+    
+        # if state == 'released':
+        #     # Not on disk, but either just about to start, or just finished
+        #     sleep(1)
+        #     # give it a sec and try again
+        #     state = self.check_with_scheduler()
+        #     if state == 'released':
+        #         if self.is_in_cache():
+        #             # Turns out it just finished
+        #             self.respond_ready()
+        #             return
+        #         # Either it's lost or was never sent
+        #         self.error_message = "Cannot locate simulation. It is not on disk and does not appear to be running."
+        #         self.respond_error()
+        #         return
+
+        # if state == 'processing':
+        #     self.respond_running()
+        #     return
+
+        # if state == 'memory':
+        #     self.respond_pending()
+        #     return
+
+        # if state == 'forgotten':
+        #     # Either it JUST finished (unlikely)
+        #     sleep(1)
+        #     if self.is_in_cache():
+        #         self.respond_ready()
+        #         return
+        #     # Or something seriously messed up (but it was definitely sent)
+        #     else:
+        #         self.error_message = "If this is your error message please file a bug report on github. Sorry."
+        #         self.respond_error()
+        #         return
         
-        if state is None:
-            # The scheduler doesn't know, just to be sure, check if there is a future.
-            client = Client(self.scheduler_address)
-            future = client.futures.get(results_id)
-            if future is None:
-                # Don't know about anything!
-                self.respond_DNE()
-                return
-            if future.done():
-                # Apparently, it just finished so maybe go back and check disk once more?
-                sleep(1)
-                if self.is_in_cache():
-                    self.respond_ready()
-                    return
-                # Something broke.
-                self.error_message = "The simulation has finished but cannot locate results. If this is your error message please file a bug report on github. Sorry."
-                self.respond_error()
-                return
+        # if state is None:
+        #     # The scheduler doesn't know, just to be sure, check if there is a future.
+        #     client = Client(self.scheduler_address)
+        #     future = client.futures.get(results_id)
+        #     if future is None:
+        #         # Don't know about anything!
+        #         self.respond_DNE()
+        #         return
+        #     if future.done():
+        #         # Apparently, it just finished so maybe go back and check disk once more?
+        #         sleep(1)
+        #         if self.is_in_cache():
+        #             self.respond_ready()
+        #             return
+        #         # Something broke.
+        #         self.error_message = "The simulation has finished but cannot locate results. If this is your error message please file a bug report on github. Sorry."
+        #         self.respond_error()
+        #         return
                 
         
-        if state == 'erred':
-            # error message is already set.
-            self.respond_error(error_message)
-            return
+        # if state == 'erred':
+        #     # error message is already set.
+        #     self.respond_error(error_message)
+        #     return
 
-        if state == 'waiting' or state == 'no-worker' or state == 'queued':
-            self.respond_pending()
-            return
+        # if state == 'waiting' or state == 'no-worker' or state == 'queued':
+        #     self.respond_pending()
+        #     return
 
-        self.respond_DNE()
-        return
+        # self.respond_DNE()
+        # return
 
 
 
@@ -138,25 +134,22 @@ class StatusHandler(RequestHandler):
         self.write(status_response._encode())
         self.finish()
 
-    def _exists(self):
-        return os.path.exists(self.results_path)
+    # def check_with_scheduler(self):
+    #     client = Client(self.scheduler_address)
 
-    def check_with_scheduler(self):
-        client = Client(self.scheduler_address)
+    #     # define function here so that it is pickle-able
+    #     def scheduler_task_state(dask_scheduler, results_id):
+    #         task = dask_scheduler.tasks.get(results_id)
 
-        # define function here so that it is pickle-able
-        def scheduler_task_state(dask_scheduler, results_id):
-            task = dask_scheduler.tasks.get(results_id)
-
-            if task is None:
-                return None
-            return {
-                'state': task.state,
-                'exception_text': task.exception_text,
-            }
+    #         if task is None:
+    #             return None
+    #         return {
+    #             'state': task.state,
+    #             'exception_text': task.exception_text,
+    #         }
         
-        # results are not on disk, so ask the scheduler about the task
-        task_dict = client.run_on_scheduler(scheduler_task_state, results_id=self.results_id)
-        return task_dict
+    #     # results are not on disk, so ask the scheduler about the task
+    #     task_dict = client.run_on_scheduler(scheduler_task_state, results_id=self.results_id)
+    #     return task_dict
 
 
