@@ -52,7 +52,7 @@ class StatusHandler(RequestHandler):
             self.respond_running()
             return
 
-        if state is 'memory':
+        if state == 'memory':
             self.respond_pending()
             return
 
