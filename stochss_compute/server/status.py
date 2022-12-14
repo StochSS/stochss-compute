@@ -1,8 +1,11 @@
 import os
 from time import sleep
 from tornado.web import RequestHandler
+from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import SimStatus, StatusResponse
 from distributed import Client
+
+from stochss_compute.server.cache import Cache
 
 class StatusHandler(RequestHandler):
 
@@ -11,15 +14,22 @@ class StatusHandler(RequestHandler):
         self.cache_dir = cache_dir
 
 
-    async def get(self, results_id = None):
+    async def get(self, results_id = None, n_traj = None):
+        if None in (results_id, n_traj):
+            raise RemoteSimulationError('Malformed request')
         self.results_id = results_id
-        if results_id is None:
-            raise Exception('Malformed request')
 
         print(f'[Status Request] | Source: <{self.request.remote_ip}> | Results ID: <{results_id}>')
         self.results_path = os.path.join(self.cache_dir, f'{results_id}.results')
         self.error_message = None
         # First check if results are on disk
+        exists = self._exists()
+        if not exists:
+            self._respond_DNE()
+            return
+        if exists:
+            results = Cache.open(self.results_path)
+            # check length
         if self.is_in_cache():
             self.respond_ready()
             return
@@ -103,33 +113,32 @@ class StatusHandler(RequestHandler):
 
 
 
-    def respond_ready(self):
+    def _respond_ready(self):
         status_response = StatusResponse(SimStatus.READY)
         self.write(status_response._encode())
         self.finish()
 
-    def respond_pending(self):
-        status_response = StatusResponse(SimStatus.PENDING)
-        self.write(status_response._encode())
-        self.finish()
+    # def _respond_pending(self):
+    #     status_response = StatusResponse(SimStatus.PENDING)
+    #     self.write(status_response._encode())
+    #     self.finish()
     
-    def respond_error(self, error_message):
+    def _respond_error(self, error_message):
         status_response = StatusResponse(SimStatus.ERROR, error_message)
         self.write(status_response._encode())
         self.finish()
 
-    def respond_DNE(self):
-        status_response = StatusResponse(SimStatus.DOES_NOT_EXIST)
+    def _respond_DNE(self):
+        status_response = StatusResponse(SimStatus.DOES_NOT_EXIST, 'There is no record of that simulation')
         self.write(status_response._encode())
         self.finish()
 
-
-    def respond_running(self):
+    def _respond_running(self):
         status_response = StatusResponse(SimStatus.RUNNING)
         self.write(status_response._encode())
         self.finish()
 
-    def is_in_cache(self):
+    def _exists(self):
         return os.path.exists(self.results_path)
 
     def check_with_scheduler(self):

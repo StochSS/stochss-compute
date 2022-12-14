@@ -23,12 +23,12 @@ class RemoteResults(Results):
     :param server: The remote instance of StochSS-Compute where the Results are cached.
     :type server: stochss_compute.ComputeServer
     """
-
+    # These three fields are initialized by the server
     id = None
     server = None
+    n_traj = None
 
     def __init__(self, data = None):
-
         self._data = data
 
     @property
@@ -36,8 +36,8 @@ class RemoteResults(Results):
         """
         The trajectory data.
         """
-        if self.id is None or self.server is None:
-            raise Exception('RemoteResults must have a self.id and a self.server.')
+        if None in (self.id, self.server, self.n_traj):
+            raise Exception('RemoteResults must have a self.id, self.server and self.n_traj.')
 
         if self._data is None:
             self._resolve()
@@ -50,7 +50,7 @@ class RemoteResults(Results):
 
     def _status(self):
         # Request the status of a submitted simulation.
-        response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/status")
+        response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/status")
         if not response_raw.ok:
             raise RemoteSimulationError(response_raw.reason)
 
@@ -60,14 +60,6 @@ class RemoteResults(Results):
     def _resolve(self):
         status_response = self._status()
         status = status_response.status
-        if status in (SimStatus.PENDING, SimStatus.DOES_NOT_EXIST):
-            print('Simulation is pending (not running yet). Checking for status update....')
-            while True:
-                sleep(5)
-                status_response = self._status()
-                status = status_response.status
-                if status != SimStatus.PENDING:
-                    break
 
         if status == SimStatus.RUNNING:
             print('Simulation is running. Downloading results when complete......')
@@ -75,17 +67,16 @@ class RemoteResults(Results):
                 sleep(5)
                 status_response = self._status()
                 status = status_response.status
-                if status == SimStatus.PENDING:
-                    continue
                 if status != SimStatus.RUNNING:
                     break
 
-        if status == SimStatus.ERROR:
-            raise RemoteSimulationError(status_response.error_message)
+        if status in (SimStatus.DOES_NOT_EXIST, SimStatus.ERROR):
+            raise RemoteSimulationError(status_response.message)
+
 
         if status == SimStatus.READY:
             print('Results ready. Fetching.......')
-            response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
+            response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/results")
             if not response_raw.ok:
                 raise RemoteSimulationError(response_raw.reason)
 

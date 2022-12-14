@@ -122,24 +122,23 @@ class StatusResponse(Response):
     :type status: SimStatus
     :type error_message: str
     '''
-    def __init__(self, status, error_message = None):
+    def __init__(self, status, message = None):
         self.status = status
-        self.error_message = error_message
-        # Add traceback eventually!
+        self.message = message
     
     def _encode(self):
         return {'status': self.status.name,
-                'error_message': self.error_message or ''}
+                'message': self.message or ''}
     
     @staticmethod
     def _parse(raw_response):
         response_dict = json_decode(raw_response)
         status = SimStatus._from_str(response_dict['status'])
-        error_message = response_dict['error_message']
-        if not error_message:
+        message = response_dict['message']
+        if not message:
             return StatusResponse(status)
         else:
-            return StatusResponse(status, error_message)
+            return StatusResponse(status, message)
             
 class ResultsRequest(Request):
     '''

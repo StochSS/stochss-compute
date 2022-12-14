@@ -7,6 +7,8 @@ from distributed import Client, Future
 import os
 import random
 
+from stochss_compute.server.cache import Cache
+
 class RunHandler(RequestHandler):
 
 
@@ -18,17 +20,13 @@ class RunHandler(RequestHandler):
         sim_request = SimulationRunRequest._parse(self.request.body)
         sim_hash = sim_request._hash()
         log_string = f'[Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
-        self.results_path = os.path.join(self.cache_dir, f'{sim_hash}.results')
-        exists = os.path.exists(self.results_path)
+        
+        exists = Cache.exists(self.results_path)
         if not exists:
             open(self.results_path, 'w').close()
         empty = self._is_empty()
         if not empty:
-            try:
-                with open(self.results_path,'r') as results_json:
-                    results = Results.from_json(results_json)
-            except Exception:
-                raise RemoteSimulationError('Malformed json')
+            results = Cache.open(self.results_path)
             # Check the number of trajectories in the request, default 1
             n_traj = sim_request.kwargs.get('number_of_trajectories', 1)
             # Compare that to the number of cached trajectories
@@ -37,6 +35,7 @@ class RunHandler(RequestHandler):
                 sim_request.kwargs['number_of_trajectories'] -= n_cached_traj
                 new_traj = sim_request.kwargs['number_of_trajectories']
                 print(log_string + f'Partial cache. Running {new_traj} new trajectories.')
+                self._return_running(sim_hash)
                 future = self._submit(sim_request, sim_hash)
                 await IOLoop.current().run_in_executor(None, self._cache, future)
             else:
@@ -49,22 +48,10 @@ class RunHandler(RequestHandler):
                 self.finish()
         if empty:
             print(log_string + 'Results not cached. Running simulation.')
-            self._return_pending(sim_hash)
+            self._return_running(sim_hash)
             future = self._submit(sim_request, sim_hash)
             await IOLoop.current().run_in_executor(None, self._cache, future)
             
-    def _is_empty(self):
-        if os.path.exists(self.results_path):
-            with open(self.results_path, 'r') as file:
-                if file.read(1) == '':
-                    file.seek(0)
-                    return True
-                else:
-                    file.seek(0)
-                    return False
-        else:
-            return True
-
     def _future(self, future_results: Future):
         results: Results = future_results.result()
         return results
@@ -101,10 +88,10 @@ class RunHandler(RequestHandler):
         future = client.submit(model.run, **kwargs, key=sim_hash)
         return future
 
-    def _return_pending(self, results_id):
-        sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=results_id)
-        self.write(sim_response._encode())
-        self.finish()
+    # def _return_pending(self, results_id):
+    #     sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=results_id)
+    #     self.write(sim_response._encode())
+    #     self.finish()
 
     def _return_running(self, results_id):
         sim_response = SimulationRunResponse(SimStatus.RUNNING, results_id=results_id)
