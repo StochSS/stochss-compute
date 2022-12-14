@@ -27,6 +27,13 @@ class Cache:
         if n_traj > len(results):
             return False
         return True
+
+    def n_traj_needed(self, n_traj) -> int:
+        results = self.open()
+        diff = n_traj - len(results)
+        if diff>0:
+            return diff
+        return 0
         
     def open(self) -> Results:
         try:
@@ -35,3 +42,7 @@ class Cache:
                 results = Results.from_json(results_json)
         except Exception:
             raise RemoteSimulationError('Malformed json')
+
+    def read(self) -> str:
+        with open(self.results_path,'r') as file:
+            return file.read()

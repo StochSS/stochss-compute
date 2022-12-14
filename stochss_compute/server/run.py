@@ -20,26 +20,25 @@ class RunHandler(RequestHandler):
         sim_request = SimulationRunRequest._parse(self.request.body)
         sim_hash = sim_request._hash()
         log_string = f'[Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
-        
-        exists = Cache.exists(self.results_path)
+        cache = Cache(self.cache_dir, sim_hash)
+        exists = cache.exists()
         if not exists:
             open(self.results_path, 'w').close()
-        empty = self._is_empty()
+        empty = cache.is_empty()
         if not empty:
-            results = Cache.open(self.results_path)
             # Check the number of trajectories in the request, default 1
             n_traj = sim_request.kwargs.get('number_of_trajectories', 1)
             # Compare that to the number of cached trajectories
-            n_cached_traj = len(results)
-            if n_traj > n_cached_traj:
-                sim_request.kwargs['number_of_trajectories'] -= n_cached_traj
-                new_traj = sim_request.kwargs['number_of_trajectories']
-                print(log_string + f'Partial cache. Running {new_traj} new trajectories.')
+            trajectories_needed =  cache.n_traj_needed(n_traj)
+            if trajectories_needed > 0:
+                sim_request.kwargs['number_of_trajectories'] = trajectories_needed
+                print(log_string + f'Partial cache. Running {trajectories_needed} new trajectories.')
                 self._return_running(sim_hash)
                 future = self._submit(sim_request, sim_hash)
                 await IOLoop.current().run_in_executor(None, self._cache, future)
             else:
                 print(log_string + 'Returning cached results.')
+                results = cache.open()
                 ret_traj = random.sample(results, n_traj)
                 new_results = Results(ret_traj)
                 new_results_json = new_results.to_json()

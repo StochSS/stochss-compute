@@ -1,21 +1,21 @@
 import os
 from tornado.web import RequestHandler
+from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import ResultsResponse
+from stochss_compute.server.cache import Cache
 
 class ResultsHandler(RequestHandler):
 
     def initialize(self, cache_dir):
         self.cache_dir = cache_dir
 
-    async def get(self, results_id = None):
-        if results_id is None:
-            raise Exception('Malformed request')
+    async def get(self, results_id = None, n_traj = None):
+        if None in (results_id, n_traj):
+            raise RemoteSimulationError(f'Malformed request | Source: <{self.request.remote_ip}>')
         print(f'[Results Request] | Source: <{self.request.remote_ip}> | ID: <{results_id}>')
-        results_path = os.path.join(self.cache_dir, f'{results_id}.results')
-        if os.path.exists(results_path):
-            file = open(results_path, 'r')
-            results = file.read()
-            file.close()
+        cache = Cache(self.cache_dir, results_id)
+        if cache.is_ready():
+            results = cache.read()
             results_response = ResultsResponse(results)
             self.write(results_response._encode())
         else:
