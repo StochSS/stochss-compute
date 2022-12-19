@@ -22,11 +22,15 @@ class StatusHandler(RequestHandler):
         # First check if results are on disk
         exists = cache.exists()
         if exists:
-            ready = cache.is_ready(n_traj)
-            if ready:
-                self._respond_ready()
-            else:
+            empty = cache.is_empty()
+            if empty:
                 self._respond_running()
+            else:
+                ready = cache.is_ready(n_traj)
+                if ready:
+                    self._respond_ready()
+                else:
+                    self._respond_running()
         else:
             self._respond_DNE()
 
