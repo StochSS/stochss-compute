@@ -12,9 +12,10 @@ class ResultsHandler(RequestHandler):
     async def get(self, results_id = None, n_traj = None):
         if None in (results_id, n_traj):
             raise RemoteSimulationError(f'Malformed request | Source: <{self.request.remote_ip}>')
+        n_traj = int(n_traj)
         print(f'[Results Request] | Source: <{self.request.remote_ip}> | ID: <{results_id}>')
         cache = Cache(self.cache_dir, results_id)
-        if cache.is_ready():
+        if cache.is_ready(n_traj):
             results = cache.read()
             results_response = ResultsResponse(results)
             self.write(results_response._encode())

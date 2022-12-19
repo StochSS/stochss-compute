@@ -65,6 +65,7 @@ class RunHandler(RequestHandler):
     def _submit(self, sim_request, sim_hash):
         model = sim_request.model
         kwargs = sim_request.kwargs['kwargs']
+        print(kwargs)
         if "solver" in kwargs:
             from pydoc import locate
             kwargs["solver"] = locate(kwargs["solver"])

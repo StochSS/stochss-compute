@@ -17,6 +17,7 @@ class StatusHandler(RequestHandler):
     async def get(self, results_id = None, n_traj = None):
         if None in (results_id, n_traj):
             raise RemoteSimulationError('Malformed request')
+        n_traj = int(n_traj)
         cache = Cache(self.cache_dir, results_id)
         print(f'[Status Request] | Source: <{self.request.remote_ip}> | Results ID: <{results_id}>')
         # First check if results are on disk
