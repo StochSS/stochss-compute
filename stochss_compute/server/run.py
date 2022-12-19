@@ -23,7 +23,7 @@ class RunHandler(RequestHandler):
         cache = Cache(self.cache_dir, sim_hash)
         exists = cache.exists()
         if not exists:
-            open(self.results_path, 'w').close()
+            open(cache.results_path, 'w').close()
         empty = cache.is_empty()
         if not empty:
             # Check the number of trajectories in the request, default 1
@@ -35,10 +35,10 @@ class RunHandler(RequestHandler):
                 print(log_string + f'Partial cache. Running {trajectories_needed} new trajectories.')
                 self._return_running(sim_hash)
                 future = self._submit(sim_request, sim_hash)
-                await IOLoop.current().run_in_executor(None, self._cache, future)
+                await IOLoop.current().run_in_executor(None, self._cache, future, cache)
             else:
                 print(log_string + 'Returning cached results.')
-                results = cache.open()
+                results = cache.get()
                 ret_traj = random.sample(results, n_traj)
                 new_results = Results(ret_traj)
                 new_results_json = new_results.to_json()
@@ -49,31 +49,18 @@ class RunHandler(RequestHandler):
             print(log_string + 'Results not cached. Running simulation.')
             self._return_running(sim_hash)
             future = self._submit(sim_request, sim_hash)
-            await IOLoop.current().run_in_executor(None, self._cache, future)
+            await IOLoop.current().run_in_executor(None, self._cache, future, cache)
             
     def _future(self, future_results: Future):
         results: Results = future_results.result()
         return results
 
-    def _cache(self, future: Future):
+    def _cache(self, future: Future, cache: Cache):
         results = self._future(future)
-        if self._is_empty():
-            self._cache_results_empty(results)
+        if cache.is_empty():
+            cache.new(results)
         else:
-            self._cache_add_results(results)
-
-    def _cache_results_empty(self, results: Results):
-        print(f'[Simulation Finished] | Simulation ID: <{self.results_path}> | Caching results.')
-        with open(self.results_path, 'w') as file:
-            file.write(results.to_json())
-
-    def _cache_add_results(self, new_results: Results):
-        print(f'[Simulation Finished] | Simulation ID: <{self.results_path}> | Caching results.')
-        with open(self.results_path,'r') as file:
-            old_results = Results.from_json(file.read())
-        combined_results = new_results + old_results
-        with open(self.results_path,'w') as file:
-            file.write(combined_results.to_json())
+            cache.add(results)
 
     def _submit(self, sim_request, sim_hash):
         model = sim_request.model
@@ -86,11 +73,6 @@ class RunHandler(RequestHandler):
         client = Client(self.scheduler_address)
         future = client.submit(model.run, **kwargs, key=sim_hash)
         return future
-
-    # def _return_pending(self, results_id):
-    #     sim_response = SimulationRunResponse(SimStatus.PENDING, results_id=results_id)
-    #     self.write(sim_response._encode())
-    #     self.finish()
 
     def _return_running(self, results_id):
         sim_response = SimulationRunResponse(SimStatus.RUNNING, results_id=results_id)
