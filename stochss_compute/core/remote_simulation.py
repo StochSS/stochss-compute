@@ -87,7 +87,7 @@ class RemoteSimulation:
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
 
-        sim_request = SimulationRunRequest(model=self.model, kwargs=params)
+        sim_request = SimulationRunRequest(model=self.model, **params)
         response_raw = self.server._post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
         if not response_raw.ok:
             raise Exception(response_raw.reason)

@@ -68,12 +68,10 @@ class SimulationRunRequest(Request):
 
     def _hash(self):
         anon_model_string = self.model.to_anon().to_json(encode_private=False)
-        popped_kwargs = {kw:self.kwargs['kwargs'][kw] for kw in self.kwargs['kwargs'] if kw!='number_of_trajectories'}
+        popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
         kwargs_string = json_encode(popped_kwargs)
         request_string =  f'{anon_model_string}{kwargs_string}'
         hash = md5(str.encode(request_string)).hexdigest()
-        with open(f'${self.model.name}-{md5(str.encode(request_string)).hexdigest()}', 'w') as file:
-            file.write(request_string)
         return hash
 
 class SimulationRunResponse(Response):

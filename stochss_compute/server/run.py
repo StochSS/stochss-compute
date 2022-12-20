@@ -2,12 +2,13 @@ from tornado.web import RequestHandler
 from tornado.ioloop import IOLoop
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import SimStatus, SimulationRunRequest, SimulationRunResponse
+from stochss_compute.server.cache import Cache
 from gillespy2.core import Results
 from distributed import Client, Future
 import os
 import random
+from datetime import datetime
 
-from stochss_compute.server.cache import Cache
 
 class RunHandler(RequestHandler):
 
@@ -19,7 +20,7 @@ class RunHandler(RequestHandler):
     async def post(self):
         sim_request = SimulationRunRequest._parse(self.request.body)
         sim_hash = sim_request._hash()
-        log_string = f'[Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
+        log_string = f'{datetime.now()} | [Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
         cache = Cache(self.cache_dir, sim_hash)
         exists = cache.exists()
         if not exists:
@@ -64,8 +65,8 @@ class RunHandler(RequestHandler):
 
     def _submit(self, sim_request, sim_hash):
         model = sim_request.model
-        kwargs = sim_request.kwargs['kwargs']
-        print(kwargs)
+        kwargs = sim_request.kwargs
+
         if "solver" in kwargs:
             from pydoc import locate
             kwargs["solver"] = locate(kwargs["solver"])
