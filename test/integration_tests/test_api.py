@@ -12,7 +12,7 @@ from stochss_compute.core.messages import SimStatus
 from distributed import Client
 import asyncio
 
-class ApiTest(unittest.IsolatedAsyncioTestCase):
+class ApiTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:

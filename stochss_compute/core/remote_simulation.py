@@ -62,7 +62,7 @@ class RemoteSimulation:
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
 
-        sim_request = SimulationRunRequest(model=self.model, kwargs=params)
+        sim_request = SimulationRunRequest(model=self.model, **params)
         results_dummy = RemoteResults()
         results_dummy.id = sim_request._hash()
         results_dummy.server = self.server

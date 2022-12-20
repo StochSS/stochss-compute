@@ -8,10 +8,9 @@ from distributed import Client
 
 from stochss_compute.server.cache import Cache
 
-class StatusHandler(RequestHandler):
+class isCachedHandler(RequestHandler):
 
-    def initialize(self, scheduler_address, cache_dir):
-        self.scheduler_address = scheduler_address
+    def initialize(self, cache_dir):
         self.cache_dir = cache_dir
 
 
@@ -20,22 +19,27 @@ class StatusHandler(RequestHandler):
             raise RemoteSimulationError('Malformed request')
         n_traj = int(n_traj)
         cache = Cache(self.cache_dir, results_id)
-        print(f'{datetime.now()} | [Status Request] | Source: <{self.request.remote_ip}> | ID: <{results_id}>')
-        msg = f'{datetime.now()} | <{results_id}> | Status: '
+        print(f'''
+{datetime.now()} |
+ Cache Check |
+ Source: <{self.request.remote_ip}> |
+ ID: <{results_id}> |
+ Trajectories: {n_traj} ''')
+        msg = f'{datetime.now()} | <{results_id}> | Trajectories: {n_traj} | Status: '
         exists = cache.exists()
         if exists:
             empty = cache.is_empty()
             if empty:
-                print(msg+SimStatus.RUNNING.name)
-                self._respond_running()
+                print(msg+SimStatus.DOES_NOT_EXIST.name)
+                self._respond_DNE()
             else:
                 ready = cache.is_ready(n_traj)
                 if ready:
                     print(msg+SimStatus.READY.name)
                     self._respond_ready()
                 else:
-                    print(msg+SimStatus.RUNNING.name)
-                    self._respond_running()
+                    print(msg+SimStatus.DOES_NOT_EXIST.name)
+                    self._respond_DNE()
         else:
             print(msg+SimStatus.DOES_NOT_EXIST.name)
             self._respond_DNE()
