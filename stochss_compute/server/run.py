@@ -20,11 +20,8 @@ class RunHandler(RequestHandler):
     async def post(self):
         sim_request = SimulationRunRequest._parse(self.request.body)
         sim_hash = sim_request._hash()
-        log_string = f'{datetime.now()} | [Simulation Run Request] | Source: <{self.request.remote_ip}> | Simulation ID: <{sim_hash}> | '
+        log_string = f'{datetime.now()} | Simulation Run Request | <{self.request.remote_ip}> | <{sim_hash}> | '
         cache = Cache(self.cache_dir, sim_hash)
-        exists = cache.exists()
-        if not exists:
-            open(cache.results_path, 'w').close()
         empty = cache.is_empty()
         if not empty:
             # Check the number of trajectories in the request, default 1
@@ -36,7 +33,7 @@ class RunHandler(RequestHandler):
                 print(log_string + f'Partial cache. Running {trajectories_needed} new trajectories.')
                 self._return_running(sim_hash)
                 future = self._submit(sim_request, sim_hash)
-                await IOLoop.current().run_in_executor(None, self._cache, future, cache)
+                await IOLoop.current().run_in_executor(None, self._cache, future)
             else:
                 print(log_string + 'Returning cached results.')
                 results = cache.get()
@@ -47,21 +44,16 @@ class RunHandler(RequestHandler):
                 self.write(sim_response._encode())
                 self.finish()
         if empty:
+            cache.create()
             print(log_string + 'Results not cached. Running simulation.')
             self._return_running(sim_hash)
             future = self._submit(sim_request, sim_hash)
-            await IOLoop.current().run_in_executor(None, self._cache, future, cache)
-            
-    def _future(self, future_results: Future):
-        results: Results = future_results.result()
-        return results
+            await IOLoop.current().run_in_executor(None, self._cache, future)
 
-    def _cache(self, future: Future, cache: Cache):
-        results = self._future(future)
-        if cache.is_empty():
-            cache.new(results)
-        else:
-            cache.add(results)
+    def _cache(self, future: Future):
+        results = future.result()
+        cache = Cache(self.cache_dir, future.key)
+        cache.save(results)
 
     def _submit(self, sim_request, sim_hash):
         model = sim_request.model

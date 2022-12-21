@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
@@ -11,9 +12,9 @@ class ResultsHandler(RequestHandler):
 
     async def get(self, results_id = None, n_traj = None):
         if None in (results_id, n_traj):
-            raise RemoteSimulationError(f'Malformed request | Source: <{self.request.remote_ip}>')
+            raise RemoteSimulationError(f'Malformed request | <{self.request.remote_ip}>')
         n_traj = int(n_traj)
-        print(f'[Results Request] | Source: <{self.request.remote_ip}> | ID: <{results_id}>')
+        print(f'{datetime.now()} | Results Request | <{self.request.remote_ip}> | <{results_id}>')
         cache = Cache(self.cache_dir, results_id)
         if cache.is_ready(n_traj):
             results = cache.read()

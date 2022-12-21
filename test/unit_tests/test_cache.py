@@ -10,18 +10,15 @@ from stochss_compute.server.cache import Cache
 
 class CacheTest(unittest.TestCase):
     cache_dir = 'cache'
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        if os.path.exists(cls.cache_dir):
-            subprocess.Popen(['rm', '-r', cls.cache_dir])
-        if not os.path.exists(cls.cache_dir):
-            subprocess.Popen(['mkdir', cls.cache_dir])
+    def setUp(self) -> None:
+        if os.path.exists(self.cache_dir):
+            subprocess.Popen(['rm', '-r', self.cache_dir])
+        if not os.path.exists(self.cache_dir):
+            subprocess.Popen(['mkdir', self.cache_dir])
         
-    @classmethod
-    def tearDownClass(cls) -> None:
-        if os.path.exists(cls.cache_dir):
-            subprocess.Popen(['rm', '-r', cls.cache_dir])
+    def tearDown(self) -> None:
+        if os.path.exists(self.cache_dir):
+            subprocess.Popen(['rm', '-r', self.cache_dir])
 
     def test_cache(self):
         for create_model in gillespy2_models.__all__:
@@ -32,8 +29,8 @@ class CacheTest(unittest.TestCase):
                     continue
                 model: Model = gillespy2_models.__dict__[create_model]()
                 sim_request = SimulationRunRequest(model)
-                cache = Cache(cache_dir='cache', results_id=sim_request._hash())
-                assert(cache.exists() == True, 'hi')
+                cache = Cache(cache_dir=self.cache_dir, results_id=sim_request._hash())
+                assert(cache.exists() == False)
                 assert(cache.is_empty() == True)
                 results = model.run()
                 cache.new(results)
@@ -41,4 +38,16 @@ class CacheTest(unittest.TestCase):
                 assert(cache.is_empty() == False)
                 results_get = cache.get()
                 assert(len(results_get) == 1)
+                assert cache.n_traj_needed(2) == 1
+                assert cache.is_ready(2) == False
+                assert cache.is_ready(1) == True
+                results = model.run()
+                cache.add(results)
+                assert len(cache.get()) == 2
+                assert cache.n_traj_needed(3) == 1
+                assert cache.n_traj_needed(2) == 0
+                assert cache.n_traj_needed(1) == 0
+                assert cache.is_ready(3) == False
+                assert cache.is_ready(2) == True
+
 

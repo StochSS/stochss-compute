@@ -1,10 +1,8 @@
 from datetime import datetime
-import os
-from time import sleep
+from distributed import Client
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import SimStatus, StatusResponse
-from distributed import Client
 
 from stochss_compute.server.cache import Cache
 
@@ -14,40 +12,80 @@ class StatusHandler(RequestHandler):
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
 
-
     async def get(self, results_id = None, n_traj = None):
         if None in (results_id, n_traj):
             raise RemoteSimulationError('Malformed request')
+        self.results_id = results_id
         n_traj = int(n_traj)
         cache = Cache(self.cache_dir, results_id)
-        print(f'{datetime.now()} | [Status Request] | Source: <{self.request.remote_ip}> | ID: <{results_id}>')
+        print(f'{datetime.now()} | Status Request | Source: <{self.request.remote_ip}> | <{results_id}> | Trajectories: {n_traj}')
         msg = f'{datetime.now()} | <{results_id}> | Status: '
         exists = cache.exists()
         if exists:
             empty = cache.is_empty()
             if empty:
-                print(msg+SimStatus.RUNNING.name)
-                self._respond_running()
+                state, err = self.check_with_scheduler()
+                print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
+                if state == 'erred':
+                    self._respond_error(err)
+                else:
+                    self._respond_running(f'Scheduler task state: {state}')
             else:
                 ready = cache.is_ready(n_traj)
                 if ready:
                     print(msg+SimStatus.READY.name)
                     self._respond_ready()
                 else:
-                    print(msg+SimStatus.RUNNING.name)
-                    self._respond_running()
+                    state, err = self.check_with_scheduler()
+                    print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
+                    if state == 'erred':
+                        self._respond_error(err)
+                    else:
+                        self._respond_running(f'Scheduler task state: {state}')
         else:
             print(msg+SimStatus.DOES_NOT_EXIST.name)
             self._respond_DNE()
 
-        # task_dict = self.check_with_scheduler()
 
-        # if task_dict is None:
-        #     state = None
-        # else:
-        #     state = task_dict['state']
-        # if state == 'erred':
-        #     error_message = task_dict['exception_text']
+    def _respond_ready(self):
+        status_response = StatusResponse(SimStatus.READY)
+        self.write(status_response._encode())
+        self.finish()
+    
+    def _respond_error(self, error_message):
+        status_response = StatusResponse(SimStatus.ERROR, error_message)
+        self.write(status_response._encode())
+        self.finish()
+
+    def _respond_DNE(self):
+        status_response = StatusResponse(SimStatus.DOES_NOT_EXIST, 'There is no record of that simulation')
+        self.write(status_response._encode())
+        self.finish()
+
+    def _respond_running(self, message):
+        status_response = StatusResponse(SimStatus.RUNNING, message)
+        self.write(status_response._encode())
+        self.finish()
+
+    def check_with_scheduler(self):
+        client = Client(self.scheduler_address)
+
+        # define function here so that it is pickle-able
+        def scheduler_task_state(dask_scheduler, results_id):
+            task = dask_scheduler.tasks.get(results_id)
+
+            if task is None:
+                return (None, None)
+            if task.exception_text == "":
+                 return (task.state, None)
+            return (task.state, task.exception_text)
+        
+        return client.run_on_scheduler(scheduler_task_state, results_id=self.results_id)
+
+
+
+
+
     
         # if state == 'released':
         #     # Not on disk, but either just about to start, or just finished
@@ -115,51 +153,5 @@ class StatusHandler(RequestHandler):
 
         # self.respond_DNE()
         # return
-
-
-
-
-    def _respond_ready(self):
-        status_response = StatusResponse(SimStatus.READY)
-        self.write(status_response._encode())
-        self.finish()
-
-    # def _respond_pending(self):
-    #     status_response = StatusResponse(SimStatus.PENDING)
-    #     self.write(status_response._encode())
-    #     self.finish()
-    
-    def _respond_error(self, error_message):
-        status_response = StatusResponse(SimStatus.ERROR, error_message)
-        self.write(status_response._encode())
-        self.finish()
-
-    def _respond_DNE(self):
-        status_response = StatusResponse(SimStatus.DOES_NOT_EXIST, 'There is no record of that simulation')
-        self.write(status_response._encode())
-        self.finish()
-
-    def _respond_running(self):
-        status_response = StatusResponse(SimStatus.RUNNING)
-        self.write(status_response._encode())
-        self.finish()
-
-    # def check_with_scheduler(self):
-    #     client = Client(self.scheduler_address)
-
-    #     # define function here so that it is pickle-able
-    #     def scheduler_task_state(dask_scheduler, results_id):
-    #         task = dask_scheduler.tasks.get(results_id)
-
-    #         if task is None:
-    #             return None
-    #         return {
-    #             'state': task.state,
-    #             'exception_text': task.exception_text,
-    #         }
-        
-    #     # results are not on disk, so ask the scheduler about the task
-    #     task_dict = client.run_on_scheduler(scheduler_task_state, results_id=self.results_id)
-    #     return task_dict
 
 
