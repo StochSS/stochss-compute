@@ -11,7 +11,8 @@ class Cache:
             os.mkdir(cache_dir)
 
     def create(self):
-        return open(self.results_path, 'x').close()
+        if not self.exists():
+            return open(self.results_path, 'x').close()
 
     def exists(self) -> bool:
         return os.path.exists(self.results_path)
