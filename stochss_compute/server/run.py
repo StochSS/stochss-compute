@@ -1,13 +1,12 @@
-from tornado.web import RequestHandler
-from tornado.ioloop import IOLoop
-from stochss_compute.core.errors import RemoteSimulationError
-from stochss_compute.core.messages import SimStatus, SimulationRunRequest, SimulationRunResponse
-from stochss_compute.server.cache import Cache
-from gillespy2.core import Results
-from distributed import Client, Future
-import os
 import random
 from datetime import datetime
+
+from tornado.web import RequestHandler
+from tornado.ioloop import IOLoop
+from distributed import Client, Future
+from gillespy2.core import Results
+from stochss_compute.core.messages import SimStatus, SimulationRunRequest, SimulationRunResponse
+from stochss_compute.server.cache import Cache
 
 
 class RunHandler(RequestHandler):
@@ -20,7 +19,7 @@ class RunHandler(RequestHandler):
     async def post(self):
         sim_request = SimulationRunRequest._parse(self.request.body)
         sim_hash = sim_request._hash()
-        log_string = f'{datetime.now()} | Simulation Run Request | <{self.request.remote_ip}> | <{sim_hash}> | '
+        log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Request | <{sim_hash}> | '
         cache = Cache(self.cache_dir, sim_hash)
         empty = cache.is_empty()
         if not empty:
