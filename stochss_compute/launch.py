@@ -93,7 +93,7 @@ def launch_with_cluster():
     finally:
         print('Shutting down cluster...', end='')
         asyncio.run(cluster.close())
-        # print('OK')
+        print('OK')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
