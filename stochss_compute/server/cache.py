@@ -1,7 +1,7 @@
-from datetime import datetime
 import os
-from gillespy2 import Results
+from datetime import datetime
 
+from gillespy2 import Results
 from stochss_compute.core.errors import RemoteSimulationError
 
 class Cache:
@@ -43,6 +43,13 @@ class Cache:
         if diff > 0:
             return diff
         return 0
+
+    def n_traj_in_cache(self) -> int:
+        if self.is_empty():
+            return 0
+        results = self.get()
+        return len(results)
+
         
     def get(self) -> Results or None:
         if self.is_empty():
