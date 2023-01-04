@@ -1,13 +1,14 @@
 import asyncio
+import signal
 import subprocess
-from distributed import Client
+import sys
+import os
 from tornado.web import Application
 from stochss_compute.server.is_cached import IsCachedHandler
 from stochss_compute.server.run import RunHandler
 from stochss_compute.server.sourceip import SourceIpHandler
 from stochss_compute.server.status import StatusHandler
 from stochss_compute.server.results import ResultsHandler
-import os
 
 def _make_app(dask_host, dask_scheduler_port, cache):
     scheduler_address = f'{dask_host}:{dask_scheduler_port}'
@@ -53,26 +54,25 @@ async def start_api(
     print(f'StochSS-Compute listening on: :{port}')
     print(f'Cache directory: {cache_path}')
     print(f'Connecting to Dask scheduler at: {dask_host}:{dask_scheduler_port}\n')
-    try:
-        await asyncio.Event().wait()
-    finally:
-        print('Shutting down.')
+
+    def sig_handler(signal, frame):
         if rm_cache_on_exit and os.path.exists(cache_path):
             print('Removing cache...', end='')
             subprocess.Popen(['rm', '-r', cache_path])
-        client = Client(f'{dask_host}:{dask_scheduler_port}')
-        print('Canceling jobs...', end='')
-        await client.cancel()
-        print('OK')
-        print('Closing Workers...', end='')
-        await client.retire_workers(close_workers=True)
-        print('OK')
-        print('Shutting down cluster...', end='')
-        await client.cluster.close()
-        print('OK')
-        print('Closing client...', end='')
-        await client.close()
-        print('OK')
-    
-    
+        sys.exit(0)
 
+    signal.signal(signal.SIGINT, sig_handler)
+    signal.signal(signal.SIGABRT, sig_handler)
+    signal.signal(signal.SIGTERM, sig_handler)
+    signal.signal(signal.SIGQUIT, sig_handler)
+    signal.signal(signal.SIGCHLD, sig_handler)
+    signal.signal(signal.SIGPIPE, sig_handler)
+
+    try:
+        await asyncio.Event().wait()
+    except asyncio.exceptions.CancelledError:
+        pass
+    finally:
+        if rm_cache_on_exit and os.path.exists(cache_path):
+            print('Removing cache...', end='')
+            subprocess.Popen(['rm', '-r', cache_path])
