@@ -2,7 +2,8 @@ import os
 from datetime import datetime
 
 from gillespy2 import Results
-from stochss_compute.core.errors import RemoteSimulationError
+from json.decoder import JSONDecodeError
+from stochss_compute.core.errors import CacheError, RemoteSimulationError
 
 class Cache:
     def __init__(self, cache_dir, results_id) -> None:
@@ -52,34 +53,27 @@ class Cache:
 
         
     def get(self) -> Results or None:
-        if self.is_empty():
-            return None
         try:
             results_json = self.read()
             return Results.from_json(results_json)
-
-        except Exception:
-            raise RemoteSimulationError('Malformed json')
+        except JSONDecodeError:
+            return None
 
     def read(self) -> str:
         with open(self.results_path,'r') as file:
             return file.read()
 
-    def new(self, results: Results):
-        with open(self.results_path, 'w') as file:
-            file.write(results.to_json())
-
     def add(self, new_results: Results):
-        old_results = self.get()
-        combined_results = new_results + old_results
         with open(self.results_path,'w') as file:
-            file.write(combined_results.to_json())
+            file.write(new_results.to_json())
 
     def save(self, results: Results):
         msg = f'{datetime.now()} | Cache | <{self.results_path}> | '
-        if self.is_empty():
+        old_results = self.get()
+        if old_results is None:
             print(msg+'New')
-            self.new(results)
-        else:
-            print(msg+'Add')
             self.add(results)
+        else:
+            combined_results = results + old_results
+            print(msg+'Add')
+            self.add(combined_results)
