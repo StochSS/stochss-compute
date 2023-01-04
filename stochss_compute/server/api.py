@@ -45,6 +45,8 @@ async def start_api(
 
     :param rm_cache_on_exit: Delete the cache when exiting this program.
     :type rm_cache_on_exit: bool
+
+    
     """
     
     cache_path = os.path.abspath(cache)
