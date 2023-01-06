@@ -58,7 +58,7 @@ class StatusHandler(RequestHandler):
         self.finish()
 
     def _respond_DNE(self):
-        status_response = StatusResponse(SimStatus.DOES_NOT_EXIST, 'There is no record of that simulation')
+        status_response = StatusResponse(SimStatus.DOES_NOT_EXIST, 'There is no record of that simulation.')
         self.write(status_response._encode())
         self.finish()
 
