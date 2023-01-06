@@ -21,6 +21,8 @@ class RunHandler(RequestHandler):
         sim_hash = sim_request._hash()
         log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Request | <{sim_hash}> | '
         cache = Cache(self.cache_dir, sim_hash)
+        if not cache.exists():
+            cache.create()
         empty = cache.is_empty()
         if not empty:
             # Check the number of trajectories in the request, default 1
@@ -29,7 +31,8 @@ class RunHandler(RequestHandler):
             trajectories_needed =  cache.n_traj_needed(n_traj)
             if trajectories_needed > 0:
                 sim_request.kwargs['number_of_trajectories'] = trajectories_needed
-                print(log_string + f'Partial cache. Running {trajectories_needed} new trajectories.')
+                print(log_string +
+                    f'Partial cache. Running {trajectories_needed} new trajectories.')
                 self._return_running(sim_hash)
                 future = self._submit(sim_request, sim_hash)
                 await IOLoop.current().run_in_executor(None, self._cache, future)
@@ -43,7 +46,6 @@ class RunHandler(RequestHandler):
                 self.write(sim_response._encode())
                 self.finish()
         if empty:
-            cache.create()
             print(log_string + 'Results not cached. Running simulation.')
             self._return_running(sim_hash)
             future = self._submit(sim_request, sim_hash)
