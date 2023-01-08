@@ -1,5 +1,6 @@
 import random
 from datetime import datetime
+from secrets import token_hex
 
 from tornado.web import RequestHandler
 from tornado.ioloop import IOLoop
@@ -33,9 +34,10 @@ class RunHandler(RequestHandler):
                 sim_request.kwargs['number_of_trajectories'] = trajectories_needed
                 print(log_string +
                     f'Partial cache. Running {trajectories_needed} new trajectories.')
-                self._return_running(sim_hash)
-                future = self._submit(sim_request, sim_hash)
-                await IOLoop.current().run_in_executor(None, self._cache, future)
+                client = Client(self.scheduler_address)
+                future = self._submit(sim_request, sim_hash, client)
+                self._return_running(sim_hash, future.key)
+                IOLoop.current().run_in_executor(None, self._cache, sim_hash, future, client)
             else:
                 print(log_string + 'Returning cached results.')
                 results = cache.get()
@@ -47,29 +49,31 @@ class RunHandler(RequestHandler):
                 self.finish()
         if empty:
             print(log_string + 'Results not cached. Running simulation.')
-            self._return_running(sim_hash)
-            future = self._submit(sim_request, sim_hash)
-            await IOLoop.current().run_in_executor(None, self._cache, future)
+            client = Client(self.scheduler_address)
+            future = self._submit(sim_request, sim_hash, client)
+            self._return_running(sim_hash, future.key)
+            IOLoop.current().run_in_executor(None, self._cache, sim_hash, future, client)
 
-    def _cache(self, future: Future):
+    def _cache(self, sim_hash, future: Future, client: Client):
         results = future.result()
-        cache = Cache(self.cache_dir, future.key)
+        client.close()
+        cache = Cache(self.cache_dir, sim_hash)
         cache.save(results)
 
-    def _submit(self, sim_request, sim_hash):
+    def _submit(self, sim_request, sim_hash, client: Client):
         model = sim_request.model
         kwargs = sim_request.kwargs
-
+        n_traj = kwargs.get('number_of_trajectories', 1)
         if "solver" in kwargs:
             from pydoc import locate
             kwargs["solver"] = locate(kwargs["solver"])
 
         # keep client open for now! close?
-        client = Client(self.scheduler_address)
-        future = client.submit(model.run, **kwargs, key=sim_hash)
+        key = f'{sim_hash}:{n_traj}:{token_hex(8)}'
+        future = client.submit(model.run, **kwargs, key=key)
         return future
 
-    def _return_running(self, results_id):
-        sim_response = SimulationRunResponse(SimStatus.RUNNING, results_id=results_id)
+    def _return_running(self, results_id, task_id):
+        sim_response = SimulationRunResponse(SimStatus.RUNNING, results_id=results_id, task_id=task_id)
         self.write(sim_response._encode())
         self.finish()
