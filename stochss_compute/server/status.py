@@ -12,36 +12,45 @@ class StatusHandler(RequestHandler):
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
 
-    async def get(self, results_id = None, n_traj = None):
+    async def get(self, results_id = None, n_traj = None, task_id = None):
         if None in (results_id, n_traj):
             raise RemoteSimulationError('Malformed request')
         self.results_id = results_id
+        self.task_id = task_id
         n_traj = int(n_traj)
         cache = Cache(self.cache_dir, results_id)
-        print(f'{datetime.now()} | <{self.request.remote_ip}> | Status Request | <{results_id}> | Trajectories: {n_traj}')
-        msg = f'{datetime.now()} | <{results_id}> | Status: '
+        print(f'{datetime.now()} | <{self.request.remote_ip}> | Status Request | <{results_id}> | Trajectories: {n_traj} | Task ID: {task_id}' )
+        msg = f'{datetime.now()} | <{results_id}> | <{task_id}> |Status: '
         exists = cache.exists()
         if exists:
             empty = cache.is_empty()
             if empty:
-                state, err = self.check_with_scheduler()
-                print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
-                if state == 'erred':
-                    self._respond_error(err)
+                if self.task_id is not None:
+                    state, err = await self.check_with_scheduler()
+                    print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
+                    if state == 'erred':
+                        self._respond_error(err)
+                    else:
+                        self._respond_running(f'Scheduler task state: {state}')
                 else:
-                    self._respond_running(f'Scheduler task state: {state}')
+                    print(msg+SimStatus.DOES_NOT_EXIST.name)
+                    self._respond_DNE()
             else:
                 ready = cache.is_ready(n_traj)
                 if ready:
                     print(msg+SimStatus.READY.name)
                     self._respond_ready()
                 else:
-                    state, err = self.check_with_scheduler()
-                    print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
-                    if state == 'erred':
-                        self._respond_error(err)
+                    if self.task_id is not None:
+                        state, err = await self.check_with_scheduler()
+                        print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
+                        if state == 'erred':
+                            self._respond_error(err)
+                        else:
+                            self._respond_running(f'Scheduler task state: {state}')
                     else:
-                        self._respond_running(f'Scheduler task state: {state}')
+                        print(msg+SimStatus.DOES_NOT_EXIST.name)
+                        self._respond_DNE()
         else:
             print(msg+SimStatus.DOES_NOT_EXIST.name)
             self._respond_DNE()
@@ -67,17 +76,19 @@ class StatusHandler(RequestHandler):
         self.write(status_response._encode())
         self.finish()
 
-    def check_with_scheduler(self):
+    async def check_with_scheduler(self):
         client = Client(self.scheduler_address)
 
         # define function here so that it is pickle-able
-        def scheduler_task_state(dask_scheduler, results_id):
-            task = dask_scheduler.tasks.get(results_id)
+        def scheduler_task_state(task_id, dask_scheduler=None):
+            task = dask_scheduler.tasks.get(task_id)
 
             if task is None:
                 return (None, None)
             if task.exception_text == "":
                  return (task.state, None)
             return (task.state, task.exception_text)
-        
-        return client.run_on_scheduler(scheduler_task_state, results_id=self.results_id)
+        # Do not await. Reasons. It returns sync.
+        ret = client.run_on_scheduler(scheduler_task_state, self.task_id)
+        client.close()
+        return ret
