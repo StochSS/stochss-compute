@@ -57,23 +57,10 @@ async def start_api(
     print(f'Cache directory: {cache_path}')
     print(f'Connecting to Dask scheduler at: {dask_host}:{dask_scheduler_port}\n')
 
-    def sig_handler(signal, frame):
-        if rm_cache_on_exit and os.path.exists(cache_path):
-            print('Removing cache...', end='')
-            subprocess.Popen(['rm', '-r', cache_path])
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, sig_handler)
-    signal.signal(signal.SIGABRT, sig_handler)
-    signal.signal(signal.SIGTERM, sig_handler)
-    signal.signal(signal.SIGQUIT, sig_handler)
-    signal.signal(signal.SIGCHLD, sig_handler)
-    signal.signal(signal.SIGPIPE, sig_handler)
-
     try:
         await asyncio.Event().wait()
-    except asyncio.exceptions.CancelledError:
-        pass
+    except asyncio.exceptions.CancelledError as e:
+        print(e)
     finally:
         if rm_cache_on_exit and os.path.exists(cache_path):
             print('Removing cache...', end='')
