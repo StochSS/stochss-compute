@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
-from filelock import Timeout, SoftFileLock
+from random import random
+import time
+from filelock import SoftFileLock, Timeout
 from gillespy2 import Results
 from json.decoder import JSONDecodeError
 from stochss_compute.core.errors import CacheError
@@ -22,14 +24,16 @@ class Cache:
         return os.path.exists(self.results_path)
 
     def is_empty(self):
-        if self.exists():
-            filesize = os.path.getsize(self.results_path)
-            if filesize == 0:
-                return True
+        lock = SoftFileLock(f'{self.results_path}.lock')
+        with lock:
+            if self.exists():
+                filesize = os.path.getsize(self.results_path)
+                if filesize == 0:
+                    return True
+                else:
+                    return False
             else:
-                return False
-        else:
-            return True
+                return True
 
     def is_ready(self, n_traj_wanted) -> bool:
         results = self.get()
@@ -64,29 +68,23 @@ class Cache:
             return None
 
     def read(self) -> str:
-        with open(self.results_path,'r') as file:
-            return file.read()
-
-    # def add(self, new_results: Results):
-    #     with open(self.results_path,'w') as file:
-    #         file.write(new_results.to_json())
+        lock = SoftFileLock(f'{self.results_path}.lock')
+        with lock:
+            with open(self.results_path,'r') as file:
+                return file.read()
 
     def save(self, results: Results):
         msg = f'{datetime.now()} | Cache | <{self.results_path}> | '
-        if self.exists():
-            lock = SoftFileLock(f'{self.results_path}.lock')
-            with lock:
-                with open(self.results_path, 'r+') as file:
-                    results_json = file.read()
-                    try:
-                        old_results = Results.from_json(results_json)
-                        combined_results = results + old_results
-                        print(msg+'Add')
-                        file.seek(0)
-                        file.write(combined_results.to_json())
-                    except JSONDecodeError:
-                        file.seek(0)
-                        print(msg+'New')
-                        file.write(results.to_json())
-        else:
-            raise CacheError('cache.save() called but results path has not been created yet.')
+        lock = SoftFileLock(f'{self.results_path}.lock')
+        with lock:
+            with open(self.results_path, 'r+') as file:
+                try:
+                    old_results = Results.from_json(file.read())
+                    combined_results = results + old_results
+                    print(msg+'Add')
+                    file.seek(0)
+                    file.write(combined_results.to_json())
+                except JSONDecodeError:
+                    print(msg+'New')
+                    file.seek(0)
+                    file.write(results.to_json())
