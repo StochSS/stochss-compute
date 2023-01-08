@@ -27,6 +27,7 @@ class RemoteResults(Results):
     id = None
     server = None
     n_traj = None
+    task_id = None
 
     def __init__(self, data = None):
         self._data = data
@@ -50,7 +51,7 @@ class RemoteResults(Results):
 
     def _status(self):
         # Request the status of a submitted simulation.
-        response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/status")
+        response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/{self.task_id or ''}/status")
         if not response_raw.ok:
             raise RemoteSimulationError(response_raw.reason)
 
