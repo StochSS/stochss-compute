@@ -81,17 +81,19 @@ class SimulationRunResponse(Response):
     :type results_id: str | None
     :type results: str | None
     '''
-    def __init__(self, status, error_message = None, results_id = None, results = None):
+    def __init__(self, status, error_message = None, results_id = None, results = None, task_id = None):
         self.status = status
         self.error_message = error_message
         self.results_id = results_id
         self.results = results
+        self.task_id = task_id
     
     def _encode(self):
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
                 'results_id': self.results_id or '',
-                'results': self.results or ''}
+                'results': self.results or '',
+                'task_id': self.task_id or '',}
     
     @staticmethod
     def _parse(raw_response):
@@ -99,11 +101,12 @@ class SimulationRunResponse(Response):
         status = SimStatus._from_str(response_dict['status'])
         results_id = response_dict['results_id']
         error_message = response_dict['error_message']
+        task_id = response_dict['task_id']
         if response_dict['results'] != '':
             results = Results.from_json(response_dict['results'])
         else:
             results = None
-        return SimulationRunResponse(status, error_message, results_id, results)
+        return SimulationRunResponse(status, error_message, results_id, results, task_id)
 
 class StatusRequest(Request):
     '''
