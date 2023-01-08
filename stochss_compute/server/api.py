@@ -14,7 +14,7 @@ def _make_app(dask_host, dask_scheduler_port, cache):
     scheduler_address = f'{dask_host}:{dask_scheduler_port}'
     return Application([
         (r"/api/v2/simulation/gillespy2/run", RunHandler, {'scheduler_address': scheduler_address, 'cache_dir': cache}),
-        (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/(?P<n_traj>[1-9]\d*?)/status", StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': cache}),
+        (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/(?P<n_traj>[1-9]\d*?)/(?P<task_id>.*?)/status", StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': cache}),
         (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/(?P<n_traj>[1-9]\d*?)/results", ResultsHandler, {'cache_dir': cache}),
         (r"/api/v2/cache/gillespy2/(?P<results_id>.*?)/(?P<n_traj>[1-9]\d*?)/is_cached", IsCachedHandler, {'cache_dir': cache}),
         (r"/api/v2/cloud/sourceip", SourceIpHandler),
@@ -45,12 +45,10 @@ async def start_api(
 
     :param rm_cache_on_exit: Delete the cache when exiting this program.
     :type rm_cache_on_exit: bool
-
-    
+   
     """
-    
-    cache_path = os.path.abspath(cache)
-        
+    # clean up lock files here
+    cache_path = os.path.abspath(cache)        
     app = _make_app(dask_host, dask_scheduler_port, cache)
     app.listen(port)
     print(f'StochSS-Compute listening on: :{port}')
@@ -65,3 +63,4 @@ async def start_api(
         if rm_cache_on_exit and os.path.exists(cache_path):
             print('Removing cache...', end='')
             subprocess.Popen(['rm', '-r', cache_path])
+            print('OK')
