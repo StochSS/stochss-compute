@@ -2,8 +2,8 @@ import os
 import subprocess
 import unittest
 
-import gillespy2_models
-from gillespy2 import Model, ODESolver
+from .. import gillespy2_models
+from gillespy2 import Model
 
 from stochss_compute.core.messages import SimulationRunRequest
 from stochss_compute.server.cache import Cache
@@ -33,7 +33,7 @@ class CacheTest(unittest.TestCase):
                 assert(cache.exists() == False)
                 assert(cache.is_empty() == True)
                 results = model.run()
-                cache.new(results)
+                cache.save(results)
                 assert(cache.exists() == True)
                 assert(cache.is_empty() == False)
                 results_get = cache.get()
@@ -42,7 +42,7 @@ class CacheTest(unittest.TestCase):
                 assert cache.is_ready(2) == False
                 assert cache.is_ready(1) == True
                 results = model.run()
-                cache.add(results)
+                cache.save(results)
                 assert len(cache.get()) == 2
                 assert cache.n_traj_needed(3) == 1
                 assert cache.n_traj_needed(2) == 0
