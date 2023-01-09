@@ -6,7 +6,7 @@ import unittest
 from stochss_compute import RemoteSimulation, ComputeServer, start_api
 
 
-from ..gillespy2_models import create_michaelis_menten
+from gillespy2_models import create_michaelis_menten
 from stochss_compute.core.messages import SimStatus
 
 from distributed import Client
