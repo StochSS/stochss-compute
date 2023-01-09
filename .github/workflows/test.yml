@@ -27,7 +27,9 @@ jobs:
         python -m pip install .
     - name: Run integration tests
       run: |
-        python test/run_integration_tests.py
+        cd test
+        python run_integration_tests.py
     - name: Run unit tests
       run: |
-        python test/run_unit_tests.py
+        cd test
+        python run_unit_tests.py
