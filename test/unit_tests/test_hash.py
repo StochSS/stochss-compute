@@ -1,6 +1,6 @@
 import unittest
 
-import gillespy2_models
+import test.unit_tests.gillespy2_models as gillespy2_models
 
 from stochss_compute.core.messages import SimulationRunRequest
 
