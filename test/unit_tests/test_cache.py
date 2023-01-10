@@ -2,7 +2,7 @@ import os
 import subprocess
 import unittest
 
-import gillespy2_models
+from . import gillespy2_models
 from gillespy2 import Model
 
 from stochss_compute.core.messages import SimulationRunRequest

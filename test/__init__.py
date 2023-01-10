@@ -1,1 +1,1 @@
-import gillespy2_models
+from .integration_tests import gillespy2_models
