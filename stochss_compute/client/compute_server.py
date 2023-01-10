@@ -3,7 +3,7 @@ from stochss_compute.client.server import Server
 
 class ComputeServer(Server):    
 
-    def __init__(self, host, port: int = 29681):
+    def __init__(self, host:str, port: int = 29681):
         '''
         Simple object representing a remote instance of StochSS-Compute.
 
@@ -13,6 +13,8 @@ class ComputeServer(Server):
         :param port: Port on which to connect. Defaults to 29681.
         :type port: int
         '''
+        host = host.replace('http://','')
+        host = host.split(':')[0]
         self._address = f"http://{host}:{port}"
 
     @property

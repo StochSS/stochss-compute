@@ -52,7 +52,6 @@ class Server(ABC):
             raise NotImplementedError
 
         url = f"{self.address}{self._endpoints[endpoint]}{sub}"
-
         n_try = 1
         sec = 3
         while n_try <= 3:
