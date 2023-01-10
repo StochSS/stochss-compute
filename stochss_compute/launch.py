@@ -1,8 +1,13 @@
+import signal
+
+import distributed
 from stochss_compute.server.api import start_api
 from argparse import ArgumentParser, Namespace
 import asyncio
 from distributed import LocalCluster
 import sys
+
+
 
 def launch_server():
     def _parse_args() -> Namespace:
@@ -16,7 +21,8 @@ def launch_server():
                             help="The port to use for the server. Defaults to 29681.")
 
         cache = parser.add_argument_group('Cache')
-        cache.add_argument('-c', '--cache', default='cache/', required=False, help='Path to use for the cache.')
+        cache.add_argument('-c', '--cache', default='cache/', required=False, help='Path to use for the cache. Default ./cache')
+        cache.add_argument('--rm', '--rm-cache', default=False, required=False, help='Whether to delete the cache upon exit. Default False.')
 
         dask = parser.add_argument_group('Dask')
         dask.add_argument("-H", "--dask-host", default='localhost', required=False,
@@ -48,6 +54,7 @@ def launch_with_cluster():
         
         cache = parser.add_argument_group('Cache')
         cache.add_argument('-c', '--cache', default='cache/', required=False, help='Path to use for the cache.')
+        cache.add_argument('--rm', default=False, action='store_true', required=False, help='Whether to delete the cache upon exit. Default False.')
 
         dask = parser.add_argument_group('Dask')
         dask.add_argument("-H", "--dask-host", default=None, required=False,
@@ -81,9 +88,13 @@ def launch_with_cluster():
     print(f'Dashboard Link: <{cluster.dashboard_link}>\n')
 
     try:
-        asyncio.run(start_api(port=args.port, cache=args.cache, dask_host=dask_host, dask_scheduler_port=dask_port))
-    except KeyboardInterrupt:
-        cluster.close()
+        asyncio.run(start_api(port=args.port, cache=args.cache, dask_host=dask_host, dask_scheduler_port=dask_port, rm_cache_on_exit=args.rm))
+    except asyncio.exceptions.CancelledError:
+        pass
+    finally:
+        print('Shutting down cluster...', end='')
+        asyncio.run(cluster.close())
+        print('OK')
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

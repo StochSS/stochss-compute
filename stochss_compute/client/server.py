@@ -28,7 +28,23 @@ class Server(ABC):
     def _get(self, endpoint, sub):
         url = f"{self.address}{self._endpoints[endpoint]}{sub}"
         print(f"[GET] {url}")
-        return requests.get(url)
+        n_try = 1
+        sec = 3
+        while n_try <= 3:
+            try:
+                return requests.get(url)
+
+            except ConnectionError as ce:
+                print(f"Connection refused by server. Retrying in {sec} seconds....")
+                sleep(sec)
+                n_try += 1
+                sec *= n_try
+            
+            except Exception as e:
+                print(f"Unknown error: {e}. Retrying in {sec} seconds....")
+                sleep(sec)
+                n_try += 1
+                sec *= n_try
 
     def _post(self, endpoint: Endpoint, sub: str, request: Request = None):
 

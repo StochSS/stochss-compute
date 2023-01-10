@@ -11,8 +11,9 @@ class SimStatus(Enum):
     '''
     PENDING = 'The simulation is pending.'
     RUNNING = 'The simulation is still running.'
-    READY = 'Simulation is done and results exist locally.'
+    READY = 'Simulation is done and results exist in the cache.'
     ERROR = 'The Simulation has encountered an error.'
+    DOES_NOT_EXIST = 'There is no evidence of this simulation either running or on disk.'
 
     @staticmethod
     def _from_str(name):
@@ -24,6 +25,8 @@ class SimStatus(Enum):
             return SimStatus.READY
         if name == 'ERROR':
             return SimStatus.ERROR
+        if name == 'DOES_NOT_EXIST':
+            return SimStatus.DOES_NOT_EXIST
     
 class Request(ABC):
     @abstractmethod
@@ -54,7 +57,7 @@ class SimulationRunRequest(Request):
 
     def _encode(self):
         return {'model': self.model.to_json(),
-                **self.kwargs}
+                'kwargs': self.kwargs}
 
     @staticmethod
     def _parse(raw_request):
@@ -68,7 +71,8 @@ class SimulationRunRequest(Request):
         popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
         kwargs_string = json_encode(popped_kwargs)
         request_string =  f'{anon_model_string}{kwargs_string}'
-        return md5(str.encode(request_string)).hexdigest()
+        hash = md5(str.encode(request_string)).hexdigest()
+        return hash
 
 class SimulationRunResponse(Response):
     '''
@@ -77,17 +81,19 @@ class SimulationRunResponse(Response):
     :type results_id: str | None
     :type results: str | None
     '''
-    def __init__(self, status, error_message = None, results_id = None, results = None):
+    def __init__(self, status, error_message = None, results_id = None, results = None, task_id = None):
         self.status = status
         self.error_message = error_message
         self.results_id = results_id
         self.results = results
+        self.task_id = task_id
     
     def _encode(self):
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
                 'results_id': self.results_id or '',
-                'results': self.results or ''}
+                'results': self.results or '',
+                'task_id': self.task_id or '',}
     
     @staticmethod
     def _parse(raw_response):
@@ -95,11 +101,12 @@ class SimulationRunResponse(Response):
         status = SimStatus._from_str(response_dict['status'])
         results_id = response_dict['results_id']
         error_message = response_dict['error_message']
+        task_id = response_dict['task_id']
         if response_dict['results'] != '':
             results = Results.from_json(response_dict['results'])
         else:
             results = None
-        return SimulationRunResponse(status, error_message, results_id, results)
+        return SimulationRunResponse(status, error_message, results_id, results, task_id)
 
 class StatusRequest(Request):
     '''
@@ -119,24 +126,23 @@ class StatusResponse(Response):
     :type status: SimStatus
     :type error_message: str
     '''
-    def __init__(self, status, error_message = None):
+    def __init__(self, status, message = None):
         self.status = status
-        self.error_message = error_message
-        # Add traceback eventually!
+        self.message = message
     
     def _encode(self):
         return {'status': self.status.name,
-                'error_message': self.error_message or ''}
+                'message': self.message or ''}
     
     @staticmethod
     def _parse(raw_response):
         response_dict = json_decode(raw_response)
         status = SimStatus._from_str(response_dict['status'])
-        error_message = response_dict['error_message']
-        if not error_message:
+        message = response_dict['message']
+        if not message:
             return StatusResponse(status)
         else:
-            return StatusResponse(status, error_message)
+            return StatusResponse(status, message)
             
 class ResultsRequest(Request):
     '''

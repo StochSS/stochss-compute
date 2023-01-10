@@ -54,11 +54,26 @@ class RemoteSimulation:
                 raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
         self.solver = solver
         
+    def isCached(self, **params):
+        if "solver" in params:
+            if hasattr(params['solver'], 'is_instantiated'):
+                raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
+            params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
+        if self.solver is not None:
+            params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
+
+        sim_request = SimulationRunRequest(model=self.model, **params)
+        results_dummy = RemoteResults()
+        results_dummy.id = sim_request._hash()
+        results_dummy.server = self.server
+        results_dummy.n_traj = params.get('number_of_trajectories', 1)
+        return results_dummy.isReady
 
     def run(self, **params):
         """
         Simulate the Model on the target ComputeServer, returning the results once complete.
-        See: https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run
+        
+        :super: https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run
 
         :param **params: Arguments to pass directly to the Model#run call on the server.
         
@@ -72,7 +87,7 @@ class RemoteSimulation:
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
 
-        sim_request = SimulationRunRequest(model=self.model, kwargs=params)
+        sim_request = SimulationRunRequest(model=self.model, **params)
         response_raw = self.server._post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
         if not response_raw.ok:
             raise Exception(response_raw.reason)
@@ -80,7 +95,7 @@ class RemoteSimulation:
         sim_response = SimulationRunResponse._parse(response_raw.text)
         
         if sim_response.status == SimStatus.ERROR:
-            raise RemoteSimulationError(sim_response.message)
+            raise RemoteSimulationError(sim_response.error_message)
             # If sim throws an error, would we still need to be able to interact with it in any way? like to clear it from memory or restart a worker?
         if sim_response.status == SimStatus.READY:
             remote_results =  RemoteResults(data=sim_response.results.data)
@@ -89,5 +104,7 @@ class RemoteSimulation:
             
         remote_results.id = sim_response.results_id
         remote_results.server = self.server
+        remote_results.n_traj = params.get('number_of_trajectories', 1)
+        remote_results.task_id = sim_response.task_id
 
         return remote_results
