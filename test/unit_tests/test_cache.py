@@ -33,6 +33,7 @@ class CacheTest(unittest.TestCase):
                 assert(cache.exists() == False)
                 assert(cache.is_empty() == True)
                 results = model.run()
+                cache.create()
                 cache.save(results)
                 assert(cache.exists() == True)
                 assert(cache.is_empty() == False)
@@ -42,6 +43,7 @@ class CacheTest(unittest.TestCase):
                 assert cache.is_ready(2) == False
                 assert cache.is_ready(1) == True
                 results = model.run()
+                cache.create()
                 cache.save(results)
                 assert len(cache.get()) == 2
                 assert cache.n_traj_needed(3) == 1

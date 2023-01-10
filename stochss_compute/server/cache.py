@@ -17,8 +17,6 @@ class Cache:
     def create(self):
         if not self.exists():
             return open(self.results_path, 'x').close()
-        else:
-            raise CacheError('cache.create() called but file exists.')
 
     def exists(self) -> bool:
         return os.path.exists(self.results_path)
