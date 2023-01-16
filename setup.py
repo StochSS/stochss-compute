@@ -1,3 +1,6 @@
+'''
+StochSS-Compute
+'''
 # Note: how to do a PyPI release
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Run the following commands:
@@ -18,17 +21,17 @@ from setuptools import setup, find_packages
 
 SETUP_DIR = path.dirname(path.abspath(__file__))
 
-with open(path.join(SETUP_DIR, 'requirements.txt')) as f:
+with open(path.join(SETUP_DIR, 'requirements.txt'), encoding='utf-8') as f:
     reqs = f.read().rstrip().splitlines()
 
-with open(path.join(SETUP_DIR, "README.md"), "r", errors="ignore") as f:
+with open(path.join(SETUP_DIR, "README.md"), "r", errors="ignore", encoding='utf-8') as f:
     readme = f.read()
 
 version = {}
-with open(path.join(SETUP_DIR, "stochss_compute/__version__.py")) as f:
+with open(path.join(SETUP_DIR, "stochss_compute/__version__.py"), encoding='utf-8') as f:
     text = f.read().rstrip().splitlines()
-    vars = [line for line in text if line.startswith("__") and "=" in line]
-    for v in vars:
+    variables = [line for line in text if line.startswith("__") and "=" in line]
+    for v in variables:
         setting = v.split("=")
         version[setting[0].strip()] = setting[1].strip().replace("\"", "")
 
