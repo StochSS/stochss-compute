@@ -25,7 +25,7 @@ async def start_api(
         cache = 'cache/',
         dask_host = 'localhost',
         dask_scheduler_port = 8786,
-        rm_cache_on_exit = False,
+        rm = False,
         ):
     
     """
@@ -43,8 +43,8 @@ async def start_api(
     :param dask_scheduler_port: The port of the dask cluster.
     :type dask_scheduler_port: int
 
-    :param rm_cache_on_exit: Delete the cache when exiting this program.
-    :type rm_cache_on_exit: bool
+    :param rm: Delete the cache when exiting this program.
+    :type rm: bool
    
     """
     # clean up lock files here
@@ -60,7 +60,7 @@ async def start_api(
     except asyncio.exceptions.CancelledError as e:
         print(e)
     finally:
-        if rm_cache_on_exit and os.path.exists(cache_path):
+        if rm and os.path.exists(cache_path):
             print('Removing cache...', end='')
             subprocess.Popen(['rm', '-r', cache_path])
             print('OK')

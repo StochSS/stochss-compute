@@ -1,22 +1,33 @@
+'''
+Cache for StochSS-Compute
+'''
 import os
-from datetime import datetime
-from random import random
-import time
-from filelock import SoftFileLock, Timeout
-from gillespy2 import Results
 from json.decoder import JSONDecodeError
-from stochss_compute.core.errors import CacheError
+from datetime import datetime
+from filelock import SoftFileLock
+from gillespy2 import Results
 
 class Cache:
+    '''
+    Cache
 
-    def __init__(self, cache_dir, results_id) -> None:
+    :param cache_dir: The root cache directory.
+    :type cache_dir: str
+
+    :param results_id: Simulation hash.
+    :type results_id: str
+    '''
+    def __init__(self, cache_dir, results_id):
         self.results_path = os.path.join(cache_dir, f'{results_id}.results')
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
 
     def create(self):
+        '''
+        
+        '''
         if not self.exists():
-            return open(self.results_path, 'x').close()
+            return open(self.results_path, 'x', encoding='utf-8').close()
 
     def exists(self) -> bool:
         return os.path.exists(self.results_path)
@@ -28,8 +39,7 @@ class Cache:
                 filesize = os.path.getsize(self.results_path)
                 if filesize == 0:
                     return True
-                else:
-                    return False
+                return False
             else:
                 return True
 
@@ -68,14 +78,14 @@ class Cache:
     def read(self) -> str:
         lock = SoftFileLock(f'{self.results_path}.lock')
         with lock:
-            with open(self.results_path,'r') as file:
+            with open(self.results_path,'r', encoding='utf-8') as file:
                 return file.read()
 
     def save(self, results: Results):
         msg = f'{datetime.now()} | Cache | <{self.results_path}> | '
         lock = SoftFileLock(f'{self.results_path}.lock')
         with lock:
-            with open(self.results_path, 'r+') as file:
+            with open(self.results_path, 'r+', encoding='utf-8') as file:
                 try:
                     old_results = Results.from_json(file.read())
                     combined_results = results + old_results
