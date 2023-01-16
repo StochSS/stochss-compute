@@ -1,15 +1,22 @@
-import signal
+'''
+stochss_compute.launch
 
-import distributed
-from stochss_compute.server.api import start_api
-from argparse import ArgumentParser, Namespace
-import asyncio
-from distributed import LocalCluster
+:function launch_server():          Starts the API Server. Alias to script "stochss-compute".
+
+:function launch_with_cluster():    Starts a Dask Cluster and API Server. 
+                                    Alias to script "stochss-compute-cluster".
+'''
+
 import sys
-
-
+import asyncio
+from argparse import ArgumentParser, Namespace
+from distributed import LocalCluster
+from stochss_compute.server.api import start_api
 
 def launch_server():
+    '''
+    Start 
+    '''
     def _parse_args() -> Namespace:
         desc = '''
             StochSS-Compute is a server and cache that anonymizes StochSS simulation data.
@@ -88,7 +95,7 @@ def launch_with_cluster():
     print(f'Dashboard Link: <{cluster.dashboard_link}>\n')
 
     try:
-        asyncio.run(start_api(port=args.port, cache=args.cache, dask_host=dask_host, dask_scheduler_port=dask_port, rm_cache_on_exit=args.rm))
+        asyncio.run(start_api(port=args.port, cache=args.cache, dask_host=dask_host, dask_scheduler_port=dask_port, rm=args.rm))
     except asyncio.exceptions.CancelledError:
         pass
     finally:
