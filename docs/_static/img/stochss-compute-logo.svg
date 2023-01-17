@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2">
+    <rect
+       x="111.51509"
+       y="386.93346"
+       width="608.04724"
+       height="158.90818"
+       id="rect236" />
+  </defs>
+  <g
+     id="layer2"
+     transform="translate(-15.59847,-12.58042)">
+    <circle
+       style="opacity:1;fill:#4400a2;fill-opacity:1;stroke:none;stroke-width:4.41871;stroke-opacity:0.000841866"
+       id="path7974"
+       cx="54.700672"
+       cy="118.56636"
+       r="2.3189337" />
+    <circle
+       style="fill:#7000a2;fill-opacity:1;stroke:none;stroke-width:3.56829;stroke-opacity:0.000841866"
+       id="path7974-4"
+       cx="51.552654"
+       cy="122.70609"
+       r="1.8726398" />
+    <circle
+       style="fill:#a000a2;fill-opacity:1;stroke:none;stroke-width:2.74382;stroke-opacity:0.000841866"
+       id="path7974-4-8"
+       cx="48.848305"
+       cy="126.08865"
+       r="1.4399556" />
+  </g>
+  <g
+     id="g12226"
+     transform="rotate(180,118.42333,115.66656)">
+    <circle
+       style="opacity:1;fill:#0037a2;fill-opacity:1;stroke:none;stroke-width:4.41871;stroke-opacity:0.000841866"
+       id="circle12220"
+       cx="54.700672"
+       cy="118.56636"
+       r="2.3189337" />
+    <circle
+       style="fill:#0068a2;fill-opacity:1;stroke:none;stroke-width:3.56829;stroke-opacity:0.000841866"
+       id="circle12222"
+       cx="51.552654"
+       cy="122.70609"
+       r="1.8726398" />
+    <circle
+       style="fill:#009fa2;fill-opacity:1;stroke:none;stroke-width:2.74382;stroke-opacity:0.000841866"
+       id="circle12224"
+       cx="48.848305"
+       cy="126.08865"
+       r="1.4399556" />
+  </g>
+  <g
+     id="layer1">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.5806px;font-family:Loma;-inkscape-font-specification:'Loma, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.64583;stroke-opacity:0.000841866"
+       x="41.364799"
+       y="114.96738"
+       id="text1992"><tspan
+         id="tspan1990"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.5806px;font-family:Loma;-inkscape-font-specification:'Loma, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.64583"
+         x="41.364799"
+         y="114.96738">StochSS-Compute</tspan></text>
+  </g>
+</svg>
