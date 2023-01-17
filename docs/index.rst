@@ -1,5 +1,5 @@
-Documentation for StochSS-Compute |release|
-#################################
+StochSS-Compute |release|
+#########################
 
 GillesPy2 is an open-source Python package for stochastic simulation of biochemical systems.  It offers an object-oriented approach for creating mathematical models of biological systems, as well as a variety of methods for performing time simulation of those models.  The methods include the `Gillespie direct method (SSA) <https://en.wikipedia.org/wiki/Gillespie_algorithm>`_, several variant stochastic simulation methods including `tau leaping <https://en.wikipedia.org/wiki/Tau-leaping>`_, and numerical integration of ODEs.  The solvers support a variety of user environments, with optimized code for C++, `Cython <https://cython.org>`_, and `NumPy <https://numpy.org>`_.  Models can also be read from files in `SBML <https://en.wikipedia.org/wiki/SBML>`_ format.
 
@@ -32,17 +32,12 @@ Documentation
    getting_started/installation/installation.rst
    getting_started/basic_usage/basic_usage.rst
 
-
 .. toctree::
    :maxdepth: 1
    :caption: Tutorials
    :name: sec-tutorials
 
-   tutorials/tut_toggle_switch/tut_toggle_switch.rst
-..
-   tutorials/tut_michaelis_menten/tut_michaelis_menten.rst
-   tutorials/tut_sbml/tut_sbml.rst
-
+   tutorials/aws/aws.rst
 
 .. toctree::
    :maxdepth: 3

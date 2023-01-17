@@ -1,5 +1,5 @@
-Tutorial: ODE vs. SSA
-#####################
+Tutorial: EC2 on AWS
+####################
 
 Deterministic ordinary differential equation (ODE) models of biochemical processes are useful and accurate in the high-concentration limit, but often fail to capture stochastic cellular dynamics accurately because the deterministic continuous formulation assumes spatial homogeneity and continuous biomolecule concentrations.  Nevertheless, ODE simulations are appropriate in some situations.  GillesPy2 includes ODE solvers as well as stochastic solvers, and thus allows you to compare the results of both.  This tutorial demonstrates the use of both ODE and stochastic simulation on the same model.
 

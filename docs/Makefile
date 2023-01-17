@@ -3,7 +3,7 @@
 ## @brief   Makefile for creating docs
 ## @date    2019-08-27
 ## @license Please see the file named LICENSE in the project directory
-## @website https://github.com/GillesPy2/GillesPy2
+## @website https://github.com/stochss/stochss-compute
 ##
 ## The following are special commands recognized by this Makefile.
 ##

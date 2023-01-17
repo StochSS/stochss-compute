@@ -6,7 +6,7 @@
 # =============================================================================
 
 
-__version__      = "0.9.9"
+__version__      = '0.9.9'
 
 __title__        = "stochss-compute"
 __description__  = "A compute delegation package for the StochSS family of stochastic simulators"

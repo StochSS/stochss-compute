@@ -1,4 +1,0 @@
-Tutorial: using solvers
-#######################
-
-*Forthcoming*
