@@ -206,6 +206,6 @@ todo_include_todos = True
 
 # -- Additional stuff for GillesPy2 
 
-import warnings
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+# import warnings
+# warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+# warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
