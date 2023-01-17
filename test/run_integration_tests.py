@@ -1,6 +1,8 @@
-import unittest, sys, os
-sys.path.insert(1, '../')
+import os
+import sys
+import unittest
 import argparse
+sys.path.insert(1, '../')
 
 
 parser = argparse.ArgumentParser()

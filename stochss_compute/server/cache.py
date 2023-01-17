@@ -103,6 +103,9 @@ class Cache:
     def read(self) -> str:
         '''
         Retrieve a gillespy2.Results object as a JSON-formatted string.
+
+        :returns:
+        :type str:
         '''
         lock = SoftFileLock(f'{self.results_path}.lock')
         with lock:
@@ -115,6 +118,9 @@ class Cache:
 
         :param results: The new Results.
         :type gillespy2.Results:
+
+        :returns:
+        :type None:
         '''
         msg = f'{datetime.now()} | Cache | <{self.results_path}> | '
         lock = SoftFileLock(f'{self.results_path}.lock')

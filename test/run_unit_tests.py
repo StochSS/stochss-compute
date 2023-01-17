@@ -1,6 +1,11 @@
-import unittest, sys, os
-sys.path.insert(1, '../')
+'''
+test.run_unit_tests
+'''
+import os
+import sys
+import unittest
 import argparse
+sys.path.insert(1, '../')
 
 
 parser = argparse.ArgumentParser()
@@ -24,7 +29,7 @@ if __name__ == '__main__':
         suite = unittest.TestLoader().loadTestsFromModule(module)
         runner = unittest.TextTestRunner(failfast=args.mode == 'develop')
 
-        print("Executing: {}".format(module))
+        print(f'Executing: {module}')
         result = runner.run(suite)
         print('=' * 70)
         if not result.wasSuccessful():
