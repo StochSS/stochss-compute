@@ -1,3 +1,6 @@
+'''
+stochss_compute.core.remote_simulation
+'''
 from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.messages import SimulationRunRequest, SimulationRunResponse, SimStatus
 from stochss_compute.core.errors import RemoteSimulationError
@@ -7,10 +10,10 @@ from stochss_compute.core.remote_results import RemoteResults
 class RemoteSimulation:
     '''
     An object representing a remote gillespy2 simulation. Requires a model and a host address.
-    A solver type may be provided, but does not accept instantiated solvers. 
+    A solver type may be provided, but does not accept instantiated solvers.
 
     :param model: The model to simulate.
-    :type model: gillespy2.Model
+    :type gillespy2.Model: gillespy2.Model
 
     :param server: A server to run the simulation. Optional if host is provided.
     :type server: stochss_compute.Server

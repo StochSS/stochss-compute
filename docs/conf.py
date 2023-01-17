@@ -183,7 +183,7 @@ extensions.append('alabaster')
 html_theme = 'alabaster'
 
 html_theme_options = {
-    'github_user': 'StochSS-Compute',
+    'github_user': 'StochSS',
     'github_repo': 'StochSS-Compute',
     'fixed_sidebar': 'true',
     'github_banner': 'true',
