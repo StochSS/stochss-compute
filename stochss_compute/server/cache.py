@@ -25,6 +25,8 @@ class Cache:
     def create(self):
         '''
         Create the results file if it does not exist.
+
+        :returns: None
         '''
         try:
             with open(self.results_path, 'x', encoding='utf-8') as file:

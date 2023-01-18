@@ -17,13 +17,16 @@ class CacheTest(unittest.TestCase):
     cache_dir = 'cache'
     def setUp(self) -> None:
         if os.path.exists(self.cache_dir):
-            subprocess.Popen(['rm', '-r', self.cache_dir])
+            rm = subprocess.Popen(['rm', '-r', self.cache_dir])
+            rm.wait()
         if not os.path.exists(self.cache_dir):
-            subprocess.Popen(['mkdir', self.cache_dir])
+            mkdir = subprocess.Popen(['mkdir', self.cache_dir])
+            mkdir.wait()
 
     def tearDown(self) -> None:
         if os.path.exists(self.cache_dir):
-            subprocess.Popen(['rm', '-r', self.cache_dir])
+            rm = subprocess.Popen(['rm', '-r', self.cache_dir])
+            rm.wait()
 
     def test_cache(self):
         '''
