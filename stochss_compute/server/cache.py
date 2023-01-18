@@ -26,8 +26,11 @@ class Cache:
         '''
         Create the results file if it does not exist.
         '''
-        if not self.exists():
-            return open(self.results_path, 'x', encoding='utf-8').close()
+        try:
+            with open(self.results_path, 'x', encoding='utf-8') as file:
+                file.close()
+        except FileExistsError:
+            pass
 
     def exists(self) -> bool:
         '''
