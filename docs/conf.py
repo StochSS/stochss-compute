@@ -20,7 +20,6 @@ ROOT_DIR = path.join(path.dirname(path.abspath(__file__)), '..')
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-#   sys.path.insert(0, '/mnt/c/Users/seanm/OneDrive/Documents/Research/documentation/GillesPy2')
 sys.path.append('..')
 
 

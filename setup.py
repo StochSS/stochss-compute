@@ -50,8 +50,8 @@ setup(name=             version["__title__"],
             ]
         },
       install_requires= reqs,
-      extras_requires = {
-          'aws': [
+      extras_require = {
+          "AWS": [
               'boto3 == 1.24.71',
               'paramiko == 2.11.0',
               'python-dotenv == 0.21.0'

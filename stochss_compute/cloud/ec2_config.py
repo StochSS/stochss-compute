@@ -1,6 +1,5 @@
 import os
 
-
 class EC2RemoteConfig:
     _AMIS = {
         'us-east-1': 'ami-09d3b3274b6c5d4aa',

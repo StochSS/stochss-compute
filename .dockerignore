@@ -10,6 +10,9 @@ tests/
 kubernetes/
 docker/
 .github/
-docker-compose.yml
+**/docker-compose.yml
 **/dask-worker-space
 docker-build.sh
+**/.sssc/
+**/cache/*
+**/.env

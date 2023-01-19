@@ -1,5 +1,8 @@
+Basic Usage
+===========
+
 Client
-######
+------
 
 The core functionality of StochSS-Compute comes from GillesPy2.
 This documentation assumes basic familiarity with 
@@ -50,7 +53,7 @@ object has identical properties to the simulation you have requested, your resul
     # no need to fetch
 
 Server
-######
+------
 
 1. Run the included command-line utility to launch a server and pre-configured `Dask <https://www.dask.org/>`_ cluster.
 
@@ -58,8 +61,15 @@ Server
 
     stochss-compute-cluster
 
+Connecting to a Dask Cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+    stochss-compute -H localhost -P 8786
+
 Arguments
-*********
+~~~~~~~~~
 
 ``-p PORT --port PORT``
     The port to use for the server. Defaults to 29681.
@@ -86,10 +96,4 @@ Arguments
     A name to use when printing out the cluster, defaults to type name.
 
 
-Connecting to a Dask Cluster
-****************************
-
-.. code-block:: bash
-
-    stochss-compute -H localhost -P 8786
 

@@ -1,4 +1,4 @@
-FROM python:3.9.14-buster
+FROM python:3.11.1-buster
 
 LABEL authors="Ethan Green <egreen4@unca.edu>, Matthew Dippel <mdip226@gmail.com>"
 

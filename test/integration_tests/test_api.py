@@ -1,18 +1,21 @@
+'''
+test.integration_tests.test_api
+'''
 import os
 import subprocess
 import time
 import unittest
 
-from stochss_compute import RemoteSimulation, ComputeServer, start_api
+from stochss_compute import RemoteSimulation, ComputeServer
 
 
 from .gillespy2_models import create_michaelis_menten
-from stochss_compute.core.messages import SimStatus
 
-from distributed import Client
-import asyncio
 
 class ApiTest(unittest.TestCase):
+    '''
+    Spins up a local instance for testing.
+    '''
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -31,6 +34,9 @@ class ApiTest(unittest.TestCase):
         return super().tearDown()
 
     def test_run_resolve(self):
+        '''
+        Basic function.
+        '''
         model = create_michaelis_menten()
         server = ComputeServer('localhost')
         sim = RemoteSimulation(model, server)
@@ -38,6 +44,9 @@ class ApiTest(unittest.TestCase):
         assert(results.data != None)
 
     def test_isCached(self):
+        '''
+        Test RemoteSimulation#isCached()
+        '''
         model = create_michaelis_menten()
         server = ComputeServer('localhost')
         sim = RemoteSimulation(model, server)

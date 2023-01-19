@@ -57,10 +57,16 @@ python -m stochss_compute.launch
 ## Example Tutorial
 #### 1. Run this Docker command:
 ```
-docker run -it --rm -p 8888:8888 -p 8787:8787 stochss/stochss-compute:examples jupyter notebook
+JUPYTER_PORT=7888 && \
+docker run -it --rm \
+-p $JUPYTER_PORT:$JUPYTER_PORT \
+-p 8787:8787 \ # for dask dashboard
+stochss/stochss-compute:examples \
+jupyter notebook \
+--port $JUPYTER_PORT
 ```
 #### 2. Open the link provided by the Jupyter Notebook server in your browser.
-#### 3. Open and run the self-contained `Tutorial-1.ipynb`
+#### 3. Open and run the self-contained `Tutorial_1-Local.ipynb`
 ***
 ## Starting a server
 
