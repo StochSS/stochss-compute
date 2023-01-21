@@ -55,8 +55,7 @@ class Cache:
                 if filesize == 0:
                     return True
                 return False
-            else:
-                return True
+            return True
 
     def is_ready(self, n_traj_wanted) -> bool:
         '''

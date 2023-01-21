@@ -1,13 +1,22 @@
 '''
 stochss_compute.server.sourceip
 '''
+import os
 from tornado.web import RequestHandler
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
-import os
 
 class SourceIpHandler(RequestHandler):
+    '''
+    Responds with the IP address associated with the request.
+    Used only by cloud api.
+    '''
 
     def post(self):
+        '''
+        Process POST request.
+        
+        :returns: request.remote_ip
+        '''
         source_ip = self.request.remote_ip
         print(f'[SourceIp Request] | Source: <{source_ip}>')
         source_ip_request = SourceIpRequest.parse(self.request.body)
@@ -16,5 +25,5 @@ class SourceIpHandler(RequestHandler):
             source_ip_response = SourceIpResponse(source_ip=source_ip)
             self.write(source_ip_response.encode())
         else:
-            self.set_status(403, f'Access denied.')
+            self.set_status(403, 'Access denied.')
         self.finish()

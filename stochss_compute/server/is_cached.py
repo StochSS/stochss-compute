@@ -40,7 +40,7 @@ class IsCachedHandler(RequestHandler):
             empty = cache.is_empty()
             if empty:
                 print(msg+SimStatus.DOES_NOT_EXIST.name)
-                self._respond_DNE('That simulation is not currently cached.')
+                self._respond_dne('That simulation is not currently cached.')
             else:
                 ready = cache.is_ready(n_traj)
                 if ready:
@@ -48,17 +48,18 @@ class IsCachedHandler(RequestHandler):
                     self._respond_ready()
                 else:
                     print(msg+SimStatus.DOES_NOT_EXIST.name)
-                    self._respond_DNE(f'Not enough trajectories in cache. Requested: {n_traj}, Available: {cache.n_traj_in_cache()}')
+                    self._respond_dne(f'Not enough trajectories in cache. \
+                                      Requested: {n_traj}, Available: {cache.n_traj_in_cache()}')
         else:
             print(msg+SimStatus.DOES_NOT_EXIST.name)
-            self._respond_DNE('There is no record of that simulation')
+            self._respond_dne('There is no record of that simulation')
 
     def _respond_ready(self):
         status_response = StatusResponse(SimStatus.READY)
         self.write(status_response.encode())
         self.finish()
 
-    def _respond_DNE(self, msg):
+    def _respond_dne(self, msg):
         status_response = StatusResponse(SimStatus.DOES_NOT_EXIST, msg)
         self.write(status_response.encode())
         self.finish()
