@@ -16,7 +16,7 @@ jobs:
     - name: Python Pylint GitHub Action
       uses: fylein/python-pylint-github-action@v1
       with:
-        args: pip3 install -r requirements.txt && pylint --rcfile=.pylintrc <directory_name>
+        args: pip3 install -r requirements.txt && pylint --rcfile=.pylintrc stochss-compute
   #   - name: Set up Python ${{ matrix.python-version }}
   #     uses: actions/setup-python@v3
   #     with:
