@@ -20,7 +20,7 @@ As an alternative to getting it from PyPI, you can instruct ``pip`` to install S
     python3 -m pip install git+https@github.com:stochss/stochss-compute.git --user --upgrade
 
 
-As a final alternative, you can first use ``git`` to clone a copy of the GillesPy2 source tree from the GitHub repository and then install it using that copy::
+As a final alternative, you can first use ``git`` to clone a copy of the StochSS-Compute source tree from the GitHub repository and then install it using that copy::
 
     git clone --recursive https@github.com:stochss/stochss-compute.git
     cd stochss-compute

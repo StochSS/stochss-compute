@@ -1,5 +1,5 @@
-Tutorials Container
-===================
+Tutorial Docker Container
+=========================
 
 1. Run:
 

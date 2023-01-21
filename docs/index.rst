@@ -40,6 +40,7 @@ Documentation
    :caption: Tutorials
    :name: sec-tutorials
 
+   tutorials/docker/docker.rst
    tutorials/aws/aws.rst
 
 .. toctree::
