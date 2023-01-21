@@ -13,18 +13,20 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
-    - name: Python Pylint GitHub Action
-      uses: fylein/python-pylint-github-action@v1
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
       with:
-        args: pwd && ls && pip3 install -r requirements.txt && pylint --rcfile=.pylintrc stochss-compute
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v3
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       python -m pip install .
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install .
+        python -m pip install pylint
+    - name: Python Pylint GitHub Action
+      run: |
+        pylint --rcfile=.pylintrc stochss-compute
+
   #   - name: Run integration tests
   #     run: |
   #       cd test
