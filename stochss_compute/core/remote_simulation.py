@@ -76,7 +76,7 @@ class RemoteSimulation:
         results_dummy.id = sim_request.hash()
         results_dummy.server = self.server
         results_dummy.n_traj = params.get('number_of_trajectories', 1)
-        return results_dummy.isReady
+        return results_dummy.is_ready
 
     def run(self, **params):
         """

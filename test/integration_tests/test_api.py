@@ -43,16 +43,16 @@ class ApiTest(unittest.TestCase):
         results = sim.run()
         assert(results.data != None)
 
-    def test_isCached(self):
+    def test_is_cached(self):
         '''
-        Test RemoteSimulation#isCached()
+        Test RemoteSimulation#is_cached()
         '''
         model = create_michaelis_menten()
         server = ComputeServer('localhost')
         sim = RemoteSimulation(model, server)
-        assert(sim.isCached() is False)
+        assert(sim.is_cached() is False)
         results = sim.run()
         results._resolve()
-        assert(sim.isCached() is True)
+        assert(sim.is_cached() is True)
 
 
