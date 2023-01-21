@@ -29,5 +29,5 @@ jobs:
         with:
           push: true
           file: api.dockerfile
-          tags: stochss/stochss-compute:dev
+          tags: stochss/stochss-compute:dev, stochss/stochss-compute:cloud
       - run: echo "🍏 This job's status is ${{ job.status }}."
