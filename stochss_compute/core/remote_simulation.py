@@ -1,10 +1,9 @@
 '''
-stochss_compute.core.remote_simulation
+RemoteSimulation
 '''
 from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.messages import SimulationRunRequest, SimulationRunResponse, SimStatus
 from stochss_compute.core.errors import RemoteSimulationError
-
 from stochss_compute.core.remote_results import RemoteResults
 
 class RemoteSimulation:
@@ -13,7 +12,7 @@ class RemoteSimulation:
     A solver type may be provided, but does not accept instantiated solvers.
 
     :param model: The model to simulate.
-    :type gillespy2.Model: gillespy2.Model
+    :type model: gillespy2.Model
 
     :param server: A server to run the simulation. Optional if host is provided.
     :type server: stochss_compute.Server
@@ -26,9 +25,7 @@ class RemoteSimulation:
     :type port: int
 
     :param solver: The type of solver to use. Does not accept instantiated solvers.
-    :type solver: Type[gillespy2.GillesPySolver]
-
-
+    :type solver: gillespy2.GillesPySolver
     '''
     def __init__(self,
                  model,
@@ -82,9 +79,9 @@ class RemoteSimulation:
         """
         Simulate the Model on the target ComputeServer, returning the results once complete.
 
-        https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run
+        <https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run>
 
-        :param **params: Arguments to pass directly to the Model#run call on the server.
+        :param params: Arguments to pass directly to the Model#run call on the server.
 
         :returns: stochss_compute.RemoteResults
         """

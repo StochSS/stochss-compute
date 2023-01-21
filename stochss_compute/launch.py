@@ -1,10 +1,10 @@
 '''
 stochss_compute.launch
 
-:function launch_server():          Starts the API Server. Alias to script "stochss-compute".
+launch_server()          Starts the API Server. Alias to script "stochss-compute".
 
-:function launch_with_cluster():    Starts a Dask Cluster and API Server.
-                                    Alias to script "stochss-compute-cluster".
+launch_with_cluster()    Starts a Dask Cluster and API Server.
+                         Alias to script "stochss-compute-cluster".
 '''
 
 import sys

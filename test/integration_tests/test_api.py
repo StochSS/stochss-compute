@@ -41,7 +41,7 @@ class ApiTest(unittest.TestCase):
         server = ComputeServer('localhost')
         sim = RemoteSimulation(model, server)
         results = sim.run()
-        assert(results.data != None)
+        assert(results.data is not None)
 
     def test_is_cached(self):
         '''
