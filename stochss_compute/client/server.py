@@ -60,7 +60,7 @@ class Server(ABC):
                     print(f"[POST] {url}")
                     return requests.post(url)
                 print(f"[{type(request).__name__}] {url}")
-                return requests.post(url, json=request._encode())
+                return requests.post(url, json=request.encode())
 
             except ConnectionError as ce:
                 print(f"Connection refused by server. Retrying in {sec} seconds....")

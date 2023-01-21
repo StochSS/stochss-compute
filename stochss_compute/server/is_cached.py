@@ -1,16 +1,29 @@
+'''
+stochss_compute.server.is_cached
+'''
 from datetime import datetime
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import SimStatus, StatusResponse
 from stochss_compute.server.cache import Cache
 
-# TODO could possibly respond with number of trajectories in cache 
 class IsCachedHandler(RequestHandler):
-
+    '''
+    Endpoint that will determine if a particular simulation exists in the cache.
+    '''
     def initialize(self, cache_dir):
+        '''
+        Set variables.
+        '''
         self.cache_dir = cache_dir
 
     async def get(self, results_id = None, n_traj = None):
+        '''
+        Process GET request.
+
+        :param results_id: Hash of the simulation.
+        :param n_traj: Number of trajectories to check for.
+        '''
         if None in (results_id, n_traj):
             raise RemoteSimulationError('Malformed request')
         n_traj = int(n_traj)
@@ -42,10 +55,10 @@ class IsCachedHandler(RequestHandler):
 
     def _respond_ready(self):
         status_response = StatusResponse(SimStatus.READY)
-        self.write(status_response._encode())
+        self.write(status_response.encode())
         self.finish()
 
     def _respond_DNE(self, msg):
         status_response = StatusResponse(SimStatus.DOES_NOT_EXIST, msg)
-        self.write(status_response._encode())
+        self.write(status_response.encode())
         self.finish()

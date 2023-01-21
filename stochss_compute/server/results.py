@@ -18,7 +18,7 @@ class ResultsHandler(RequestHandler):
         if cache.is_ready(n_traj):
             results = cache.read()
             results_response = ResultsResponse(results)
-            self.write(results_response._encode())
+            self.write(results_response.encode())
         else:
             # This should not happen!
             self.set_status(404, f'Results "{results_id}" not found.')

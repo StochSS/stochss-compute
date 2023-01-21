@@ -1,8 +1,11 @@
+'''
+stochss_compute.core.messages
+'''
 from abc import ABC, abstractmethod
-from gillespy2 import Model, Results
 from enum import Enum
-from tornado.escape import json_encode, json_decode
 from hashlib import md5
+from gillespy2 import Model, Results
+from tornado.escape import json_encode, json_decode
 
 
 class SimStatus(Enum):
@@ -16,7 +19,10 @@ class SimStatus(Enum):
     DOES_NOT_EXIST = 'There is no evidence of this simulation either running or on disk.'
 
     @staticmethod
-    def _from_str(name):
+    def from_str(name):
+        '''
+        Convert str to Enum.
+        '''
         if name == 'PENDING':
             return SimStatus.PENDING
         if name == 'RUNNING':
@@ -27,24 +33,38 @@ class SimStatus(Enum):
             return SimStatus.ERROR
         if name == 'DOES_NOT_EXIST':
             return SimStatus.DOES_NOT_EXIST
-    
+
 class Request(ABC):
+    '''
+    Talk about class.
+    '''
     @abstractmethod
-    def _encode(self):
-        pass
+    def encode(self):
+        '''
+        Encode self for http.
+        '''
     @staticmethod
     @abstractmethod
-    def _parse(raw_request):
-        pass
+    def parse(raw_request):
+        '''
+        Parse http for python.
+        '''
 
 class Response(ABC):
+    '''
+    Response abstracted down to the essentials.
+    '''
     @abstractmethod
-    def _encode(self):
-        pass
+    def encode(self):
+        '''
+        Encode self for http.
+        '''
     @staticmethod
     @abstractmethod
-    def _parse(raw_response):
-        pass
+    def parse(raw_response):
+        '''
+        Parse http for python.
+        '''
 
 
 class SimulationRunRequest(Request):
@@ -55,24 +75,26 @@ class SimulationRunRequest(Request):
         self.model = model
         self.kwargs = kwargs
 
-    def _encode(self):
+    def encode(self):
         return {'model': self.model.to_json(),
                 'kwargs': self.kwargs}
 
     @staticmethod
-    def _parse(raw_request):
+    def parse(raw_request):
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs = request_dict['kwargs']
         return SimulationRunRequest(model, **kwargs)
 
-    def _hash(self):
+    def hash(self):
+        '''
+        '''
         anon_model_string = self.model.to_anon().to_json(encode_private=False)
         popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
         kwargs_string = json_encode(popped_kwargs)
         request_string =  f'{anon_model_string}{kwargs_string}'
-        hash = md5(str.encode(request_string)).hexdigest()
-        return hash
+        _hash = md5(str.encode(request_string)).hexdigest()
+        return _hash
 
 class SimulationRunResponse(Response):
     '''
@@ -88,7 +110,7 @@ class SimulationRunResponse(Response):
         self.results = results
         self.task_id = task_id
     
-    def _encode(self):
+    def encode(self):
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
                 'results_id': self.results_id or '',
@@ -96,9 +118,9 @@ class SimulationRunResponse(Response):
                 'task_id': self.task_id or '',}
     
     @staticmethod
-    def _parse(raw_response):
+    def parse(raw_response):
         response_dict = json_decode(raw_response)
-        status = SimStatus._from_str(response_dict['status'])
+        status = SimStatus.from_str(response_dict['status'])
         results_id = response_dict['results_id']
         error_message = response_dict['error_message']
         task_id = response_dict['task_id']
@@ -114,10 +136,10 @@ class StatusRequest(Request):
     '''
     def __init__(self, results_id):
         self.results_id = results_id
-    def _encode(self):
+    def encode(self):
         return self.__dict__
     @staticmethod
-    def _parse(raw_request):
+    def parse(raw_request):
         request_dict = json_decode(raw_request)
         return StatusRequest(request_dict['results_id'])
 
@@ -130,14 +152,14 @@ class StatusResponse(Response):
         self.status = status
         self.message = message
     
-    def _encode(self):
+    def encode(self):
         return {'status': self.status.name,
                 'message': self.message or ''}
     
     @staticmethod
-    def _parse(raw_response):
+    def parse(raw_response):
         response_dict = json_decode(raw_response)
-        status = SimStatus._from_str(response_dict['status'])
+        status = SimStatus.from_str(response_dict['status'])
         message = response_dict['message']
         if not message:
             return StatusResponse(status)
@@ -150,10 +172,10 @@ class ResultsRequest(Request):
     '''
     def __init__(self, results_id):
         self.results_id = results_id
-    def _encode(self):
+    def encode(self):
         return self.__dict__
     @staticmethod
-    def _parse(raw_request):
+    def parse(raw_request):
         request_dict = json_decode(raw_request)
         return ResultsRequest(request_dict['results_id'])
 
@@ -164,11 +186,11 @@ class ResultsResponse(Response):
     def __init__(self, results = None):
         self.results = results
     
-    def _encode(self):
+    def encode(self):
         return {'results': self.results or ''}
     
     @staticmethod
-    def _parse(raw_response):
+    def parse(raw_response):
         response_dict = json_decode(raw_response)
         if response_dict['results'] != '':
             results = Results.from_json(response_dict['results'])
@@ -182,24 +204,29 @@ class SourceIpRequest(Request):
     '''
     def __init__(self, cloud_key):
         self.cloud_key = cloud_key
-    def _encode(self):
+    def encode(self):
         return self.__dict__
     @staticmethod
-    def _parse(raw_request):
+    def parse(raw_request):
         request_dict = json_decode(raw_request)
         return SourceIpRequest(request_dict['cloud_key'])
 
 class SourceIpResponse(Response):
     '''
-    :type results: str | None
+    Response from server containing IP address of the source.
     '''
     def __init__(self, source_ip):
         self.source_ip = source_ip
-    
-    def _encode(self):
+
+    def encode(self):
         return self.__dict__
-    
+
     @staticmethod
-    def _parse(raw_response):
+    def parse(raw_response):
+        '''
+        Parses a http response and returns a python object.
+
+        :param raw_response: A raw http SourceIpResponse from the server.
+        '''
         response_dict = json_decode(raw_response)
         return SourceIpResponse(response_dict['source_ip'])

@@ -11,7 +11,7 @@ class SourceIpHandler(RequestHandler):
         # could possibly also check just to see if request is valid?
         if source_ip_request.cloud_key == os.environ.get('CLOUD_LOCK'):
             source_ip_response = SourceIpResponse(source_ip=source_ip)
-            self.write(source_ip_response._encode())
+            self.write(source_ip_response.encode())
         else:
             self.set_status(403, f'Access denied.')
         self.finish()

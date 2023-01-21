@@ -1,3 +1,6 @@
+'''
+stochss_compute.__version__
+'''
 # =============================================================================
 # @file    __version__.py
 # @brief   stochss-compute version info

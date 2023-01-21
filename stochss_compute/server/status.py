@@ -58,22 +58,22 @@ class StatusHandler(RequestHandler):
 
     def _respond_ready(self):
         status_response = StatusResponse(SimStatus.READY)
-        self.write(status_response._encode())
+        self.write(status_response.encode())
         self.finish()
     
     def _respond_error(self, error_message):
         status_response = StatusResponse(SimStatus.ERROR, error_message)
-        self.write(status_response._encode())
+        self.write(status_response.encode())
         self.finish()
 
     def _respond_DNE(self):
         status_response = StatusResponse(SimStatus.DOES_NOT_EXIST, 'There is no record of that simulation.')
-        self.write(status_response._encode())
+        self.write(status_response.encode())
         self.finish()
 
     def _respond_running(self, message):
         status_response = StatusResponse(SimStatus.RUNNING, message)
-        self.write(status_response._encode())
+        self.write(status_response.encode())
         self.finish()
 
     async def check_with_scheduler(self):

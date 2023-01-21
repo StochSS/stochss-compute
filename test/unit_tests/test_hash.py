@@ -14,7 +14,7 @@ class HashTest(unittest.TestCase):
                 sim_request1 = SimulationRunRequest(model1)
                 sim_request2 = SimulationRunRequest(model2)
 
-                assert(sim_request1._hash() == sim_request2._hash())
+                assert(sim_request1.hash() == sim_request2.hash())
 
     def test_trajectories(self):
         for create_model in gillespy2_models.__all__:
@@ -24,5 +24,5 @@ class HashTest(unittest.TestCase):
                 sim_request1 = SimulationRunRequest(model1)
                 sim_request2 = SimulationRunRequest(model2, number_of_trajectories = 50)
 
-                assert(sim_request1._hash() == sim_request2._hash())
+                assert(sim_request1.hash() == sim_request2.hash())
 

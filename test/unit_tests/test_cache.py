@@ -46,7 +46,7 @@ class CacheTest(unittest.TestCase):
                     continue
                 model: Model = gillespy2_models.__dict__[create_model]()
                 sim_request = SimulationRunRequest(model)
-                cache = Cache(cache_dir=self.cache_dir, results_id=sim_request._hash())
+                cache = Cache(cache_dir=self.cache_dir, results_id=sim_request.hash())
                 assert cache.exists() is False
                 assert cache.is_empty() is True
                 results = model.run()

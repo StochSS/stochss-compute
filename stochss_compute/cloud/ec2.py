@@ -1,3 +1,6 @@
+'''
+stochss_compute.cloud.ec2
+'''
 from stochss_compute.client.server import Server
 from stochss_compute.cloud.ec2_config import EC2LocalConfig, EC2RemoteConfig
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
@@ -10,7 +13,7 @@ try:
     from botocore.exceptions import ClientError
     from paramiko import SSHClient, AutoAddPolicy
 except ImportError as err:
-    raise EC2ImportException
+    raise EC2ImportException from err
 import os
 import logging
 from time import sleep
@@ -61,7 +64,6 @@ class EC2Cluster(Server):
         :type EC2LocalConfig:
 
         """
-
         if local_config is not None:
             self._local_config = local_config
         if remote_config is not None:
@@ -83,15 +85,15 @@ class EC2Cluster(Server):
         else:
             try:
                 self._ami = self._remote_config._AMIS[region]
-            except KeyError:
+            except KeyError as err2:
                 self._set_status('region error')
-                raise EC2Exception(f'Unsupported region. Currently Supported: {list(self._remote_config._AMIS.keys())}. Try providing an AMI identifier.')
+                raise EC2Exception(f'Unsupported region. Currently Supported: {list(self._remote_config._AMIS.keys())}. Try providing an AMI identifier.') from err2
 
         try:
             self._load_cluster()      
-        except ClientError as ce:
-            self._set_status(ce.response['Error']['Code'])
-            raise EC2Exception(ce.response['Error']['Message'])
+        except ClientError as c_e:
+            self._set_status(c_e.response['Error']['Code'])
+            raise EC2Exception(c_e.response['Error']['Message']) from c_e
         except ResourceException:
             self.clean_up()
 
@@ -122,15 +124,15 @@ class EC2Cluster(Server):
         if self._local_config.status_file is not None:
             # handle path?
             # os.makedirs(self._local_config.status_file, exist_ok=True)
-            with open(self._local_config.status_file, 'w') as file:
+            with open(self._local_config.status_file, 'w', encoding='utf-8') as file:
                 file.write(status)
 
-    def launch_single_node_instance(self, instanceType):
+    def launch_single_node_instance(self, instance_type):
         """ 
-        Launches a single node StochSS-Compute instance. Make sure to check instanceType pricing before launching. 
+        Launches a single node StochSS-Compute instance. Make sure to check instance_type pricing before launching. 
 
-        :param instanceType: Example: 't3.nano' See full list here: https://aws.amazon.com/ec2/instance-types/ 
-        :type instanceType: str
+        :param instance_ype: Example: 't3.nano' See full list here: https://aws.amazon.com/ec2/instance-types/ 
+        :type instance_ype: str
          """
         if self._init is True:
             raise EC2Exception('You cannot launch more than one StochSS-Compute cluster instance per EC2Cluster object.')
@@ -139,10 +141,10 @@ class EC2Cluster(Server):
         try:
             self._launch_network()
             self._create_root_key()
-            self._launch_head_node(instanceType=instanceType)
-        except ClientError as ce:
-            self._set_status(ce.response['Error']['Code'])
-            raise EC2Exception(ce.response['Error']['Message'])        
+            self._launch_head_node(instance_type=instance_type)
+        except ClientError as c_e:
+            self._set_status(c_e.response['Error']['Code'])
+            raise EC2Exception(c_e.response['Error']['Message']) from c_e        
         self._set_status(self._server.state['Name'])
 
     def clean_up(self):
@@ -167,51 +169,53 @@ class EC2Cluster(Server):
                 vpc = self._resources.Vpc(vpc_id)
                 for instance in vpc.instances.all():
                     instance.terminate()
-                    self.log.info(f'Terminating "{instance.id}". This might take a minute.......')
+                    self.log.info('Terminating "%s". This might take a minute.......', instance.id)
                     instance.wait_until_terminated()
                     self._server = None
-                    self.log.info(f'Instance {instance.id}" terminated.')
+                    self.log.info('Instance "%s" terminated.', instance.id)
                 for sg in vpc.security_groups.all():
                     if sg.group_name == self._remote_config.security_group_name:
-                        self.log.info(f'Deleting {sg.id}.......')
+                        self.log.info('Deleting "%s".......', sg.id)
                         sg.delete()
                         self._server_security_group = None
-                        self.log.info(f'Security group {sg.id} deleted.')
+                        self.log.info('Security group "%s" deleted.', sg.id)
                     elif sg.group_name == 'default':
                         self._default_security_group = None
                 for subnet in vpc.subnets.all():
-                    self.log.info(f'Deleting {subnet.id}.......')
+                    self.log.info('Deleting %s.......', subnet.id)
                     subnet.delete()
                     self._subnets['public'] = None
-                    self.log.info(f'Subnet {subnet.id} deleted.')
+                    self.log.info('Subnet %s deleted.', subnet.id)
                 for igw in vpc.internet_gateways.all():
-                    self.log.info(f'Detaching {igw.id}.......')
+                    self.log.info('Detaching %s.......', igw.id)
                     igw.detach_from_vpc(VpcId=vpc.vpc_id)
-                    self.log.info(f'Gateway {igw.id} detached.')
-                    self.log.info(f'Deleting {igw.id}.......')
+                    self.log.info('Gateway %s detached.', igw.id)
+                    self.log.info('Deleting %s.......', igw.id)
                     igw.delete()
-                    self.log.info(f'Gateway {igw.id} deleted.')
-                self.log.info(f'Deleting {vpc.id}.......')
+                    self.log.info('Gateway %s deleted.', igw.id)
+                self.log.info('Deleting %s.......', vpc.id)
                 vpc.delete()
                 self._vpc = None
-                self.log.info(f'VPC {vpc.id} deleted.')
+                self.log.info('VPC %s deleted.', vpc.id)
             try:
                 self._client.describe_key_pairs(KeyNames=[self._remote_config.key_name])
                 key_pair = self._resources.KeyPair(self._remote_config.key_name)
-                self.log.info(f'Deleting "{self._remote_config.key_name}".')
-                self.log.info(f'Key "{self._remote_config.key_name}" deleted.')
+                self.log.info(
+                    'Deleting "%s".', self._remote_config.key_name)
+                self.log.info(
+                    'Key "%s" deleted.', self._remote_config.key_name)
                 key_pair.delete()
             except:
                 # be more specific here
                 pass
-        except ClientError as ce:
-            self._set_status(ce.response['Error']['Code'])
-            raise EC2Exception(ce.response['Error']['Message'])
+        except ClientError as c_e:
+            self._set_status(c_e.response['Error']['Code'])
+            raise EC2Exception(c_e.response['Error']['Message']) from c_e
         self._delete_root_key()
         self._set_status('terminated')
 
     def _launch_network(self):
-        """ 
+        """
         Launches required network resources.
         """
         self.log.info("Launching Network.......")
@@ -230,26 +234,27 @@ class EC2Cluster(Server):
 
         waiter = self._client.get_waiter('key_pair_exists')
         waiter.wait(KeyNames=[self._remote_config.key_name])
-        os.makedirs(self._local_config._key_dir, exist_ok=True)
-        key = open(self._local_config.key_path, 'x')
+        os.makedirs(self._local_config.key_dir, exist_ok=True)
+        key = open(self._local_config.key_path, 'x', encoding='utf-8')
         key.write(response['KeyMaterial'])
         key.close()
         os.chmod(self._local_config.key_path, 0o400)
 
     def _delete_root_key(self) -> None:
-        f"""
-        Deletes key from local filesystem if it exists. 
+        """
+        Deletes key from local filesystem if it exists.
         """
         if os.path.exists(self._local_config.key_path):
-            self.log.info(f'Deleting "{self._local_config.key_path}".')
+            self.log.info(
+                'Deleting "%s".', self._local_config.key_path)
             os.remove(self._local_config.key_path)
-            self.log.info(f'"{self._local_config.key_path}" deleted.')
+            self.log.info('"%s" deleted.', self._local_config.key_path)
 
     def _create_sssc_vpc(self):
-        f"""
-        Creates a vpc. 
         """
-        vpc_cidrBlock = '172.31.0.0/16'
+        Creates a vpc.
+        """
+        vpc_cidr_block = '172.31.0.0/16'
         vpc_tag = [
             {
                 'ResourceType': 'vpc',
@@ -262,7 +267,7 @@ class EC2Cluster(Server):
             }
         ]
 
-        vpc_response = self._client.create_vpc(CidrBlock=vpc_cidrBlock, TagSpecifications=vpc_tag)
+        vpc_response = self._client.create_vpc(CidrBlock=vpc_cidr_block, TagSpecifications=vpc_tag)
         vpc_id = vpc_response['Vpc']['VpcId']
         vpc_waiter_exist = self._client.get_waiter('vpc_exists')
         vpc_waiter_exist.wait(VpcIds=[vpc_id])
@@ -278,7 +283,7 @@ class EC2Cluster(Server):
         igw_id = igw_response['InternetGateway']['InternetGatewayId']
         igw_waiter = self._client.get_waiter('internet_gateway_exists')
         igw_waiter.wait(InternetGatewayIds=[igw_id])
-        
+
         self._vpc.attach_internet_gateway(InternetGatewayId=igw_id)
         for rtb in self._vpc.route_tables.all():
             if rtb.associations_attribute[0]['Main'] == True:
@@ -288,8 +293,8 @@ class EC2Cluster(Server):
         self._vpc.reload()
 
     def _create_sssc_subnet(self, public: bool):
-        f""" 
-        Creates a public or private subnet prefixed {self._remote_config.subnet_name}.
+        """
+        Creates a public or private subnet.
         """
         if public is True:
             label = 'public'
@@ -297,7 +302,7 @@ class EC2Cluster(Server):
         else:
             label = 'private'
             subnet_cidrBlock = '172.31.16.0/20'
-        
+
         subnet_tag = [
             {
                 'ResourceType': 'subnet',
@@ -316,8 +321,8 @@ class EC2Cluster(Server):
         self._subnets[label].reload()
 
     def _create_sssc_security_group(self):
-        f"""
-        Creates a security group named {self._remote_config.security_group_name} for SSH and StochSS-Compute API access.
+        """
+        Creates a security group for SSH and StochSS-Compute API access.
         """
         description = 'Default Security Group for StochSS-Compute.'
         self._server_security_group = self._vpc.create_security_group(Description=description, GroupName=self._remote_config.security_group_name)
@@ -348,11 +353,11 @@ class EC2Cluster(Server):
         self._server_security_group.authorize_ingress(**sgargs)
         self._server_security_group.reload()
 
-    def _restrict_ingress(self, ipAddress: str = ''):
-        f""" 
-        Modifies the security group API ingress rule to only allow access on port {self._remote_config.api_port} from the given ip address.
+    def _restrict_ingress(self, ip_address: str = ''):
         """
-        ruleFilter=[
+        Modifies the security group API ingress rule to only allow access on the specified port from the given ip address.
+        """
+        rule_filter=[
             {
                 'Name': 'group-id',
                 'Values': [
@@ -366,24 +371,24 @@ class EC2Cluster(Server):
                 ]
             },
         ]
-        sgr_response = self._client.describe_security_group_rules(Filters=ruleFilter)
+        sgr_response = self._client.describe_security_group_rules(Filters=rule_filter)
         sgr_id = sgr_response['SecurityGroupRules'][0]['SecurityGroupRuleId']
-        newSecurityGroupRules=[
+        new_sg_rules=[
             {
                 'SecurityGroupRuleId': sgr_id,
                 'SecurityGroupRule': {
                     'IpProtocol': 'tcp',
                     'FromPort': self._remote_config.api_port,
                     'ToPort': self._remote_config.api_port,
-                    'CidrIpv4': f'{ipAddress}/32',
+                    'CidrIpv4': f'{ip_address}/32',
                     'Description': 'Restricts cluster access.'
                 }
             },
         ]
-        self._client.modify_security_group_rules(GroupId=self._server_security_group.id, SecurityGroupRules=newSecurityGroupRules)
+        self._client.modify_security_group_rules(GroupId=self._server_security_group.id, SecurityGroupRules=new_sg_rules)
         self._server_security_group.reload()
 
-    def _launch_head_node(self, instanceType):
+    def _launch_head_node(self, instance_type):
         """ 
         Launches a StochSS-Compute server instance.
         """
@@ -399,7 +404,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
 '''
         kwargs = {
             'ImageId': self._ami, 
-            'InstanceType': instanceType,
+            'InstanceType': instance_type,
             'KeyName': self._remote_config.key_name,
             'MinCount': 1, 
             'MaxCount': 1,
@@ -419,11 +424,11 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             'UserData': launch_commands,
             }
 
-        self.log.info(f'Launching StochSS-Compute server instance. This might take a minute.......')
+        self.log.info('Launching StochSS-Compute server instance. This might take a minute.......')
         try:
             response = self._client.run_instances(**kwargs)
-        except ClientError as e:
-            raise EC2Exception(e)
+        except ClientError as c_e:
+            raise EC2Exception from c_e
 
         instance_id = response['Instances'][0]['InstanceId']
         # try catch
@@ -431,7 +436,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         self._server.wait_until_exists()
         self._server.wait_until_running()
 
-        self.log.info(f'Instance "{instance_id}" is running.')
+        self.log.info('Instance "%s" is running.', instance_id)
 
         self._poll_launch_progress(['sssc'])
 
@@ -467,10 +472,10 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             sshtries = 0
             while True:
                 sleep(60)
-                stdin,stdout,stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' " + f'{container}')
+                _, stdout, stderr = ssh.exec_command("docker container inspect -f '{{.State.Running}}' " + f'{container}')
                 rc = stdout.channel.recv_exit_status()
                 out = stdout.readlines()
-                err = stderr.readlines()
+                err2 = stderr.readlines()
                 if rc == -1:
                     ssh.close()
                     raise EC2Exception("Something went wrong connecting to the server. No exit status provided by the server.")
@@ -480,11 +485,11 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                     sshtries += 1
                     if sshtries >= 5:
                         ssh.close()
-                        raise EC2Exception(f"Something went wrong with Docker. Max retry attempts exceeded.\nError:\n{''.join(err)}")
+                        raise EC2Exception(f"Something went wrong with Docker. Max retry attempts exceeded.\nError:\n{''.join(err2)}")
                 if rc == 0:
                     if 'true\n' in out:
                         sleep(10)
-                        self.log.info(f'Container "{container}" is running.')
+                        self.log.info('Container "%s" is running.', container)
                         break
         ssh.close()
 
@@ -499,7 +504,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         response_raw = self._post(Endpoint.CLOUD, sub='/sourceip', request=source_ip_request)
         if not response_raw.ok:
             raise EC2Exception(response_raw.reason)
-        response = SourceIpResponse._parse(response_raw.text)
+        response = SourceIpResponse.parse(response_raw.text)
         return response.source_ip
 
     def _load_cluster(self):

@@ -37,12 +37,16 @@ class Cache:
     def exists(self) -> bool:
         '''
         Check if the results file exists.
+
+        :returns: bool
         '''
         return os.path.exists(self.results_path)
 
     def is_empty(self):
         '''
         Check if the results are empty.
+
+        :returns: bool
         '''
         lock = SoftFileLock(f'{self.results_path}.lock')
         with lock:
@@ -60,6 +64,8 @@ class Cache:
 
         :param n_traj_wanted: The number of requested trajectories.
         :type int:
+
+        :returns: bool
         '''
         results = self.get()
         if results is None or n_traj_wanted > len(results):

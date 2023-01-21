@@ -16,7 +16,7 @@ StochSS-Compute on AWS
     from stochss_compute.cloud import EC2Cluster
     from stochss_compute import RemoteSimulation
 
-3. Launch an EC2 Instance. Make sure to check `instanceType` pricing before launching.
+3. Launch an EC2 Instance. Make sure to check `instance_type` pricing before launching.
 
 .. code-block:: python
 
