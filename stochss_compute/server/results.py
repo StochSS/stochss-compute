@@ -1,3 +1,6 @@
+'''
+stochss_compute.server.results
+'''
 from datetime import datetime
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
@@ -5,11 +8,23 @@ from stochss_compute.core.messages import ResultsResponse
 from stochss_compute.server.cache import Cache
 
 class ResultsHandler(RequestHandler):
+    '''
+    Endpoint for Results objects.
+    '''
 
     def initialize(self, cache_dir):
+        '''
+        Set the cache directory.
+        '''
         self.cache_dir = cache_dir
 
     async def get(self, results_id = None, n_traj = None):
+        '''
+        Process GET request.
+
+        :param results_id: Hash of the simulation.
+        :param n_traj: Number of trajectories in the request.
+        '''
         if None in (results_id, n_traj):
             raise RemoteSimulationError(f'Malformed request | <{self.request.remote_ip}>')
         n_traj = int(n_traj)

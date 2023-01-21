@@ -88,6 +88,8 @@ class SimulationRunRequest(Request):
 
     def hash(self):
         '''
+        Return a unique hash of this simulation request.
+        Do not include number_of_trajectories in this calculation.
         '''
         anon_model_string = self.model.to_anon().to_json(encode_private=False)
         popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
@@ -109,14 +111,14 @@ class SimulationRunResponse(Response):
         self.results_id = results_id
         self.results = results
         self.task_id = task_id
-    
+
     def encode(self):
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
                 'results_id': self.results_id or '',
                 'results': self.results or '',
                 'task_id': self.task_id or '',}
-    
+
     @staticmethod
     def parse(raw_response):
         response_dict = json_decode(raw_response)
@@ -151,11 +153,11 @@ class StatusResponse(Response):
     def __init__(self, status, message = None):
         self.status = status
         self.message = message
-    
+
     def encode(self):
         return {'status': self.status.name,
                 'message': self.message or ''}
-    
+
     @staticmethod
     def parse(raw_response):
         response_dict = json_decode(raw_response)
@@ -165,7 +167,7 @@ class StatusResponse(Response):
             return StatusResponse(status)
         else:
             return StatusResponse(status, message)
-            
+
 class ResultsRequest(Request):
     '''
     :type results_id: str
@@ -185,10 +187,10 @@ class ResultsResponse(Response):
     '''
     def __init__(self, results = None):
         self.results = results
-    
+
     def encode(self):
         return {'results': self.results or ''}
-    
+
     @staticmethod
     def parse(raw_response):
         response_dict = json_decode(raw_response)

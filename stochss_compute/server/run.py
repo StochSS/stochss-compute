@@ -1,3 +1,6 @@
+'''
+stochss_compute.server.run
+'''
 import random
 from datetime import datetime
 from secrets import token_hex
@@ -11,14 +14,22 @@ from stochss_compute.server.cache import Cache
 
 
 class RunHandler(RequestHandler):
-
+    '''
+    Endpoint for running Gillespy2 simulations.
+    '''
 
     def initialize(self, scheduler_address, cache_dir):
+        '''
+        Sets the address to the Dask scheduler and the cache directory.
+        '''
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
 
     async def post(self):
-        sim_request = SimulationRunRequest._parse(self.request.body)
+        '''
+        Process simulation run request.
+        '''
+        sim_request = SimulationRunRequest.parse(self.request.body)
         sim_hash = sim_request.hash()
         log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Request | <{sim_hash}> | '
         cache = Cache(self.cache_dir, sim_hash)

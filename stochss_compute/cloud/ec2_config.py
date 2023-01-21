@@ -3,6 +3,7 @@ stochss_compute.cloud.ec2_config
 '''
 import os
 
+
 class EC2RemoteConfig:
     '''
     Configure remote settings.
@@ -13,17 +14,18 @@ class EC2RemoteConfig:
         'us-west-1': 'ami-017c001a88dd93847',
         'us-west-2': 'ami-0d593311db5abb72b',
     }
+
     def __init__(self,
-                suffix=None,
-                vpc_name='sssc-vpc',
-                subnet_name='sssc-subnet',
-                security_group_name='sssc-sg',
-                server_name='sssc-server',
-                key_name='sssc-server-ssh-key',
-                api_port=29681,
-                region=None,
-                ami=None,
-                ):
+                 suffix=None,
+                 vpc_name='sssc-vpc',
+                 subnet_name='sssc-subnet',
+                 security_group_name='sssc-sg',
+                 server_name='sssc-server',
+                 key_name='sssc-server-ssh-key',
+                 api_port=29681,
+                 region=None,
+                 ami=None,
+                 ):
         if suffix is not None:
             suffix = f'-{suffix}'
         else:
@@ -38,21 +40,23 @@ class EC2RemoteConfig:
         self.region = region
         self.ami = ami
 
+
 class EC2LocalConfig:
     '''
     Configure local settings.
     '''
+
     def __init__(self,
-                key_dir='./.sssc',
-                key_name='sssc-server-ssh-key',
-                status_file=None,
-                key_type='ed25519',
-                key_format='pem',
-                ):
+                 key_dir='./.sssc',
+                 key_name='sssc-server-ssh-key',
+                 status_file=None,
+                 key_type='ed25519',
+                 key_format='pem',
+                 ):
         self.key_dir = key_dir
         self._key_filename = f'{key_name}.{key_format}'
         self.key_type = key_type
         self.key_format = key_format
-        self.key_path = os.path.abspath(os.path.join(self.key_dir, self._key_filename))
+        self.key_path = os.path.abspath(
+            os.path.join(self.key_dir, self._key_filename))
         self.status_file = status_file
-        

@@ -1,12 +1,10 @@
-# from stochss_compute.client.server import Server
-# figure out type hinting for Server
-from stochss_compute.client.endpoint import Endpoint
-from gillespy2 import Results
-
+'''
+stochss_compute.core.remote_results
+'''
 from time import sleep
-
+from gillespy2 import Results
+from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.errors import RemoteSimulationError
-
 from stochss_compute.core.messages import ResultsResponse, SimStatus, StatusResponse
 
 class RemoteResults(Results):
@@ -45,17 +43,21 @@ class RemoteResults(Results):
         return self._data
 
     @property
-    def simStatus(self):
+    def sim_status(self):
+        '''
+        :returns: Simulation status enum as a string.
+        '''
         return self._status().status.name
 
 
     def _status(self):
         # Request the status of a submitted simulation.
-        response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/{self.task_id or ''}/status")
+        response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2,
+                                       f"/{self.id}/{self.n_traj}/{self.task_id or ''}/status")
         if not response_raw.ok:
             raise RemoteSimulationError(response_raw.reason)
 
-        status_response = StatusResponse._parse(response_raw.text)
+        status_response = StatusResponse.parse(response_raw.text)
         return status_response
 
     def _resolve(self):
@@ -77,11 +79,11 @@ class RemoteResults(Results):
 
         if status == SimStatus.READY:
             print('Results ready. Fetching.......')
-            response_raw = self.server._get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/results")
+            response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/results")
             if not response_raw.ok:
                 raise RemoteSimulationError(response_raw.reason)
 
-            response = ResultsResponse._parse(response_raw.text)
+            response = ResultsResponse.parse(response_raw.text)
             self._data = response.results.data
 
 
@@ -96,9 +98,8 @@ class RemoteResults(Results):
 
 
     @property
-    def isReady(self):
+    def is_ready(self):
         """
         True if results exist in cache on the server.
         """
         return self._status().status == SimStatus.READY
-

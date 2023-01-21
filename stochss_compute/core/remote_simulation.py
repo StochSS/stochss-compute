@@ -21,7 +21,8 @@ class RemoteSimulation:
     :param host: The address of a running instance of StochSS-Compute. Optional if server is provided.
     :type host: str
 
-    :param port: The port to use when connecting to the host. Only needed if default server port is changed. Defaults to 29681.
+    :param port: The port to use when connecting to the host.
+                 Only needed if default server port is changed. Defaults to 29681.
     :type port: int
 
     :param solver: The type of solver to use. Does not accept instantiated solvers.
@@ -54,13 +55,18 @@ class RemoteSimulation:
 
         if solver is not None:
             if hasattr(solver, 'is_instantiated'):
-                raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
+                raise RemoteSimulationError(
+                    'RemoteSimulation does not accept an instantiated solver object. Pass a type.')
         self.solver = solver
-        
-    def isCached(self, **params):
+
+    def is_cached(self, **params):
+        '''
+        Checks to see if a dummy simulation exists in the cache.
+        '''
         if "solver" in params:
             if hasattr(params['solver'], 'is_instantiated'):
-                raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
+                raise RemoteSimulationError(
+                    'RemoteSimulation does not accept an instantiated solver object. Pass a type.')
             params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
@@ -75,36 +81,36 @@ class RemoteSimulation:
     def run(self, **params):
         """
         Simulate the Model on the target ComputeServer, returning the results once complete.
-        
-        :super: https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run
+
+        https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run
 
         :param **params: Arguments to pass directly to the Model#run call on the server.
-        
+
         :returns: stochss_compute.RemoteResults
         """
-    
+
         if "solver" in params:
             if hasattr(params['solver'], 'is_instantiated'):
-                raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
+                raise RemoteSimulationError(
+                    'RemoteSimulation does not accept an instantiated solver object. Pass a type.')
             params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
 
         sim_request = SimulationRunRequest(model=self.model, **params)
-        response_raw = self.server._post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
+        response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
         if not response_raw.ok:
             raise Exception(response_raw.reason)
 
-        sim_response = SimulationRunResponse._parse(response_raw.text)
-        
+        sim_response = SimulationRunResponse.parse(response_raw.text)
+
         if sim_response.status == SimStatus.ERROR:
             raise RemoteSimulationError(sim_response.error_message)
-            # If sim throws an error, would we still need to be able to interact with it in any way? like to clear it from memory or restart a worker?
         if sim_response.status == SimStatus.READY:
             remote_results =  RemoteResults(data=sim_response.results.data)
         else:
             remote_results =  RemoteResults()
-            
+
         remote_results.id = sim_response.results_id
         remote_results.server = self.server
         remote_results.n_traj = params.get('number_of_trajectories', 1)

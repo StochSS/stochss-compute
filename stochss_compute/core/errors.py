@@ -1,5 +1,13 @@
+'''
+stochss_compute.core.errors
+'''
 class RemoteSimulationError(Exception):
-    pass
+    '''
+    General simulation error.
+    '''
 
 class CacheError(Exception):
-    pass
+    '''
+    General cache error.
+    '''
+    
