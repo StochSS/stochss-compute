@@ -25,7 +25,7 @@ jobs:
         python -m pip install pylint
     - name: Python Pylint GitHub Action
       run: |
-        pylint --rcfile=.pylintrc stochss-compute
+        pylint --rcfile=.pylintrc stochss_compute
 
   #   - name: Run integration tests
   #     run: |
