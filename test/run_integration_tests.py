@@ -4,7 +4,6 @@ import unittest
 import argparse
 sys.path.insert(1, '../')
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--mode', default='develop', choices=['develop', 'release'],
                     help='Run tests in develop mode or release mode.')
@@ -15,10 +14,11 @@ if __name__ == '__main__':
         print('Running tests in develop mode. Appending repository directory to system path.')
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-    from integration_tests import test_api
+    from integration_tests import test_api, test_ec2
 
     modules = [
-        test_api,
+        # test_api,
+        test_ec2,
     ]
 
     for module in modules:

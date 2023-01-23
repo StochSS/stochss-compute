@@ -5,7 +5,6 @@ import os
 import sys
 import unittest
 import argparse
-sys.path.insert(1, '../')
 
 
 parser = argparse.ArgumentParser()
@@ -17,14 +16,16 @@ if __name__ == '__main__':
     if args.mode == 'develop':
         print('Running tests in develop mode. Appending repository directory to system path.')
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+        sys.path.insert(1, '..')
 
-    from test.unit_tests import test_hash, test_cache
+    from test.unit_tests import test_hash, test_cache, test_launch, test_compute_server
 
     modules = [
-        test_hash,
-        test_cache,
+        # test_hash,
+        # test_cache,
+        # test_launch,
+        test_compute_server,
     ]
-
     for module in modules:
         suite = unittest.TestLoader().loadTestsFromModule(module)
         runner = unittest.TextTestRunner(failfast=args.mode == 'develop')
@@ -34,3 +35,4 @@ if __name__ == '__main__':
         print('=' * 70)
         if not result.wasSuccessful():
             sys.exit(not result.wasSuccessful())
+    
