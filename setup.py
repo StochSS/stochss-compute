@@ -56,6 +56,10 @@ setup(name=             version["__title__"],
               'paramiko == 2.11.0',
               'python-dotenv == 0.21.0'
           ],
+          'dev': [
+            'pytest',
+            'moto',
+          ]
       },
       long_description= readme,
       long_description_content_type= "text/markdown",

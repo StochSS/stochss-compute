@@ -19,9 +19,6 @@ class CacheTest(unittest.TestCase):
         if os.path.exists(self.cache_dir):
             rm = subprocess.Popen(['rm', '-r', self.cache_dir])
             rm.wait()
-        if not os.path.exists(self.cache_dir):
-            mkdir = subprocess.Popen(['mkdir', self.cache_dir])
-            mkdir.wait()
 
     def tearDown(self) -> None:
         if os.path.exists(self.cache_dir):
@@ -49,11 +46,15 @@ class CacheTest(unittest.TestCase):
                 cache = Cache(cache_dir=self.cache_dir, results_id=sim_request.hash())
                 assert cache.exists() is False
                 assert cache.is_empty() is True
+                assert cache.n_traj_needed(0) == 0
+                assert cache.n_traj_needed(1) == 1
+                assert cache.n_traj_in_cache() == 0
                 results = model.run()
                 cache.create()
                 cache.save(results)
                 assert cache.exists() is True
                 assert cache.is_empty() is False
+                assert cache.n_traj_in_cache() == 1
                 results_get = cache.get()
                 assert len(results_get) == 1
                 assert cache.n_traj_needed(2) == 1
@@ -68,5 +69,3 @@ class CacheTest(unittest.TestCase):
                 assert cache.n_traj_needed(1) == 0
                 assert cache.is_ready(3) is False
                 assert cache.is_ready(2) is True
-
-
