@@ -1,9 +1,6 @@
 '''
 test.unit_tests.test_launch
 '''
-import os
-import subprocess
-import time
 import unittest
 from stochss_compute import ComputeServer
 

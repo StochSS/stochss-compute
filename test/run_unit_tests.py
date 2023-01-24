@@ -18,13 +18,14 @@ if __name__ == '__main__':
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.insert(1, '..')
 
-    from test.unit_tests import test_hash, test_cache, test_launch, test_compute_server
+    from test.unit_tests import test_hash, test_cache, test_launch, test_compute_server, test_status
 
     modules = [
         # test_hash,
         # test_cache,
         # test_launch,
-        test_compute_server,
+        # test_compute_server,
+        test_status,
     ]
     for module in modules:
         suite = unittest.TestLoader().loadTestsFromModule(module)
