@@ -40,7 +40,7 @@ SPHINXOPTS  = -j auto
 SPHINXBUILD = python3 -m sphinx
 SOURCEDIR   = .
 FORMAT      = html
-BUILDDIR    = _build/$(FORMAT)
+BUILDDIR    = build/$(FORMAT)
 
 
 # Main build targets.
