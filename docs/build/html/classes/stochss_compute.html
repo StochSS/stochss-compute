@@ -1,0 +1,420 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>stochss_compute package &#8212; &#34;stochss-compute&#34; 0.9.9 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/gillespy2_alabaster_customizations.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="stochss_compute.client package" href="stochss_compute.client.html" />
+    <link rel="prev" title="StochSS-Compute on AWS" href="../tutorials/aws/aws.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+    <link rel="apple-touch-icon" href="../_static/img/stochss-compute-logo.png" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/img/stochss-compute-logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=StochSS&repo=StochSS-Compute&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/containers/docker.html">Docker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/basic_usage/basic_usage.html">Basic Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/docker/docker.html">Tutorial Docker Container</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/aws/aws.html">StochSS-Compute on AWS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">stochss_compute package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.client.html">stochss_compute.client package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html">stochss_compute.cloud package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html">stochss_compute.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html">stochss_compute.server package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-stochss_compute.launch">stochss_compute.launch module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stochss_compute.launch.launch_server"><code class="docutils literal notranslate"><span class="pre">launch_server()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stochss_compute.launch.launch_with_cluster"><code class="docutils literal notranslate"><span class="pre">launch_with_cluster()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-stochss_compute">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../tutorials/aws/aws.html" title="previous chapter">StochSS-Compute on AWS</a></li>
+      <li>Next: <a href="stochss_compute.client.html" title="next chapter">stochss_compute.client package</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="stochss-compute-package">
+<h1>stochss_compute package<a class="headerlink" href="#stochss-compute-package" title="Permalink to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="stochss_compute.client.html">stochss_compute.client package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.client.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.client.html#module-stochss_compute.client.compute_server">stochss_compute.client.compute_server module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.compute_server.ComputeServer"><code class="docutils literal notranslate"><span class="pre">ComputeServer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.compute_server.ComputeServer.address"><code class="docutils literal notranslate"><span class="pre">ComputeServer.address</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.client.html#module-stochss_compute.client.endpoint">stochss_compute.client.endpoint module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.endpoint.Endpoint"><code class="docutils literal notranslate"><span class="pre">Endpoint</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.endpoint.Endpoint.CLOUD"><code class="docutils literal notranslate"><span class="pre">Endpoint.CLOUD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.endpoint.Endpoint.SIMULATION_GILLESPY2"><code class="docutils literal notranslate"><span class="pre">Endpoint.SIMULATION_GILLESPY2</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.client.html#module-stochss_compute.client.server">stochss_compute.client.server module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.server.Server"><code class="docutils literal notranslate"><span class="pre">Server</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.server.Server.address"><code class="docutils literal notranslate"><span class="pre">Server.address</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.server.Server.get"><code class="docutils literal notranslate"><span class="pre">Server.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.client.html#stochss_compute.client.server.Server.post"><code class="docutils literal notranslate"><span class="pre">Server.post()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.client.html#module-stochss_compute.client">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stochss_compute.cloud.html">stochss_compute.cloud package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.cloud.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.cloud.html#module-stochss_compute.cloud.ec2">stochss_compute.cloud.ec2 module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.ec2.EC2Cluster"><code class="docutils literal notranslate"><span class="pre">EC2Cluster</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.ec2.EC2Cluster.address"><code class="docutils literal notranslate"><span class="pre">EC2Cluster.address</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.ec2.EC2Cluster.clean_up"><code class="docutils literal notranslate"><span class="pre">EC2Cluster.clean_up()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.ec2.EC2Cluster.launch_single_node_instance"><code class="docutils literal notranslate"><span class="pre">EC2Cluster.launch_single_node_instance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.ec2.EC2Cluster.log"><code class="docutils literal notranslate"><span class="pre">EC2Cluster.log</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.ec2.EC2Cluster.status"><code class="docutils literal notranslate"><span class="pre">EC2Cluster.status</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.cloud.html#module-stochss_compute.cloud.ec2_config">stochss_compute.cloud.ec2_config module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.ec2_config.EC2LocalConfig"><code class="docutils literal notranslate"><span class="pre">EC2LocalConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.ec2_config.EC2RemoteConfig"><code class="docutils literal notranslate"><span class="pre">EC2RemoteConfig</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.cloud.html#module-stochss_compute.cloud.exceptions">stochss_compute.cloud.exceptions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.exceptions.EC2Exception"><code class="docutils literal notranslate"><span class="pre">EC2Exception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.exceptions.EC2ImportException"><code class="docutils literal notranslate"><span class="pre">EC2ImportException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html#stochss_compute.cloud.exceptions.ResourceException"><code class="docutils literal notranslate"><span class="pre">ResourceException</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.cloud.html#module-stochss_compute.cloud">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stochss_compute.core.html">stochss_compute.core package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.core.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.core.html#module-stochss_compute.core.errors">stochss_compute.core.errors module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.errors.CacheError"><code class="docutils literal notranslate"><span class="pre">CacheError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.errors.RemoteSimulationError"><code class="docutils literal notranslate"><span class="pre">RemoteSimulationError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.core.html#module-stochss_compute.core.messages">stochss_compute.core.messages module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.Request"><code class="docutils literal notranslate"><span class="pre">Request</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.Request.encode"><code class="docutils literal notranslate"><span class="pre">Request.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.Request.parse"><code class="docutils literal notranslate"><span class="pre">Request.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.Response"><code class="docutils literal notranslate"><span class="pre">Response</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.Response.encode"><code class="docutils literal notranslate"><span class="pre">Response.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.Response.parse"><code class="docutils literal notranslate"><span class="pre">Response.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.ResultsRequest"><code class="docutils literal notranslate"><span class="pre">ResultsRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.ResultsRequest.encode"><code class="docutils literal notranslate"><span class="pre">ResultsRequest.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.ResultsRequest.parse"><code class="docutils literal notranslate"><span class="pre">ResultsRequest.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.ResultsResponse"><code class="docutils literal notranslate"><span class="pre">ResultsResponse</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.ResultsResponse.encode"><code class="docutils literal notranslate"><span class="pre">ResultsResponse.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.ResultsResponse.parse"><code class="docutils literal notranslate"><span class="pre">ResultsResponse.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimStatus"><code class="docutils literal notranslate"><span class="pre">SimStatus</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimStatus.DOES_NOT_EXIST"><code class="docutils literal notranslate"><span class="pre">SimStatus.DOES_NOT_EXIST</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimStatus.ERROR"><code class="docutils literal notranslate"><span class="pre">SimStatus.ERROR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimStatus.PENDING"><code class="docutils literal notranslate"><span class="pre">SimStatus.PENDING</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimStatus.READY"><code class="docutils literal notranslate"><span class="pre">SimStatus.READY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimStatus.RUNNING"><code class="docutils literal notranslate"><span class="pre">SimStatus.RUNNING</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimStatus.from_str"><code class="docutils literal notranslate"><span class="pre">SimStatus.from_str()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimulationRunRequest"><code class="docutils literal notranslate"><span class="pre">SimulationRunRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimulationRunRequest.encode"><code class="docutils literal notranslate"><span class="pre">SimulationRunRequest.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimulationRunRequest.hash"><code class="docutils literal notranslate"><span class="pre">SimulationRunRequest.hash()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimulationRunRequest.parse"><code class="docutils literal notranslate"><span class="pre">SimulationRunRequest.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimulationRunResponse"><code class="docutils literal notranslate"><span class="pre">SimulationRunResponse</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimulationRunResponse.encode"><code class="docutils literal notranslate"><span class="pre">SimulationRunResponse.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SimulationRunResponse.parse"><code class="docutils literal notranslate"><span class="pre">SimulationRunResponse.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SourceIpRequest"><code class="docutils literal notranslate"><span class="pre">SourceIpRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SourceIpRequest.encode"><code class="docutils literal notranslate"><span class="pre">SourceIpRequest.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SourceIpRequest.parse"><code class="docutils literal notranslate"><span class="pre">SourceIpRequest.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SourceIpResponse"><code class="docutils literal notranslate"><span class="pre">SourceIpResponse</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SourceIpResponse.encode"><code class="docutils literal notranslate"><span class="pre">SourceIpResponse.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.SourceIpResponse.parse"><code class="docutils literal notranslate"><span class="pre">SourceIpResponse.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.StatusRequest"><code class="docutils literal notranslate"><span class="pre">StatusRequest</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.StatusRequest.encode"><code class="docutils literal notranslate"><span class="pre">StatusRequest.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.StatusRequest.parse"><code class="docutils literal notranslate"><span class="pre">StatusRequest.parse()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.StatusResponse"><code class="docutils literal notranslate"><span class="pre">StatusResponse</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.StatusResponse.encode"><code class="docutils literal notranslate"><span class="pre">StatusResponse.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.StatusResponse.parse"><code class="docutils literal notranslate"><span class="pre">StatusResponse.parse()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.core.html#module-stochss_compute.core.remote_results">stochss_compute.core.remote_results module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults"><code class="docutils literal notranslate"><span class="pre">RemoteResults</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.data"><code class="docutils literal notranslate"><span class="pre">RemoteResults.data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.get_gillespy2_results"><code class="docutils literal notranslate"><span class="pre">RemoteResults.get_gillespy2_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.id"><code class="docutils literal notranslate"><span class="pre">RemoteResults.id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.is_ready"><code class="docutils literal notranslate"><span class="pre">RemoteResults.is_ready</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.n_traj"><code class="docutils literal notranslate"><span class="pre">RemoteResults.n_traj</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.server"><code class="docutils literal notranslate"><span class="pre">RemoteResults.server</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.sim_status"><code class="docutils literal notranslate"><span class="pre">RemoteResults.sim_status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.task_id"><code class="docutils literal notranslate"><span class="pre">RemoteResults.task_id</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.core.html#module-stochss_compute.core.remote_simulation">stochss_compute.core.remote_simulation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_simulation.RemoteSimulation"><code class="docutils literal notranslate"><span class="pre">RemoteSimulation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_simulation.RemoteSimulation.is_cached"><code class="docutils literal notranslate"><span class="pre">RemoteSimulation.is_cached()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.remote_simulation.RemoteSimulation.run"><code class="docutils literal notranslate"><span class="pre">RemoteSimulation.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.core.html#module-stochss_compute.core">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stochss_compute.server.html">stochss_compute.server package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#module-stochss_compute.server.api">stochss_compute.server.api module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.api.start_api"><code class="docutils literal notranslate"><span class="pre">start_api()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#module-stochss_compute.server.cache">stochss_compute.server.cache module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache"><code class="docutils literal notranslate"><span class="pre">Cache</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.create"><code class="docutils literal notranslate"><span class="pre">Cache.create()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.exists"><code class="docutils literal notranslate"><span class="pre">Cache.exists()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.get"><code class="docutils literal notranslate"><span class="pre">Cache.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.is_empty"><code class="docutils literal notranslate"><span class="pre">Cache.is_empty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.is_ready"><code class="docutils literal notranslate"><span class="pre">Cache.is_ready()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.n_traj_in_cache"><code class="docutils literal notranslate"><span class="pre">Cache.n_traj_in_cache()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.n_traj_needed"><code class="docutils literal notranslate"><span class="pre">Cache.n_traj_needed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.read"><code class="docutils literal notranslate"><span class="pre">Cache.read()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.cache.Cache.save"><code class="docutils literal notranslate"><span class="pre">Cache.save()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#module-stochss_compute.server.is_cached">stochss_compute.server.is_cached module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.is_cached.IsCachedHandler"><code class="docutils literal notranslate"><span class="pre">IsCachedHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.is_cached.IsCachedHandler.get"><code class="docutils literal notranslate"><span class="pre">IsCachedHandler.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.is_cached.IsCachedHandler.initialize"><code class="docutils literal notranslate"><span class="pre">IsCachedHandler.initialize()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#module-stochss_compute.server.results">stochss_compute.server.results module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.results.ResultsHandler"><code class="docutils literal notranslate"><span class="pre">ResultsHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.results.ResultsHandler.get"><code class="docutils literal notranslate"><span class="pre">ResultsHandler.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.results.ResultsHandler.initialize"><code class="docutils literal notranslate"><span class="pre">ResultsHandler.initialize()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#module-stochss_compute.server.run">stochss_compute.server.run module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.run.RunHandler"><code class="docutils literal notranslate"><span class="pre">RunHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.run.RunHandler.initialize"><code class="docutils literal notranslate"><span class="pre">RunHandler.initialize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.run.RunHandler.post"><code class="docutils literal notranslate"><span class="pre">RunHandler.post()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#module-stochss_compute.server.sourceip">stochss_compute.server.sourceip module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.sourceip.SourceIpHandler"><code class="docutils literal notranslate"><span class="pre">SourceIpHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.sourceip.SourceIpHandler.post"><code class="docutils literal notranslate"><span class="pre">SourceIpHandler.post()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#module-stochss_compute.server.status">stochss_compute.server.status module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.status.StatusHandler"><code class="docutils literal notranslate"><span class="pre">StatusHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.status.StatusHandler.check_with_scheduler"><code class="docutils literal notranslate"><span class="pre">StatusHandler.check_with_scheduler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.status.StatusHandler.get"><code class="docutils literal notranslate"><span class="pre">StatusHandler.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="stochss_compute.server.html#stochss_compute.server.status.StatusHandler.initialize"><code class="docutils literal notranslate"><span class="pre">StatusHandler.initialize()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.server.html#module-stochss_compute.server">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-stochss_compute.launch">
+<span id="stochss-compute-launch-module"></span><h2>stochss_compute.launch module<a class="headerlink" href="#module-stochss_compute.launch" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.launch</p>
+<p>launch_server()          Starts the API Server. Alias to script “stochss-compute”.</p>
+<dl class="simple">
+<dt>launch_with_cluster()    Starts a Dask Cluster and API Server.</dt><dd><p>Alias to script “stochss-compute-cluster”.</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="stochss_compute.launch.launch_server">
+<span class="sig-prename descclassname"><span class="pre">stochss_compute.launch.</span></span><span class="sig-name descname"><span class="pre">launch_server</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/launch.html#launch_server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.launch.launch_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the REST API.</p>
+<p>stochss-compute –help</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stochss_compute.launch.launch_with_cluster">
+<span class="sig-prename descclassname"><span class="pre">stochss_compute.launch.</span></span><span class="sig-name descname"><span class="pre">launch_with_cluster</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/launch.html#launch_with_cluster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.launch.launch_with_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start up a Dask Cluster and StochSS-Compute REST API.</p>
+<p>stochss-compute cluster –help</p>
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-stochss_compute" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute</p>
+</section>
+</section>
+
+
+          </div>
+              <div class="related bottom">
+                &nbsp;
+  <nav id="rellinks">
+    <ul>
+        <li>
+          &larr;
+          <a href="../tutorials/aws/aws.html" title="Previous document">StochSS-Compute on AWS</a>
+        </li>
+        <li>
+          <a href="stochss_compute.client.html" title="Next document">stochss_compute.client package</a>
+          &rarr;
+        </li>
+    </ul>
+  </nav>
+              </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;"Copyright (C) 2017-2023".
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/classes/stochss_compute.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/StochSS/StochSS-Compute" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
