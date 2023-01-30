@@ -21,7 +21,7 @@ class StatusHandler(RequestHandler):
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
 
-    async def get(self, results_id = None, n_traj = None, task_id = None):
+    async def get(self, results_id, n_traj, task_id):
         '''
         Process GET request.
 
@@ -29,8 +29,10 @@ class StatusHandler(RequestHandler):
         :param n_traj: Number of trajectories in the request. Default 1.
         :param task_id: ID of the running simulation. Required.
         '''
-        if None in (results_id, n_traj):
-            raise RemoteSimulationError('Malformed request')
+        if '' in (results_id, n_traj):
+            self.set_status(404, reason=f'Malformed request: {self.request.uri}')
+            self.finish()
+            raise RemoteSimulationError(f'Malformed request: {self.request.uri}')
         self.results_id = results_id
         self.task_id = task_id
         n_traj = int(n_traj)
@@ -43,7 +45,7 @@ class StatusHandler(RequestHandler):
         if exists:
             empty = cache.is_empty()
             if empty:
-                if self.task_id is not None:
+                if self.task_id != '':
                     state, err = await self.check_with_scheduler()
                     print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                     if state == 'erred':
@@ -59,7 +61,7 @@ class StatusHandler(RequestHandler):
                     print(msg+SimStatus.READY.name)
                     self._respond_ready()
                 else:
-                    if self.task_id is not None:
+                    if self.task_id != '':
                         state, err = await self.check_with_scheduler()
                         print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                         if state == 'erred':
