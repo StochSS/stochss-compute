@@ -532,7 +532,7 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         :type cloud_key: str
         """
         source_ip_request = SourceIpRequest(cloud_key=cloud_key)
-        response_raw = self._post(
+        response_raw = self.post(
             Endpoint.CLOUD, sub='/sourceip', request=source_ip_request)
         if not response_raw.ok:
             raise EC2Exception(response_raw.reason)
