@@ -36,7 +36,7 @@ class LaunchTest(unittest.TestCase):
         env['PATH'] = '../env/bin'
         if local:
             env['PYTHONPATH'] = '../env/lib/python3.11/site-packages'
-        with subprocess.Popen(['python3', '-m', 'stochss_compute.launch'], env=env) as server:
+        with subprocess.Popen(['python', '-m', 'stochss_compute.launch'], env=env) as server:
             time.sleep(5)
             server.terminate()
             server.kill()

@@ -12,9 +12,9 @@ from stochss_compute.server.api import _make_app
 from stochss_compute.server.cache import Cache
 from .gillespy2_models import create_michaelis_menten
 
-class SourceIpHandlerTest(AsyncHTTPTestCase):
+class IsCachedHandlerTest(AsyncHTTPTestCase):
     '''
-    Test ResultsHandler class.
+    Test IsCachedHandler class.
     '''
     cache_dir = 'cache/'
     host = 'localhost'
@@ -35,11 +35,34 @@ class SourceIpHandlerTest(AsyncHTTPTestCase):
         '''
         # I think this is returning a 404 before getting to the handler.
         # not sure a way around it.
-        uri = "/api/v2/simulation/gillespy2/asdf//results"
+        uri = "/api/v2/cache/gillespy2///is_cached"
         response_raw = self.fetch(uri)
         assert response_raw.code == 404
 
-    def test_is_ready(self):
+    def test_dne_0(self):
+        '''
+        This uri should DNE
+        '''
+        uri = "/api/v2/cache/gillespy2/asdf/1/is_cached"
+        response_raw = self.fetch(uri)
+        assert response_raw.code == 200
+        response = StatusResponse.parse(response_raw.body)
+        assert response.status == SimStatus.DOES_NOT_EXIST
+
+    def test_dne_1(self):
+        '''
+        This uri should return DNE.
+        '''
+        model = create_michaelis_menten()
+        sim = SimulationRunRequest(model=model)
+        sim_hash = sim.hash()
+        cache = Cache(self.cache_dir, sim_hash)
+        cache.create()
+        uri = f'/api/v2/cache/gillespy2/{sim_hash}/1/is_cached'
+        response_raw = self.fetch(uri)
+        assert response_raw.code == 200
+
+    def test_ready_not_ready(self):
         '''
         This uri should return a copy of these results
         '''
@@ -50,9 +73,13 @@ class SourceIpHandlerTest(AsyncHTTPTestCase):
         cache = Cache(self.cache_dir, sim_hash)
         cache.create()
         cache.save(results)
-        uri = f'/api/v2/simulation/gillespy2/{sim_hash}/1/results'
+        uri = f'/api/v2/cache/gillespy2/{sim_hash}/1/is_cached'
         response_raw = self.fetch(uri)
         assert response_raw.code == 200
-        uri = f'/api/v2/simulation/gillespy2/{sim_hash}/2/results'
+        response = StatusResponse.parse(response_raw.body)
+        assert response.status == SimStatus.READY
+        uri = f'/api/v2/cache/gillespy2/{sim_hash}/2/is_cached'
         response_raw = self.fetch(uri)
-        assert response_raw.code == 404
+        assert response_raw.code == 200
+        response = StatusResponse.parse(response_raw.body)
+        assert response.status == SimStatus.DOES_NOT_EXIST
