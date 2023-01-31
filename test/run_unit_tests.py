@@ -10,6 +10,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--mode', default='develop', choices=['develop', 'release'],
                     help='Run tests in develop mode or release mode.')
+parser.add_argument('-c', '--case',required=False, type=str)
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -18,16 +19,18 @@ if __name__ == '__main__':
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.insert(1, '..')
 
-    from test.unit_tests import test_hash, test_cache, test_launch, test_compute_server, test_status
+    if args.case is not None:
+        import importlib
+        modules = [importlib.import_module(f'unit_tests.test_{args.case}')]
+    else:
+        modules = []
+        from test.unit_tests import *
+        for name, module in sys.modules.items():
+            if name.startswith('test.unit_tests.test_'):
+                modules.append(module)
 
-    modules = [
-        # test_hash,
-        # test_cache,
-        # test_launch,
-        # test_compute_server,
-        test_status,
-    ]
     for module in modules:
+
         suite = unittest.TestLoader().loadTestsFromModule(module)
         runner = unittest.TextTestRunner(failfast=args.mode == 'develop')
 
