@@ -28,12 +28,12 @@ class IsCachedHandler(RequestHandler):
             raise RemoteSimulationError('Malformed request')
         n_traj = int(n_traj)
         cache = Cache(self.cache_dir, results_id)
-        print(f'''
-{datetime.now()} |
- Source: <{self.request.remote_ip}> |
- Cache Check |
- <{results_id}> |
- Trajectories: {n_traj} ''')
+        print(f'\
+{datetime.now()} |\
+ Source: <{self.request.remote_ip}> |\
+ Cache Check |\
+ <{results_id}> |\
+ Trajectories: {n_traj} ')
         msg = f'{datetime.now()} | <{results_id}> | Trajectories: {n_traj} | Status: '
         exists = cache.exists()
         if exists:
