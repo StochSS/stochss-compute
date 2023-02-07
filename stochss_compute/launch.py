@@ -127,6 +127,10 @@ def launch_with_cluster():
         print('OK')
 
 if __name__ == '__main__':
+    import os
+    if 'COVERAGE_PROCESS_START' in os.environ:
+        import coverage
+        coverage.process_startup()
     if len(sys.argv) > 1:
         if sys.argv[1] == 'cluster':
             del sys.argv[1]

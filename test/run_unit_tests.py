@@ -16,7 +16,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.mode == 'develop':
         print('Running tests in develop mode. Appending repository directory to system path.')
-        sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         sys.path.insert(1, '..')
 
     if args.case is not None:

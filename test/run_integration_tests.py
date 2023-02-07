@@ -7,19 +7,24 @@ sys.path.insert(1, '../')
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--mode', default='develop', choices=['develop', 'release'],
                     help='Run tests in develop mode or release mode.')
+parser.add_argument('-c', '--case',required=False, type=str)
 
 if __name__ == '__main__':
     args = parser.parse_args()
     if args.mode == 'develop':
         print('Running tests in develop mode. Appending repository directory to system path.')
-        sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+        sys.path.insert(1, '..')
 
-    from test.integration_tests import test_api, test_ec2
 
-    modules = [
-        # test_api,
-        # test_ec2,
-    ]
+    if args.case is not None:
+        import importlib
+        modules = [importlib.import_module(f'integration_tests.test_{args.case}')]
+    else:
+        modules = []
+        from test.integration_tests import *
+        for name, module in sys.modules.items():
+            if name.startswith('test.integration_tests.test_'):
+                modules.append(module)
 
     for module in modules:
         suite = unittest.TestLoader().loadTestsFromModule(module)

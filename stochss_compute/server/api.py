@@ -10,7 +10,9 @@ from stochss_compute.server.run import RunHandler
 from stochss_compute.server.sourceip import SourceIpHandler
 from stochss_compute.server.status import StatusHandler
 from stochss_compute.server.results import ResultsHandler
-
+import coverage, os
+os.environ['COVERAGE_PROCESS_START'] = '.covrc'
+coverage.process_startup()
 def _make_app(dask_host, dask_scheduler_port, cache):
     scheduler_address = f'{dask_host}:{dask_scheduler_port}'
     return Application([
