@@ -8,9 +8,11 @@ from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import ResultsResponse, SimStatus, StatusResponse
 
 class RemoteResults(Results):
-    """
+    '''
     Wrapper for a gillespy2.Results object that exists on a remote server and which is then downloaded locally.
     A Results object is: A List of Trajectory objects created by a gillespy2 solver, extends the UserList object.
+
+    These three fields must be initialized manually: id, server, n_traj, task_id.
 
     :param data: A list of trajectory objects.
     :type data: UserList
@@ -20,7 +22,10 @@ class RemoteResults(Results):
 
     :param server: The remote instance of StochSS-Compute where the Results are cached.
     :type server: stochss_compute.ComputeServer
-    """
+
+    :param task_id: Handle for the running simulation.
+    :type task_id: str
+    '''
     # These three fields are initialized by the server
     id = None
     server = None
@@ -34,6 +39,9 @@ class RemoteResults(Results):
     def data(self):
         """
         The trajectory data.
+
+        :returns: self._data
+        :rtype: UserList
         """
         if None in (self.id, self.server, self.n_traj):
             raise Exception('RemoteResults must have a self.id, self.server and self.n_traj.')
@@ -45,10 +53,32 @@ class RemoteResults(Results):
     @property
     def sim_status(self):
         '''
+        Fetch the simulation status.
+
         :returns: Simulation status enum as a string.
+        :rtype: str
         '''
         return self._status().status.name
 
+    def get_gillespy2_results(self):
+        """
+        Get the GillesPy2 results object from the remote results.
+
+        :returns: The generated GillesPy2 results object.
+        :rtype: gillespy.Results
+        """
+        return Results(self.data)
+
+
+    @property
+    def is_ready(self):
+        """
+        True if results exist in cache on the server.
+
+        :returns: status == SimStatus.READY
+        :rtype: bool
+        """
+        return self._status().status == SimStatus.READY
 
     def _status(self):
         # Request the status of a submitted simulation.
@@ -86,20 +116,3 @@ class RemoteResults(Results):
             response = ResultsResponse.parse(response_raw.text)
             self._data = response.results.data
 
-
-    def get_gillespy2_results(self):
-        """
-        Get the GillesPy2 results object from the remote results.
-
-        :returns: The generated GillesPy2 results object.
-        :rtype: gillespy.Results
-        """
-        return Results(self.data)
-
-
-    @property
-    def is_ready(self):
-        """
-        True if results exist in cache on the server.
-        """
-        return self._status().status == SimStatus.READY
