@@ -111,9 +111,11 @@
 <span class="kn">from</span> <span class="nn">stochss_compute.core.messages</span> <span class="kn">import</span> <span class="n">ResultsResponse</span><span class="p">,</span> <span class="n">SimStatus</span><span class="p">,</span> <span class="n">StatusResponse</span>
 
 <div class="viewcode-block" id="RemoteResults"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults">[docs]</a><span class="k">class</span> <span class="nc">RemoteResults</span><span class="p">(</span><span class="n">Results</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Wrapper for a gillespy2.Results object that exists on a remote server and which is then downloaded locally.</span>
 <span class="sd">    A Results object is: A List of Trajectory objects created by a gillespy2 solver, extends the UserList object.</span>
+
+<span class="sd">    These three fields must be initialized manually: id, server, n_traj, task_id.</span>
 
 <span class="sd">    :param data: A list of trajectory objects.</span>
 <span class="sd">    :type data: UserList</span>
@@ -123,7 +125,10 @@
 
 <span class="sd">    :param server: The remote instance of StochSS-Compute where the Results are cached.</span>
 <span class="sd">    :type server: stochss_compute.ComputeServer</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+
+<span class="sd">    :param task_id: Handle for the running simulation.</span>
+<span class="sd">    :type task_id: str</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># These three fields are initialized by the server</span>
     <span class="nb">id</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">server</span> <span class="o">=</span> <span class="kc">None</span>
@@ -137,6 +142,9 @@
     <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The trajectory data.</span>
+
+<span class="sd">        :returns: self._data</span>
+<span class="sd">        :rtype: UserList</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_traj</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;RemoteResults must have a self.id, self.server and self.n_traj.&#39;</span><span class="p">)</span>
@@ -148,10 +156,32 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sim_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Fetch the simulation status.</span>
+
 <span class="sd">        :returns: Simulation status enum as a string.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">()</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">name</span>
 
+<div class="viewcode-block" id="RemoteResults.get_gillespy2_results"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.get_gillespy2_results">[docs]</a>    <span class="k">def</span> <span class="nf">get_gillespy2_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the GillesPy2 results object from the remote results.</span>
+
+<span class="sd">        :returns: The generated GillesPy2 results object.</span>
+<span class="sd">        :rtype: gillespy.Results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Results</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if results exist in cache on the server.</span>
+
+<span class="sd">        :returns: status == SimStatus.READY</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">()</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">SimStatus</span><span class="o">.</span><span class="n">READY</span>
 
     <span class="k">def</span> <span class="nf">_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Request the status of a submitted simulation.</span>
@@ -187,25 +217,8 @@
                 <span class="k">raise</span> <span class="n">RemoteSimulationError</span><span class="p">(</span><span class="n">response_raw</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span>
 
             <span class="n">response</span> <span class="o">=</span> <span class="n">ResultsResponse</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">response_raw</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">data</span></div>
 
-
-<div class="viewcode-block" id="RemoteResults.get_gillespy2_results"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.remote_results.RemoteResults.get_gillespy2_results">[docs]</a>    <span class="k">def</span> <span class="nf">get_gillespy2_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the GillesPy2 results object from the remote results.</span>
-
-<span class="sd">        :returns: The generated GillesPy2 results object.</span>
-<span class="sd">        :rtype: gillespy.Results</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Results</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
-
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">is_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        True if results exist in cache on the server.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">()</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">SimStatus</span><span class="o">.</span><span class="n">READY</span></div>
 </pre></div>
 
           </div>

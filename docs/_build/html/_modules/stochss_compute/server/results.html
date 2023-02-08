@@ -118,6 +118,9 @@
 <div class="viewcode-block" id="ResultsHandler.initialize"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.results.ResultsHandler.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Set the cache directory.</span>
+
+<span class="sd">        :param cache_dir: Path to the cache.</span>
+<span class="sd">        :type cache_dir: str</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span> <span class="o">=</span> <span class="n">cache_dir</span></div>
 
@@ -126,7 +129,10 @@
 <span class="sd">        Process GET request.</span>
 
 <span class="sd">        :param results_id: Hash of the simulation.</span>
+<span class="sd">        :type results_id: str</span>
+<span class="sd">        </span>
 <span class="sd">        :param n_traj: Number of trajectories in the request.</span>
+<span class="sd">        :type n_traj: str</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="p">(</span><span class="n">results_id</span><span class="p">,</span> <span class="n">n_traj</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">RemoteSimulationError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Malformed request | &lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">remote_ip</span><span class="si">}</span><span class="s1">&gt;&#39;</span><span class="p">)</span>

@@ -307,8 +307,8 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>results_id</strong> – Hash of the simulation.</p></li>
-<li><p><strong>n_traj</strong> – Number of trajectories to check for.</p></li>
+<li><p><strong>results_id</strong> (<em>str</em>) – Hash of the simulation.</p></li>
+<li><p><strong>n_traj</strong> (<em>str</em>) – Number of trajectories to check for.</p></li>
 </ul>
 </dd>
 </dl>
@@ -317,7 +317,12 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="stochss_compute.server.is_cached.IsCachedHandler.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/is_cached.html#IsCachedHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.is_cached.IsCachedHandler.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set variables.</p>
+<dd><p>Set cache path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cache_dir</strong> (<em>str</em>) – Path to the cache.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -338,8 +343,8 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>results_id</strong> – Hash of the simulation.</p></li>
-<li><p><strong>n_traj</strong> – Number of trajectories in the request.</p></li>
+<li><p><strong>results_id</strong> (<em>str</em>) – Hash of the simulation.</p></li>
+<li><p><strong>n_traj</strong> (<em>str</em>) – Number of trajectories in the request.</p></li>
 </ul>
 </dd>
 </dl>
@@ -349,6 +354,11 @@
 <dt class="sig sig-object py" id="stochss_compute.server.results.ResultsHandler.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/results.html#ResultsHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.results.ResultsHandler.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the cache directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cache_dir</strong> (<em>str</em>) – Path to the cache.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -366,6 +376,14 @@
 <dt class="sig sig-object py" id="stochss_compute.server.run.RunHandler.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler_address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/run.html#RunHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.run.RunHandler.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the address to the Dask scheduler and the cache directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheduler_address</strong> (<em>str</em>) – Scheduler address.</p></li>
+<li><p><strong>cache_dir</strong> (<em>str</em>) – Path to the cache.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -394,6 +412,9 @@ Used only by cloud api.</p>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>request.remote_ip</p>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -409,21 +430,15 @@ Used only by cloud api.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RequestHandler</span></code></p>
 <p>Endpoint for requesting the status of a simulation.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="stochss_compute.server.status.StatusHandler.check_with_scheduler">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_with_scheduler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/status.html#StatusHandler.check_with_scheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.status.StatusHandler.check_with_scheduler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ask the scheduler for information about a task.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="stochss_compute.server.status.StatusHandler.get">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_traj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/status.html#StatusHandler.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.status.StatusHandler.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process GET request.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>results_id</strong> – Hash of the simulation. Required.</p></li>
-<li><p><strong>n_traj</strong> – Number of trajectories in the request. Default 1.</p></li>
-<li><p><strong>task_id</strong> – ID of the running simulation. Required.</p></li>
+<li><p><strong>results_id</strong> (<em>str</em>) – Hash of the simulation. Required.</p></li>
+<li><p><strong>n_traj</strong> (<em>str</em>) – Number of trajectories in the request. Default 1.</p></li>
+<li><p><strong>task_id</strong> (<em>str</em>) – ID of the running simulation. Required.</p></li>
 </ul>
 </dd>
 </dl>
@@ -432,7 +447,15 @@ Used only by cloud api.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="stochss_compute.server.status.StatusHandler.initialize">
 <span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler_address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/status.html#StatusHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.status.StatusHandler.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the scheduler address and cache directory.</p>
+<dd><p>Sets the address to the Dask scheduler and the cache directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheduler_address</strong> (<em>str</em>) – Scheduler address.</p></li>
+<li><p><strong>cache_dir</strong> (<em>str</em>) – Path to the cache.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

@@ -142,6 +142,11 @@
 <dt class="sig sig-object py" id="stochss_compute.client.compute_server.ComputeServer.address">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#stochss_compute.client.compute_server.ComputeServer.address" title="Permalink to this definition">¶</a></dt>
 <dd><p>The server’s IP address and port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>“<a class="reference external" href="http:/">http:/</a>/{host}:{port}”</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -175,7 +180,12 @@
 <dt class="sig sig-object py" id="stochss_compute.client.server.Server">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.client.server.</span></span><span class="sig-name descname"><span class="pre">Server</span></span><a class="reference internal" href="../_modules/stochss_compute/client/server.html#Server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.client.server.Server" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Server parent class with hard coded endpoints.</p>
+<p>Abstract Server class with hard coded endpoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – Server cannot be instantiated directly. Must be ComputeServer or Cluster.</p>
+</dd>
+</dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="stochss_compute.client.server.Server.address">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">address</span></span><a class="headerlink" href="#stochss_compute.client.server.Server.address" title="Permalink to this definition">¶</a></dt>
@@ -184,14 +194,43 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="stochss_compute.client.server.Server.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/client/server.html#Server.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.client.server.Server.get" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#stochss_compute.client.endpoint.Endpoint" title="stochss_compute.client.endpoint.Endpoint"><span class="pre">Endpoint</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/client/server.html#Server.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.client.server.Server.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Send a GET request to endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>endpoint</strong> (<a class="reference internal" href="#stochss_compute.client.endpoint.Endpoint" title="stochss_compute.client.endpoint.Endpoint"><em>Endpoint</em></a>) – The API endpoint.</p></li>
+<li><p><strong>sub</strong> (<em>str</em>) – Final part of url string.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The HTTP response.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>requests.Response</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="stochss_compute.client.server.Server.post">
 <span class="sig-name descname"><span class="pre">post</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#stochss_compute.client.endpoint.Endpoint" title="stochss_compute.client.endpoint.Endpoint"><span class="pre">Endpoint</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.Request" title="stochss_compute.core.messages.Request"><span class="pre">Request</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/client/server.html#Server.post"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.client.server.Server.post" title="Permalink to this definition">¶</a></dt>
 <dd><p>Send a POST request to endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>endpoint</strong> (<a class="reference internal" href="#stochss_compute.client.endpoint.Endpoint" title="stochss_compute.client.endpoint.Endpoint"><em>Endpoint</em></a>) – The API endpoint.</p></li>
+<li><p><strong>sub</strong> (<em>str</em>) – Final part of url string.</p></li>
+<li><p><strong>request</strong> (<a class="reference internal" href="stochss_compute.core.html#stochss_compute.core.messages.Request" title="stochss_compute.core.messages.Request"><em>Request</em></a>) – An object that inherits from Request.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The HTTP response.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>requests.Response</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

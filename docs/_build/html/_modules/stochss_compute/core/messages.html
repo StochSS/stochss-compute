@@ -139,7 +139,7 @@
 
 <div class="viewcode-block" id="Request"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.Request">[docs]</a><span class="k">class</span> <span class="nc">Request</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Talk about class.</span>
+<span class="sd">    Base class.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 <div class="viewcode-block" id="Request.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.Request.encode">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -155,7 +155,7 @@
 
 <div class="viewcode-block" id="Response"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.Response">[docs]</a><span class="k">class</span> <span class="nc">Response</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Response abstracted down to the essentials.</span>
+<span class="sd">    Base class.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 <div class="viewcode-block" id="Response.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.Response.encode">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -172,18 +172,36 @@
 
 <div class="viewcode-block" id="SimulationRunRequest"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SimulationRunRequest">[docs]</a><span class="k">class</span> <span class="nc">SimulationRunRequest</span><span class="p">(</span><span class="n">Request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A simulation request.</span>
+
+<span class="sd">    :param model: A model to run.</span>
 <span class="sd">    :type model: gillespy2.Model</span>
+
+<span class="sd">    :param kwargs: kwargs for the model.run() call.</span>
+<span class="sd">    :type kwargs: dict[str, Any]</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
 
 <div class="viewcode-block" id="SimulationRunRequest.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SimulationRunRequest.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        JSON-encode model and then encode self to dict.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span>
                 <span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">}</span></div>
 
 <div class="viewcode-block" id="SimulationRunRequest.parse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SimulationRunRequest.parse">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">raw_request</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parse HTTP request.</span>
+
+<span class="sd">        :param raw_request: The request.</span>
+<span class="sd">        :type raw_request: dict[str, str]</span>
+
+<span class="sd">        :returns: The decoded object.</span>
+<span class="sd">        :rtype: SimulationRunRequest</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">request_dict</span> <span class="o">=</span> <span class="n">json_decode</span><span class="p">(</span><span class="n">raw_request</span><span class="p">)</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">request_dict</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">])</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="n">request_dict</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span>
@@ -191,8 +209,11 @@
 
 <div class="viewcode-block" id="SimulationRunRequest.hash"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SimulationRunRequest.hash">[docs]</a>    <span class="k">def</span> <span class="nf">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Return a unique hash of this simulation request.</span>
-<span class="sd">        Do not include number_of_trajectories in this calculation.</span>
+<span class="sd">        Generate a unique hash of this simulation request.</span>
+<span class="sd">        Does not include number_of_trajectories in this calculation.</span>
+
+<span class="sd">        :returns: md5 hex digest.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">anon_model_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to_anon</span><span class="p">()</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">encode_private</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">popped_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">kw</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="k">if</span> <span class="n">kw</span><span class="o">!=</span><span class="s1">&#39;number_of_trajectories&#39;</span><span class="p">}</span>
@@ -203,9 +224,18 @@
 
 <div class="viewcode-block" id="SimulationRunResponse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SimulationRunResponse">[docs]</a><span class="k">class</span> <span class="nc">SimulationRunResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A response from the server regarding a SimulationRunRequest.</span>
+<span class="sd">    </span>
+<span class="sd">    :param status: The status of the simulation.</span>
 <span class="sd">    :type status: SimStatus</span>
+
+<span class="sd">    :param error_message: Possible error message.</span>
 <span class="sd">    :type error_message: str | None</span>
+
+<span class="sd">    :param results_id: Hash of the simulation request. Identifies the results.</span>
 <span class="sd">    :type results_id: str | None</span>
+
+<span class="sd">    :param results: JSON-Encoded gillespy2.Results</span>
 <span class="sd">    :type results: str | None</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">error_message</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">results_id</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">task_id</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -216,6 +246,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">task_id</span> <span class="o">=</span> <span class="n">task_id</span>
 
 <div class="viewcode-block" id="SimulationRunResponse.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SimulationRunResponse.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">       Encode self to dict.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                 <span class="s1">&#39;error_message&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_message</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;results_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_id</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
@@ -224,6 +257,15 @@
 
 <div class="viewcode-block" id="SimulationRunResponse.parse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SimulationRunResponse.parse">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">raw_response</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parse HTTP response.</span>
+
+<span class="sd">        :param raw_response: The response.</span>
+<span class="sd">        :type raw_response: dict[str, str]</span>
+
+<span class="sd">        :returns: The decoded object.</span>
+<span class="sd">        :rtype: SimulationRunResponse</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">response_dict</span> <span class="o">=</span> <span class="n">json_decode</span><span class="p">(</span><span class="n">raw_response</span><span class="p">)</span>
         <span class="n">status</span> <span class="o">=</span> <span class="n">SimStatus</span><span class="o">.</span><span class="n">from_str</span><span class="p">(</span><span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">])</span>
         <span class="n">results_id</span> <span class="o">=</span> <span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;results_id&#39;</span><span class="p">]</span>
@@ -237,32 +279,68 @@
 
 <div class="viewcode-block" id="StatusRequest"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.StatusRequest">[docs]</a><span class="k">class</span> <span class="nc">StatusRequest</span><span class="p">(</span><span class="n">Request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A request for simulation status.</span>
+
+<span class="sd">    :param results_id: Hash of the SimulationRunRequest</span>
 <span class="sd">    :type results_id: str</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results_id</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">results_id</span> <span class="o">=</span> <span class="n">results_id</span>
 <div class="viewcode-block" id="StatusRequest.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.StatusRequest.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :returns: self.__dict__</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span></div>
+
 <div class="viewcode-block" id="StatusRequest.parse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.StatusRequest.parse">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">raw_request</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parse HTTP request.</span>
+
+<span class="sd">        :param raw_request: The request.</span>
+<span class="sd">        :type raw_request: dict[str, str]</span>
+
+<span class="sd">        :returns: The decoded object.</span>
+<span class="sd">        :rtype: StatusRequest</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">request_dict</span> <span class="o">=</span> <span class="n">json_decode</span><span class="p">(</span><span class="n">raw_request</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">StatusRequest</span><span class="p">(</span><span class="n">request_dict</span><span class="p">[</span><span class="s1">&#39;results_id&#39;</span><span class="p">])</span></div></div>
 
 <div class="viewcode-block" id="StatusResponse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.StatusResponse">[docs]</a><span class="k">class</span> <span class="nc">StatusResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A response from the server about simulation status.</span>
+
+<span class="sd">    :param status: Status of the simulation</span>
 <span class="sd">    :type status: SimStatus</span>
-<span class="sd">    :type error_message: str</span>
+<span class="sd">    </span>
+<span class="sd">    :param message: Possible error message or otherwise</span>
+<span class="sd">    :type message: str</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
 
 <div class="viewcode-block" id="StatusResponse.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.StatusResponse.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Encodes self.</span>
+<span class="sd">        :returns: self as dict</span>
+<span class="sd">        :rtype: dict[str, str]</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                 <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">}</span></div>
 
 <div class="viewcode-block" id="StatusResponse.parse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.StatusResponse.parse">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">raw_response</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parse HTTP response.</span>
+
+<span class="sd">        :param raw_response: The response.</span>
+<span class="sd">        :type raw_response: dict[str, str]</span>
+
+<span class="sd">        :returns: The decoded object.</span>
+<span class="sd">        :rtype: StatusResponse</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">response_dict</span> <span class="o">=</span> <span class="n">json_decode</span><span class="p">(</span><span class="n">raw_response</span><span class="p">)</span>
         <span class="n">status</span> <span class="o">=</span> <span class="n">SimStatus</span><span class="o">.</span><span class="n">from_str</span><span class="p">(</span><span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">])</span>
         <span class="n">message</span> <span class="o">=</span> <span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span>
@@ -273,29 +351,62 @@
 
 <div class="viewcode-block" id="ResultsRequest"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.ResultsRequest">[docs]</a><span class="k">class</span> <span class="nc">ResultsRequest</span><span class="p">(</span><span class="n">Request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Request results from the server.</span>
+
+<span class="sd">    :param results_id: Hash of the SimulationRunRequest</span>
 <span class="sd">    :type results_id: str</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results_id</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">results_id</span> <span class="o">=</span> <span class="n">results_id</span>
 <div class="viewcode-block" id="ResultsRequest.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.ResultsRequest.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :returns: self.__dict__</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span></div>
 <div class="viewcode-block" id="ResultsRequest.parse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.ResultsRequest.parse">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">raw_request</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parse HTTP request.</span>
+
+<span class="sd">        :param raw_request: The request.</span>
+<span class="sd">        :type raw_request: dict[str, str]</span>
+
+<span class="sd">        :returns: The decoded object.</span>
+<span class="sd">        :rtype: ResultsRequest</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">request_dict</span> <span class="o">=</span> <span class="n">json_decode</span><span class="p">(</span><span class="n">raw_request</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ResultsRequest</span><span class="p">(</span><span class="n">request_dict</span><span class="p">[</span><span class="s1">&#39;results_id&#39;</span><span class="p">])</span></div></div>
 
 <div class="viewcode-block" id="ResultsResponse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.ResultsResponse">[docs]</a><span class="k">class</span> <span class="nc">ResultsResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    :type results: str | None</span>
+<span class="sd">    A response from the server about the Results.</span>
+
+<span class="sd">    :param results: The requested Results from the cache. (JSON)</span>
+<span class="sd">    :type results: str</span>
+<span class="sd">    </span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">results</span>
 
 <div class="viewcode-block" id="ResultsResponse.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.ResultsResponse.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :returns: self.__dict__</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;results&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">}</span></div>
 
 <div class="viewcode-block" id="ResultsResponse.parse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.ResultsResponse.parse">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">raw_response</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parse HTTP response.</span>
+
+<span class="sd">        :param raw_response: The response.</span>
+<span class="sd">        :type raw_response: dict[str, str]</span>
+
+<span class="sd">        :returns: The decoded object.</span>
+<span class="sd">        :rtype: ResultsResponse</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">response_dict</span> <span class="o">=</span> <span class="n">json_decode</span><span class="p">(</span><span class="n">raw_response</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">Results</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;results&#39;</span><span class="p">])</span>
@@ -305,25 +416,48 @@
 
 <div class="viewcode-block" id="SourceIpRequest"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SourceIpRequest">[docs]</a><span class="k">class</span> <span class="nc">SourceIpRequest</span><span class="p">(</span><span class="n">Request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Restrict server access.</span>
+
+<span class="sd">    :param cloud_key: Random key generated locally during launch.</span>
 <span class="sd">    :type cloud_key: str</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cloud_key</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cloud_key</span> <span class="o">=</span> <span class="n">cloud_key</span>
 <div class="viewcode-block" id="SourceIpRequest.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SourceIpRequest.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :returns: self.__dict__</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span></div>
 <div class="viewcode-block" id="SourceIpRequest.parse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SourceIpRequest.parse">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">raw_request</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parse HTTP request.</span>
+
+<span class="sd">        :param raw_request: The request.</span>
+<span class="sd">        :type raw_request: dict[str, str]</span>
+
+<span class="sd">        :returns: The decoded object.</span>
+<span class="sd">        :rtype: SourceIpRequest</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">request_dict</span> <span class="o">=</span> <span class="n">json_decode</span><span class="p">(</span><span class="n">raw_request</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">SourceIpRequest</span><span class="p">(</span><span class="n">request_dict</span><span class="p">[</span><span class="s1">&#39;cloud_key&#39;</span><span class="p">])</span></div></div>
 
 <div class="viewcode-block" id="SourceIpResponse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SourceIpResponse">[docs]</a><span class="k">class</span> <span class="nc">SourceIpResponse</span><span class="p">(</span><span class="n">Response</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Response from server containing IP address of the source.</span>
+
+<span class="sd">    :param source_ip: IP address of the client.</span>
+<span class="sd">    :type source_ip: str</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_ip</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source_ip</span> <span class="o">=</span> <span class="n">source_ip</span>
 
 <div class="viewcode-block" id="SourceIpResponse.encode"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SourceIpResponse.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :returns: self.__dict__</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span></div>
 
 <div class="viewcode-block" id="SourceIpResponse.parse"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.messages.SourceIpResponse.parse">[docs]</a>    <span class="nd">@staticmethod</span>
@@ -332,6 +466,10 @@
 <span class="sd">        Parses a http response and returns a python object.</span>
 
 <span class="sd">        :param raw_response: A raw http SourceIpResponse from the server.</span>
+<span class="sd">        :type raw_response: str</span>
+
+<span class="sd">        :returns: The decoded object.</span>
+<span class="sd">        :rtype: SourceIpResponse</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">response_dict</span> <span class="o">=</span> <span class="n">json_decode</span><span class="p">(</span><span class="n">raw_response</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">SourceIpResponse</span><span class="p">(</span><span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;source_ip&#39;</span><span class="p">])</span></div></div>

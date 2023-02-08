@@ -162,6 +162,12 @@
 <div class="viewcode-block" id="RemoteSimulation.is_cached"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.remote_simulation.RemoteSimulation.is_cached">[docs]</a>    <span class="k">def</span> <span class="nf">is_cached</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Checks to see if a dummy simulation exists in the cache.</span>
+
+<span class="sd">        :param params: Arguments for simulation.</span>
+<span class="sd">        :type params: dict[str, Any]</span>
+
+<span class="sd">        :returns: If the results are cached on the server.</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="s2">&quot;solver&quot;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;solver&#39;</span><span class="p">],</span> <span class="s1">&#39;is_instantiated&#39;</span><span class="p">):</span>
@@ -180,13 +186,17 @@
 
 <div class="viewcode-block" id="RemoteSimulation.run"><a class="viewcode-back" href="../../../classes/stochss_compute.core.html#stochss_compute.core.remote_simulation.RemoteSimulation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Simulate the Model on the target ComputeServer, returning the results once complete.</span>
+<span class="sd">        Simulate the Model on the target ComputeServer, returning the results or a handle to a running simulation.</span>
 
-<span class="sd">        &lt;https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run&gt;</span>
+<span class="sd">        See `here &lt;https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run&gt;`_.</span>
 
 <span class="sd">        :param params: Arguments to pass directly to the Model#run call on the server.</span>
+<span class="sd">        :type params: dict[str, Any]</span>
 
-<span class="sd">        :returns: stochss_compute.RemoteResults</span>
+<span class="sd">        :returns: RemoteResults populated with Results if cached, otherwise and unpopulated RemoteResults</span>
+<span class="sd">        :rtype: RemoteResults</span>
+
+<span class="sd">        :raises RemoteSimulationError: In the case of SimStatus.ERROR</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="s2">&quot;solver&quot;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
