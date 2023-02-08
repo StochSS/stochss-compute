@@ -27,7 +27,9 @@ def launch_server():
     '''
     Start the REST API. Alias to script "stochss-compute".
 
-    stochss-compute --help
+    `stochss-compute --help`
+    OR
+    `python -m stochss_compute.launch --help`
     '''
     def _parse_args() -> Namespace:
         desc = '''
@@ -60,7 +62,9 @@ def launch_with_cluster():
     '''
     Start up a Dask Cluster and StochSS-Compute REST API. Alias to script "stochss-compute-cluster".
 
-    stochss-compute cluster --help
+    `stochss-compute cluster --help`
+    OR
+    `python -m stochss_compute.launch cluster --help`
     '''
 
     def _parse_args() -> Namespace:
