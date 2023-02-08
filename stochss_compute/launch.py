@@ -1,11 +1,21 @@
 '''
 stochss_compute.launch
-
-launch_server()          Starts the API Server. Alias to script "stochss-compute".
-
-launch_with_cluster()    Starts a Dask Cluster and API Server.
-                         Alias to script "stochss-compute-cluster".
 '''
+# StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
+# Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import asyncio
@@ -15,7 +25,7 @@ from stochss_compute.server.api import start_api
 
 def launch_server():
     '''
-    Start the REST API.
+    Start the REST API. Alias to script "stochss-compute".
 
     stochss-compute --help
     '''
@@ -48,7 +58,7 @@ def launch_server():
 
 def launch_with_cluster():
     '''
-    Start up a Dask Cluster and StochSS-Compute REST API.
+    Start up a Dask Cluster and StochSS-Compute REST API. Alias to script "stochss-compute-cluster".
 
     stochss-compute cluster --help
     '''
