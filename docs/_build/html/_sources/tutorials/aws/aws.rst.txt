@@ -8,7 +8,7 @@ StochSS-Compute on AWS
     python -m pip install 'stochss_compute[AWS]'
     # installs boto3, paramiko, and python-dotenv
 
-2. Import necessary objects.
+2. Import necessary classes.
 
 .. code-block:: python
 
