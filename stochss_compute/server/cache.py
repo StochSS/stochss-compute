@@ -22,11 +22,9 @@ class Cache:
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
 
-    def create(self):
+    def create(self) -> None:
         '''
         Create the results file if it does not exist.
-
-        :returns: None
         '''
         try:
             with open(self.results_path, 'x', encoding='utf-8') as file:
@@ -38,23 +36,23 @@ class Cache:
         '''
         Check if the results file exists.
 
-        :returns: bool
+        :returns: os.path.exists(self.results_path)
+        :rtype: bool
         '''
         return os.path.exists(self.results_path)
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         '''
         Check if the results are empty.
 
-        :returns: bool
+        :returns: filesize == 0 or self.exists()
+        :rtype: bool
         '''
         lock = SoftFileLock(f'{self.results_path}.lock')
         with lock:
             if self.exists():
                 filesize = os.path.getsize(self.results_path)
-                if filesize == 0:
-                    return True
-                return False
+                return filesize == 0
             return True
 
     def is_ready(self, n_traj_wanted) -> bool:
@@ -62,9 +60,10 @@ class Cache:
         Check if the results are ready to be retrieved from the cache.
 
         :param n_traj_wanted: The number of requested trajectories.
-        :type int:
+        :type: int
 
-        :returns: bool
+        :returns: n_traj_wanted <= len(<Results in cache>)
+        :rtype: bool
         '''
         results = self.get()
         if results is None or n_traj_wanted > len(results):
@@ -77,7 +76,10 @@ class Cache:
          and the number of trajectories currently in the cache.
 
         :param n_traj_wanted: The number of requested trajectories.
-        :type int:
+        :type: int
+
+        :returns: A number greater than or equal to zero.
+        :rtype: int
         '''
         if self.is_empty():
             return n_traj_wanted
@@ -92,6 +94,9 @@ class Cache:
     def n_traj_in_cache(self) -> int:
         '''
         Check the number of trajectories in the cache.
+
+        :returns: `len()` of the gillespy2.Results
+        :rtype: int
         '''
         if self.is_empty():
             return 0
@@ -103,6 +108,9 @@ class Cache:
     def get(self) -> Results or None:
         '''
         Retrieve a gillespy2.Results object from the cache or None if error.
+
+        :returns: Results.from_json(results_json)
+        :rtype: gillespy2.Results or None
         '''
         try:
             results_json = self.read()
@@ -114,23 +122,20 @@ class Cache:
         '''
         Retrieve a gillespy2.Results object as a JSON-formatted string.
 
-        :returns:
-        :type str:
+        :returns: The output of reading the file.
+        :rtype: str
         '''
         lock = SoftFileLock(f'{self.results_path}.lock')
         with lock:
             with open(self.results_path,'r', encoding='utf-8') as file:
                 return file.read()
 
-    def save(self, results: Results):
+    def save(self, results: Results) -> None:
         '''
         Save a newly processed gillespy2.Results object to the cache.
 
         :param results: The new Results.
-        :type gillespy2.Results:
-
-        :returns:
-        :type None:
+        :type: gillespy2.Results
         '''
         msg = f'{datetime.now()} | Cache | <{self.results_path}> | '
         lock = SoftFileLock(f'{self.results_path}.lock')
