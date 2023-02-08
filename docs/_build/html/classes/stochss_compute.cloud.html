@@ -133,21 +133,41 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>remote_config</strong> – Optional. Allows configuration of remote cluster resource identifiers.</p></li>
-<li><p><strong>local_config</strong> – Optional. Allows configuration of local cluster resources.</p></li>
+<li><p><strong>local_config</strong> (<a class="reference internal" href="#stochss_compute.cloud.ec2_config.EC2LocalConfig" title="stochss_compute.cloud.ec2_config.EC2LocalConfig"><em>EC2LocalConfig</em></a>) – Optional. Allows configuration of local cluster resources.</p></li>
+<li><p><strong>remote_config</strong> (<a class="reference internal" href="#stochss_compute.cloud.ec2_config.EC2RemoteConfig" title="stochss_compute.cloud.ec2_config.EC2RemoteConfig"><em>EC2RemoteConfig</em></a>) – Optional. Allows configuration of remote cluster resource identifiers.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#stochss_compute.cloud.exceptions.EC2Exception" title="stochss_compute.cloud.exceptions.EC2Exception"><strong>EC2Exception</strong></a> – possible boto3 ClientError from AWS calls. See <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions">here</a>.</p>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="stochss_compute.cloud.ec2.EC2Cluster.address">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">address</span></span><a class="headerlink" href="#stochss_compute.cloud.ec2.EC2Cluster.address" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#stochss_compute.cloud.ec2.EC2Cluster.address" title="Permalink to this definition">¶</a></dt>
 <dd><p>The server’s IP address and port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>“<a class="reference external" href="http:/">http:/</a>/{ip}:{port}”</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.cloud.exceptions.EC2Exception" title="stochss_compute.cloud.exceptions.EC2Exception"><strong>EC2Exception</strong></a> – Do not call before launching a cluster.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="stochss_compute.cloud.ec2.EC2Cluster.clean_up">
 <span class="sig-name descname"><span class="pre">clean_up</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/cloud/ec2.html#EC2Cluster.clean_up"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.cloud.ec2.EC2Cluster.clean_up" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes all cluster resources.</p>
+<dd><p>Terminates and removes all cluster resources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.cloud.exceptions.EC2Exception" title="stochss_compute.cloud.exceptions.EC2Exception"><strong>EC2Exception</strong></a> – <p>possible boto3 ClientError from AWS calls. See <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions">here</a>.</p>
+</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -156,7 +176,12 @@
 <dd><p>Launches a single node StochSS-Compute instance. Make sure to check instance_type pricing before launching.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>instance_type</strong> (<em>str</em>) – Example: ‘t3.nano’ See full list here: <a class="reference external" href="https://aws.amazon.com/ec2/instance-types/">https://aws.amazon.com/ec2/instance-types/</a></p>
+<dd class="field-odd"><p><strong>instance_type</strong> (<em>str</em>) – <p>Example: ‘t3.nano’ See full list <a class="reference external" href="https://aws.amazon.com/ec2/instance-types/">here</a>.</p>
+</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#stochss_compute.cloud.exceptions.EC2Exception" title="stochss_compute.cloud.exceptions.EC2Exception"><strong>EC2Exception</strong></a> – <p>possible boto3 ClientError from AWS calls. See <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions">here</a>.</p>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -168,8 +193,16 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="stochss_compute.cloud.ec2.EC2Cluster.status">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#stochss_compute.cloud.ec2.EC2Cluster.status" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#stochss_compute.cloud.ec2.EC2Cluster.status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the EC2 instance status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A status set locally, or, if connected, a status fetched from the instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -183,6 +216,17 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.cloud.ec2_config.</span></span><span class="sig-name descname"><span class="pre">EC2LocalConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./.sssc'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sssc-server-ssh-key'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ed25519'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pem'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/cloud/ec2_config.html#EC2LocalConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.cloud.ec2_config.EC2LocalConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Configure local settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key_dir</strong> (<em>str</em>) – Path to a directory to store SSH key.</p></li>
+<li><p><strong>key_name</strong> (<em>str</em>) – Name for the file.</p></li>
+<li><p><strong>status_file</strong> (<em>str</em>) – Path to a file to write instance status. Writes status to top line of that file.</p></li>
+<li><p><strong>key_type</strong> (<em>str</em>) – ed25519 or rsa</p></li>
+<li><p><strong>key_format</strong> (<em>str</em>) – pem or ppk</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -190,6 +234,23 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.cloud.ec2_config.</span></span><span class="sig-name descname"><span class="pre">EC2RemoteConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vpc_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sssc-vpc'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subnet_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sssc-subnet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">security_group_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sssc-sg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sssc-server'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sssc-server-ssh-key'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">29681</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ami</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/cloud/ec2_config.html#EC2RemoteConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.cloud.ec2_config.EC2RemoteConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Configure remote settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>suffix</strong> (<em>str</em>) – Add a suffix to all AWS resource names.</p></li>
+<li><p><strong>vpc_name</strong> (<em>str</em>) – Identify the VPC.</p></li>
+<li><p><strong>subnet_name</strong> (<em>str</em>) – Identify the subnet.</p></li>
+<li><p><strong>security_group_name</strong> (<em>str</em>) – Identify the security group.</p></li>
+<li><p><strong>server_name</strong> (<em>str</em>) – Identify the server.</p></li>
+<li><p><strong>key_name</strong> (<em>str</em>) – Identify the AWS EC2 KeyPair.</p></li>
+<li><p><strong>api_port</strong> (<em>int</em>) – Port to serve from.</p></li>
+<li><p><strong>region</strong> (<em>str</em>) – <p>Region to point to, like ‘us-east-1’ See <a class="reference external" href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions">here</a>.</p>
+</p></li>
+<li><p><strong>ami</strong> (<em>str</em>) – <p>Custom AMI to use, like ‘ami-09d3b3274b6c5d4aa’. See <a class="reference external" href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html">here</a>.</p>
+</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

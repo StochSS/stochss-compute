@@ -110,6 +110,33 @@
 <div class="viewcode-block" id="EC2RemoteConfig"><a class="viewcode-back" href="../../../classes/stochss_compute.cloud.html#stochss_compute.cloud.ec2_config.EC2RemoteConfig">[docs]</a><span class="k">class</span> <span class="nc">EC2RemoteConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Configure remote settings.</span>
+
+<span class="sd">    :param suffix: Add a suffix to all AWS resource names.</span>
+<span class="sd">    :type suffix: str</span>
+
+<span class="sd">    :param vpc_name: Identify the VPC.</span>
+<span class="sd">    :type vpc_name: str</span>
+
+<span class="sd">    :param subnet_name: Identify the subnet.</span>
+<span class="sd">    :type subnet_name: str</span>
+
+<span class="sd">    :param security_group_name: Identify the security group.</span>
+<span class="sd">    :type security_group_name: str</span>
+
+<span class="sd">    :param server_name: Identify the server.</span>
+<span class="sd">    :type server_name: str</span>
+<span class="sd">    </span>
+<span class="sd">    :param key_name: Identify the AWS EC2 KeyPair.</span>
+<span class="sd">    :type key_name: str</span>
+
+<span class="sd">    :param api_port: Port to serve from.</span>
+<span class="sd">    :type api_port: int</span>
+<span class="sd">    </span>
+<span class="sd">    :param region: Region to point to, like &#39;us-east-1&#39; See `here &lt;https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions&gt;`_.</span>
+<span class="sd">    :type region: str</span>
+
+<span class="sd">    :param ami: Custom AMI to use, like &#39;ami-09d3b3274b6c5d4aa&#39;. See `here &lt;https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html&gt;`_.</span>
+<span class="sd">    :type ami: str</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">_AMIS</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;us-east-1&#39;</span><span class="p">:</span> <span class="s1">&#39;ami-09d3b3274b6c5d4aa&#39;</span><span class="p">,</span>
@@ -147,6 +174,22 @@
 <div class="viewcode-block" id="EC2LocalConfig"><a class="viewcode-back" href="../../../classes/stochss_compute.cloud.html#stochss_compute.cloud.ec2_config.EC2LocalConfig">[docs]</a><span class="k">class</span> <span class="nc">EC2LocalConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Configure local settings.</span>
+
+<span class="sd">    :param key_dir: Path to a directory to store SSH key.</span>
+<span class="sd">    :type key_dir: str</span>
+
+<span class="sd">    :param key_name: Name for the file.</span>
+<span class="sd">    :type key_name: str</span>
+
+<span class="sd">    :param status_file: Path to a file to write instance status. Writes status to top line of that file.</span>
+<span class="sd">    :type status_file: str</span>
+
+<span class="sd">    :param key_type: ed25519 or rsa</span>
+<span class="sd">    :type key_type: str</span>
+
+<span class="sd">    :param key_format: pem or ppk</span>
+<span class="sd">    :type key_format: str</span>
+
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>

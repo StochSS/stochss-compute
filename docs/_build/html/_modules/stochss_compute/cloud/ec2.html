@@ -142,12 +142,13 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.</span>
 
-<span class="sd">    :param remote_config: Optional. Allows configuration of remote cluster resource identifiers.</span>
-<span class="sd">    :type EC2RemoteConfig:</span>
-
 <span class="sd">    :param local_config: Optional. Allows configuration of local cluster resources.</span>
-<span class="sd">    :type EC2LocalConfig:</span>
+<span class="sd">    :type local_config: EC2LocalConfig</span>
 
+<span class="sd">    :param remote_config: Optional. Allows configuration of remote cluster resource identifiers.</span>
+<span class="sd">    :type remote_config: EC2RemoteConfig</span>
+
+<span class="sd">    :raises EC2Exception: possible boto3 ClientError from AWS calls. See `here &lt;https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions&gt;`_.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">log</span> <span class="o">=</span> <span class="n">_ec2_logger</span><span class="p">()</span>
 
@@ -205,9 +206,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">clean_up</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">address</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">address</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The server&#39;s IP address and port.</span>
+
+<span class="sd">        :returns: &quot;http://{ip}:{port}&quot;</span>
+<span class="sd">        :rtype: str</span>
+
+<span class="sd">        :raises EC2Exception: Do not call before launching a cluster.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">EC2Exception</span><span class="p">(</span><span class="s1">&#39;No server found. First launch a cluster.&#39;</span><span class="p">)</span>
@@ -219,9 +225,12 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;http://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_server</span><span class="o">.</span><span class="n">public_ip_address</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_remote_config</span><span class="o">.</span><span class="n">api_port</span><span class="si">}</span><span class="s1">&#39;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Return the EC2 instance status.</span>
+
+<span class="sd">        :returns: A status set locally, or, if connected, a status fetched from the instance.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span>
@@ -231,8 +240,6 @@
     <span class="k">def</span> <span class="nf">_set_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">status</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_config</span><span class="o">.</span><span class="n">status_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># handle path?</span>
-            <span class="c1"># os.makedirs(self._local_config.status_file, exist_ok=True)</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_local_config</span><span class="o">.</span><span class="n">status_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
                 <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
 
@@ -240,8 +247,10 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Launches a single node StochSS-Compute instance. Make sure to check instance_type pricing before launching.</span>
 
-<span class="sd">        :param instance_type: Example: &#39;t3.nano&#39; See full list here: https://aws.amazon.com/ec2/instance-types/</span>
+<span class="sd">        :param instance_type: Example: &#39;t3.nano&#39; See full list `here &lt;https://aws.amazon.com/ec2/instance-types/&gt;`_.</span>
 <span class="sd">        :type instance_type: str</span>
+<span class="sd">        </span>
+<span class="sd">        :raises EC2Exception: possible boto3 ClientError from AWS calls. See `here &lt;https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions&gt;`_.</span>
 <span class="sd">         &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">EC2Exception</span><span class="p">(</span><span class="s1">&#39;You cannot launch more than one </span><span class="se">\</span>
@@ -260,7 +269,9 @@
 
 <div class="viewcode-block" id="EC2Cluster.clean_up"><a class="viewcode-back" href="../../../classes/stochss_compute.cloud.html#stochss_compute.cloud.ec2.EC2Cluster.clean_up">[docs]</a>    <span class="k">def</span> <span class="nf">clean_up</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deletes all cluster resources.</span>
+<span class="sd">        Terminates and removes all cluster resources.</span>
+
+<span class="sd">        :raises EC2Exception: possible boto3 ClientError from AWS calls. See `here &lt;https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions&gt;`_.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">&#39;terminating&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_init</span> <span class="o">=</span> <span class="kc">False</span>
@@ -321,7 +332,6 @@
                     <span class="s1">&#39;Key &quot;</span><span class="si">%s</span><span class="s1">&quot; deleted.&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_config</span><span class="o">.</span><span class="n">key_name</span><span class="p">)</span>
                 <span class="n">key_pair</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
             <span class="k">except</span><span class="p">:</span>
-                <span class="c1"># be more specific here</span>
                 <span class="k">pass</span>
         <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">c_e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="n">c_e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">])</span>

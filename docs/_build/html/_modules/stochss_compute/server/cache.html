@@ -125,11 +125,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">):</span>
             <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Cache.create"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Cache.create"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Create the results file if it does not exist.</span>
-
-<span class="sd">        :returns: None</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
@@ -141,23 +139,23 @@
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Check if the results file exists.</span>
 
-<span class="sd">        :returns: bool</span>
+<span class="sd">        :returns: os.path.exists(self.results_path)</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Cache.is_empty"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Cache.is_empty"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Check if the results are empty.</span>
 
-<span class="sd">        :returns: bool</span>
+<span class="sd">        :returns: filesize == 0 or self.exists()</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">lock</span> <span class="o">=</span> <span class="n">SoftFileLock</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="si">}</span><span class="s1">.lock&#39;</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="n">filesize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">filesize</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="kc">True</span>
-                <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">return</span> <span class="n">filesize</span> <span class="o">==</span> <span class="mi">0</span>
             <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="Cache.is_ready"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.is_ready">[docs]</a>    <span class="k">def</span> <span class="nf">is_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_traj_wanted</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -165,9 +163,10 @@
 <span class="sd">        Check if the results are ready to be retrieved from the cache.</span>
 
 <span class="sd">        :param n_traj_wanted: The number of requested trajectories.</span>
-<span class="sd">        :type int:</span>
+<span class="sd">        :type: int</span>
 
-<span class="sd">        :returns: bool</span>
+<span class="sd">        :returns: n_traj_wanted &lt;= len(&lt;Results in cache&gt;)</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">results</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">n_traj_wanted</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
@@ -180,7 +179,10 @@
 <span class="sd">         and the number of trajectories currently in the cache.</span>
 
 <span class="sd">        :param n_traj_wanted: The number of requested trajectories.</span>
-<span class="sd">        :type int:</span>
+<span class="sd">        :type: int</span>
+
+<span class="sd">        :returns: A number greater than or equal to zero.</span>
+<span class="sd">        :rtype: int</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">n_traj_wanted</span>
@@ -195,6 +197,9 @@
 <div class="viewcode-block" id="Cache.n_traj_in_cache"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.n_traj_in_cache">[docs]</a>    <span class="k">def</span> <span class="nf">n_traj_in_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Check the number of trajectories in the cache.</span>
+
+<span class="sd">        :returns: `len()` of the gillespy2.Results</span>
+<span class="sd">        :rtype: int</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">():</span>
             <span class="k">return</span> <span class="mi">0</span>
@@ -206,6 +211,9 @@
 <div class="viewcode-block" id="Cache.get"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Results</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Retrieve a gillespy2.Results object from the cache or None if error.</span>
+
+<span class="sd">        :returns: Results.from_json(results_json)</span>
+<span class="sd">        :rtype: gillespy2.Results or None</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">results_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -217,23 +225,20 @@
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Retrieve a gillespy2.Results object as a JSON-formatted string.</span>
 
-<span class="sd">        :returns:</span>
-<span class="sd">        :type str:</span>
+<span class="sd">        :returns: The output of reading the file.</span>
+<span class="sd">        :rtype: str</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">lock</span> <span class="o">=</span> <span class="n">SoftFileLock</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="si">}</span><span class="s1">.lock&#39;</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Cache.save"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">:</span> <span class="n">Results</span><span class="p">):</span>
+<div class="viewcode-block" id="Cache.save"><a class="viewcode-back" href="../../../classes/stochss_compute.server.html#stochss_compute.server.cache.Cache.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">:</span> <span class="n">Results</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Save a newly processed gillespy2.Results object to the cache.</span>
 
 <span class="sd">        :param results: The new Results.</span>
-<span class="sd">        :type gillespy2.Results:</span>
-
-<span class="sd">        :returns:</span>
-<span class="sd">        :type None:</span>
+<span class="sd">        :type: gillespy2.Results</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s1"> | Cache | &lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="si">}</span><span class="s1">&gt; | &#39;</span>
         <span class="n">lock</span> <span class="o">=</span> <span class="n">SoftFileLock</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="si">}</span><span class="s1">.lock&#39;</span><span class="p">)</span>
