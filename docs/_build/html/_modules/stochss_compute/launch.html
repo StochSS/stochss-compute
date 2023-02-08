@@ -103,12 +103,22 @@
   <h1>Source code for stochss_compute.launch</h1><div class="highlight"><pre>
 <span></span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">stochss_compute.launch</span>
-
-<span class="sd">launch_server()          Starts the API Server. Alias to script &quot;stochss-compute&quot;.</span>
-
-<span class="sd">launch_with_cluster()    Starts a Dask Cluster and API Server.</span>
-<span class="sd">                         Alias to script &quot;stochss-compute-cluster&quot;.</span>
 <span class="sd">&#39;&#39;&#39;</span>
+<span class="c1"># StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.</span>
+<span class="c1"># Copyright (C) 2019-2023 GillesPy2 and StochSS developers.</span>
+
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">asyncio</span>
@@ -118,9 +128,11 @@
 
 <div class="viewcode-block" id="launch_server"><a class="viewcode-back" href="../../classes/stochss_compute.html#stochss_compute.launch.launch_server">[docs]</a><span class="k">def</span> <span class="nf">launch_server</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Start the REST API.</span>
+<span class="sd">    Start the REST API. Alias to script &quot;stochss-compute&quot;.</span>
 
-<span class="sd">    stochss-compute --help</span>
+<span class="sd">    `stochss-compute --help`</span>
+<span class="sd">    OR</span>
+<span class="sd">    `python -m stochss_compute.launch --help`</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Namespace</span><span class="p">:</span>
         <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
@@ -151,9 +163,11 @@
 
 <div class="viewcode-block" id="launch_with_cluster"><a class="viewcode-back" href="../../classes/stochss_compute.html#stochss_compute.launch.launch_with_cluster">[docs]</a><span class="k">def</span> <span class="nf">launch_with_cluster</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Start up a Dask Cluster and StochSS-Compute REST API.</span>
+<span class="sd">    Start up a Dask Cluster and StochSS-Compute REST API. Alias to script &quot;stochss-compute-cluster&quot;.</span>
 
-<span class="sd">    stochss-compute cluster --help</span>
+<span class="sd">    `stochss-compute cluster --help`</span>
+<span class="sd">    OR</span>
+<span class="sd">    `python -m stochss_compute.launch cluster --help`</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Namespace</span><span class="p">:</span>
