@@ -14,7 +14,7 @@ class ComputeServer(Server):
     :type port: int
     '''
     # pylint: disable=super-init-not-called
-    def __init__(self, host:str, port: int = 29681):
+    def __init__(self, host: str, port: int = 29681):
         host = host.replace('http://','')
         host = host.split(':')[0]
         self._address = f"http://{host}:{port}"
@@ -24,5 +24,7 @@ class ComputeServer(Server):
     def address(self) -> str:
         """
         The server's IP address and port.
+
+        :returns: "http://{host}:{port}"
         """
         return self._address
