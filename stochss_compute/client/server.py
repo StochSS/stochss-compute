@@ -5,11 +5,13 @@ from time import sleep
 from abc import ABC, abstractmethod
 import requests
 from stochss_compute.client.endpoint import Endpoint
-from stochss_compute.core.messages import Request
+from stochss_compute.core.messages import Request, Response
 
 class Server(ABC):
     '''
-    Server parent class with hard coded endpoints.
+    Abstract Server class with hard coded endpoints.
+
+    :raises TypeError: Server cannot be instantiated directly. Must be ComputeServer or Cluster.
     '''
 
     _endpoints = {
@@ -28,9 +30,18 @@ class Server(ABC):
         '''
         return NotImplemented
 
-    def get(self, endpoint, sub):
+    def get(self, endpoint: Endpoint, sub: str):
         '''
         Send a GET request to endpoint.
+
+        :param endpoint: The API endpoint.
+        :type endpoint: Endpoint
+
+        :param sub: Final part of url string.
+        :type sub: str
+
+        :returns: The HTTP response.
+        :rtype: requests.Response
         '''
         url = f"{self.address}{self._endpoints[endpoint]}{sub}"
         n_try = 1
@@ -53,6 +64,18 @@ class Server(ABC):
     def post(self, endpoint: Endpoint, sub: str, request: Request = None):
         '''
         Send a POST request to endpoint.
+
+        :param endpoint: The API endpoint.
+        :type endpoint: Endpoint
+
+        :param sub: Final part of url string.
+        :type sub: str
+
+        :param request: An object that inherits from Request.
+        :type request: Request
+
+        :returns: The HTTP response.
+        :rtype: requests.Response
         '''
 
         if self.address is NotImplemented:
