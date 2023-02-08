@@ -13,7 +13,10 @@ class IsCachedHandler(RequestHandler):
     '''
     def initialize(self, cache_dir):
         '''
-        Set variables.
+        Set cache path.
+
+        :param cache_dir: Path to the cache.
+        :type cache_dir: str
         '''
         self.cache_dir = cache_dir
 
@@ -22,7 +25,10 @@ class IsCachedHandler(RequestHandler):
         Process GET request.
 
         :param results_id: Hash of the simulation.
+        :type results_id: str
+
         :param n_traj: Number of trajectories to check for.
+        :type n_traj: str
         '''
         if None in (results_id, n_traj):
             raise RemoteSimulationError('Malformed request')

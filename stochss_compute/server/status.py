@@ -16,7 +16,13 @@ class StatusHandler(RequestHandler):
 
     def initialize(self, scheduler_address, cache_dir):
         '''
-        Set the scheduler address and cache directory.
+        Sets the address to the Dask scheduler and the cache directory.
+        
+        :param scheduler_address: Scheduler address.
+        :type scheduler_address: str
+
+        :param cache_dir: Path to the cache.
+        :type cache_dir: str
         '''
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
@@ -26,8 +32,13 @@ class StatusHandler(RequestHandler):
         Process GET request.
 
         :param results_id: Hash of the simulation. Required.
+        :type results_id: str
+
         :param n_traj: Number of trajectories in the request. Default 1.
+        :type n_traj: str
+        
         :param task_id: ID of the running simulation. Required.
+        :type task_id: str
         '''
         if None in (results_id, n_traj):
             raise RemoteSimulationError('Malformed request')
@@ -44,7 +55,7 @@ class StatusHandler(RequestHandler):
             empty = cache.is_empty()
             if empty:
                 if self.task_id is not None:
-                    state, err = await self.check_with_scheduler()
+                    state, err = await self._check_with_scheduler()
                     print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                     if state == 'erred':
                         self._respond_error(err)
@@ -60,7 +71,7 @@ class StatusHandler(RequestHandler):
                     self._respond_ready()
                 else:
                     if self.task_id is not None:
-                        state, err = await self.check_with_scheduler()
+                        state, err = await self._check_with_scheduler()
                         print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                         if state == 'erred':
                             self._respond_error(err)
@@ -94,7 +105,7 @@ class StatusHandler(RequestHandler):
         self.write(status_response.encode())
         self.finish()
 
-    async def check_with_scheduler(self):
+    async def _check_with_scheduler(self):
         '''
         Ask the scheduler for information about a task.
         '''

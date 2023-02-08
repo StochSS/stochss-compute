@@ -59,6 +59,12 @@ class RemoteSimulation:
     def is_cached(self, **params):
         '''
         Checks to see if a dummy simulation exists in the cache.
+
+        :param params: Arguments for simulation.
+        :type params: dict[str, Any]
+
+        :returns: If the results are cached on the server.
+        :rtype: bool
         '''
         if "solver" in params:
             if hasattr(params['solver'], 'is_instantiated'):
@@ -77,13 +83,17 @@ class RemoteSimulation:
 
     def run(self, **params):
         """
-        Simulate the Model on the target ComputeServer, returning the results once complete.
+        Simulate the Model on the target ComputeServer, returning the results or a handle to a running simulation.
 
-        <https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run>
+        See `here <https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run>`_.
 
         :param params: Arguments to pass directly to the Model#run call on the server.
+        :type params: dict[str, Any]
 
-        :returns: stochss_compute.RemoteResults
+        :returns: RemoteResults populated with Results if cached, otherwise and unpopulated RemoteResults
+        :rtype: RemoteResults
+
+        :raises RemoteSimulationError: In the case of SimStatus.ERROR
         """
 
         if "solver" in params:

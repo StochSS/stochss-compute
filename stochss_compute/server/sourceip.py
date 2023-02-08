@@ -16,6 +16,7 @@ class SourceIpHandler(RequestHandler):
         Process POST request.
         
         :returns: request.remote_ip
+        :rtype: str
         '''
         source_ip = self.request.remote_ip
         print(f'[SourceIp Request] | Source: <{source_ip}>')

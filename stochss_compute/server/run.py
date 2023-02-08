@@ -21,6 +21,12 @@ class RunHandler(RequestHandler):
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
+        
+        :param scheduler_address: Scheduler address.
+        :type scheduler_address: str
+
+        :param cache_dir: Path to the cache.
+        :type cache_dir: str
         '''
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
