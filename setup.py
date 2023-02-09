@@ -74,7 +74,7 @@ setup(name=             version["__title__"],
               'python-dotenv == 0.21.0'
           ],
           'dev': [
-            'pytest',
+            'coverage',
             'moto',
           ]
       },

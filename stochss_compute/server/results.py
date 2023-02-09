@@ -47,7 +47,9 @@ class ResultsHandler(RequestHandler):
         :param n_traj: Number of trajectories in the request.
         :type n_traj: str
         '''
-        if None in (results_id, n_traj):
+        if '' in (results_id, n_traj):
+            self.set_status(404, reason=f'Malformed request: {self.request.uri}')
+            self.finish()
             raise RemoteSimulationError(f'Malformed request | <{self.request.remote_ip}>')
         n_traj = int(n_traj)
         print(f'{datetime.now()} | <{self.request.remote_ip}> | Results Request | <{results_id}>')
