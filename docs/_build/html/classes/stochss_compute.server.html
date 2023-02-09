@@ -1,0 +1,508 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>stochss_compute.server package &#8212; &#34;stochss-compute&#34; 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/gillespy2_alabaster_customizations.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="stochss_compute.core package" href="stochss_compute.core.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+    <link rel="apple-touch-icon" href="../_static/img/stochss-compute-logo.png" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/img/stochss-compute-logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=StochSS&repo=StochSS-Compute&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/containers/docker.html">Docker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/basic_usage/basic_usage.html">Basic Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/docker/docker.html">Tutorial Docker Container</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/aws/aws.html">StochSS-Compute on AWS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="stochss_compute.html">stochss_compute package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="stochss_compute.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.client.html">stochss_compute.client package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html">stochss_compute.cloud package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.core.html">stochss_compute.core package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">stochss_compute.server package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.html#module-stochss_compute.launch">stochss_compute.launch module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.html#module-stochss_compute">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="stochss_compute.html">stochss_compute package</a><ul>
+      <li>Previous: <a href="stochss_compute.core.html" title="previous chapter">stochss_compute.core package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="stochss-compute-server-package">
+<h1>stochss_compute.server package<a class="headerlink" href="#stochss-compute-server-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-stochss_compute.server.api">
+<span id="stochss-compute-server-api-module"></span><h2>stochss_compute.server.api module<a class="headerlink" href="#module-stochss_compute.server.api" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.server.api</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="stochss_compute.server.api.start_api">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.server.api.</span></span><span class="sig-name descname"><span class="pre">start_api</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">29681</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cache/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dask_host</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dask_scheduler_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8786</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/api.html#start_api"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.api.start_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the REST API with the following arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>port</strong> (<em>int</em>) – The port to listen on.</p></li>
+<li><p><strong>cache</strong> (<em>str</em>) – The cache directory path.</p></li>
+<li><p><strong>dask_host</strong> (<em>str</em>) – The address of the dask cluster.</p></li>
+<li><p><strong>dask_scheduler_port</strong> (<em>int</em>) – The port of the dask cluster.</p></li>
+<li><p><strong>rm</strong> (<em>bool</em>) – Delete the cache when exiting this program.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.server.cache">
+<span id="stochss-compute-server-cache-module"></span><h2>stochss_compute.server.cache module<a class="headerlink" href="#module-stochss_compute.server.cache" title="Permalink to this heading">¶</a></h2>
+<p>Cache for StochSS-Compute</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.server.cache.</span></span><span class="sig-name descname"><span class="pre">Cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cache_dir</strong> (<em>str</em>) – The root cache directory.</p></li>
+<li><p><strong>results_id</strong> (<em>str</em>) – Simulation hash.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the results file if it does not exist.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.exists">
+<span class="sig-name descname"><span class="pre">exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the results file exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>os.path.exists(self.results_path)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Results</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a gillespy2.Results object from the cache or None if error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Results.from_json(results_json)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>gillespy2.Results or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.is_empty">
+<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the results are empty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>filesize == 0 or self.exists()</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.is_ready">
+<span class="sig-name descname"><span class="pre">is_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_traj_wanted</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.is_ready"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.is_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the results are ready to be retrieved from the cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_traj_wanted</strong> – The number of requested trajectories.</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>n_traj_wanted &lt;= len(&lt;Results in cache&gt;)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.n_traj_in_cache">
+<span class="sig-name descname"><span class="pre">n_traj_in_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.n_traj_in_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.n_traj_in_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the number of trajectories in the cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>len()</cite> of the gillespy2.Results</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.n_traj_needed">
+<span class="sig-name descname"><span class="pre">n_traj_needed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_traj_wanted</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.n_traj_needed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.n_traj_needed" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Calculate the difference between the number of trajectories the user has requested</dt><dd><p>and the number of trajectories currently in the cache.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_traj_wanted</strong> – The number of requested trajectories.</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A number greater than or equal to zero.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.read">
+<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.read"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a gillespy2.Results object as a JSON-formatted string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The output of reading the file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.cache.Cache.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Results</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/stochss_compute/server/cache.html#Cache.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.cache.Cache.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a newly processed gillespy2.Results object to the cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>results</strong> – The new Results.</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>gillespy2.Results</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.server.is_cached">
+<span id="stochss-compute-server-is-cached-module"></span><h2>stochss_compute.server.is_cached module<a class="headerlink" href="#module-stochss_compute.server.is_cached" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.server.is_cached</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.server.is_cached.IsCachedHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.server.is_cached.</span></span><span class="sig-name descname"><span class="pre">IsCachedHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/is_cached.html#IsCachedHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.is_cached.IsCachedHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RequestHandler</span></code></p>
+<p>Endpoint that will determine if a particular simulation exists in the cache.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.is_cached.IsCachedHandler.get">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_traj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/is_cached.html#IsCachedHandler.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.is_cached.IsCachedHandler.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process GET request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results_id</strong> (<em>str</em>) – Hash of the simulation.</p></li>
+<li><p><strong>n_traj</strong> (<em>str</em>) – Number of trajectories to check for.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.is_cached.IsCachedHandler.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/is_cached.html#IsCachedHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.is_cached.IsCachedHandler.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set cache path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cache_dir</strong> (<em>str</em>) – Path to the cache.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.server.results">
+<span id="stochss-compute-server-results-module"></span><h2>stochss_compute.server.results module<a class="headerlink" href="#module-stochss_compute.server.results" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.server.results</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.server.results.ResultsHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.server.results.</span></span><span class="sig-name descname"><span class="pre">ResultsHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/results.html#ResultsHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.results.ResultsHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RequestHandler</span></code></p>
+<p>Endpoint for Results objects.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.results.ResultsHandler.get">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_traj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/results.html#ResultsHandler.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.results.ResultsHandler.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process GET request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results_id</strong> (<em>str</em>) – Hash of the simulation.</p></li>
+<li><p><strong>n_traj</strong> (<em>str</em>) – Number of trajectories in the request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.results.ResultsHandler.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/results.html#ResultsHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.results.ResultsHandler.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the cache directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cache_dir</strong> (<em>str</em>) – Path to the cache.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.server.run">
+<span id="stochss-compute-server-run-module"></span><h2>stochss_compute.server.run module<a class="headerlink" href="#module-stochss_compute.server.run" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.server.run</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.server.run.RunHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.server.run.</span></span><span class="sig-name descname"><span class="pre">RunHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/run.html#RunHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.run.RunHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RequestHandler</span></code></p>
+<p>Endpoint for running Gillespy2 simulations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.run.RunHandler.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler_address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/run.html#RunHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.run.RunHandler.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the address to the Dask scheduler and the cache directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheduler_address</strong> (<em>str</em>) – Scheduler address.</p></li>
+<li><p><strong>cache_dir</strong> (<em>str</em>) – Path to the cache.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.run.RunHandler.post">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">post</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/run.html#RunHandler.post"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.run.RunHandler.post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process simulation run request.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.server.sourceip">
+<span id="stochss-compute-server-sourceip-module"></span><h2>stochss_compute.server.sourceip module<a class="headerlink" href="#module-stochss_compute.server.sourceip" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.server.sourceip</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.server.sourceip.SourceIpHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.server.sourceip.</span></span><span class="sig-name descname"><span class="pre">SourceIpHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/sourceip.html#SourceIpHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.sourceip.SourceIpHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RequestHandler</span></code></p>
+<p>Responds with the IP address associated with the request.
+Used only by cloud api.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.sourceip.SourceIpHandler.post">
+<span class="sig-name descname"><span class="pre">post</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/sourceip.html#SourceIpHandler.post"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.sourceip.SourceIpHandler.post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process POST request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>request.remote_ip</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.server.status">
+<span id="stochss-compute-server-status-module"></span><h2>stochss_compute.server.status module<a class="headerlink" href="#module-stochss_compute.server.status" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.server.status</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.server.status.StatusHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.server.status.</span></span><span class="sig-name descname"><span class="pre">StatusHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Application</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HTTPServerRequest</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/status.html#StatusHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.status.StatusHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RequestHandler</span></code></p>
+<p>Endpoint for requesting the status of a simulation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.status.StatusHandler.get">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_traj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/status.html#StatusHandler.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.status.StatusHandler.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process GET request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results_id</strong> (<em>str</em>) – Hash of the simulation. Required.</p></li>
+<li><p><strong>n_traj</strong> (<em>str</em>) – Number of trajectories in the request. Default 1.</p></li>
+<li><p><strong>task_id</strong> (<em>str</em>) – ID of the running simulation. Required.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.server.status.StatusHandler.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler_address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/server/status.html#StatusHandler.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.server.status.StatusHandler.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the address to the Dask scheduler and the cache directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheduler_address</strong> (<em>str</em>) – Scheduler address.</p></li>
+<li><p><strong>cache_dir</strong> (<em>str</em>) – Path to the cache.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.server">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-stochss_compute.server" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.server</p>
+</section>
+</section>
+
+
+          </div>
+              <div class="related bottom">
+                &nbsp;
+  <nav id="rellinks">
+    <ul>
+        <li>
+          &larr;
+          <a href="stochss_compute.core.html" title="Previous document">stochss_compute.core package</a>
+        </li>
+    </ul>
+  </nav>
+              </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;"Copyright (C) 2017-2023".
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/classes/stochss_compute.server.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/StochSS/StochSS-Compute" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

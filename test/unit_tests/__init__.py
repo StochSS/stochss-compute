@@ -1,0 +1,2 @@
+# make sure to add new modules here or they will not be picked up by the test runner
+from . import gillespy2_models, test_hash, test_compute_server, test_status_handler, test_results_handler, test_sourceip_handler, test_is_cached_handler, test_run_handler, test_ec2

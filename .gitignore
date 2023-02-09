@@ -69,8 +69,6 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
-doc/_build/
 
 # PyBuilder
 target/
@@ -152,3 +150,5 @@ Thumbs.db #thumbnail cache on Windows
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+
+**/dask-worker-space
