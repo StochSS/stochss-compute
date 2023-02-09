@@ -5,7 +5,7 @@ import os
 import sys
 import unittest
 import argparse
-
+import importlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--mode', default='develop', choices=['develop', 'release'],
@@ -19,21 +19,20 @@ if __name__ == '__main__':
         sys.path.insert(1, '..')
 
     if args.case is not None:
-        import importlib
         modules = [importlib.import_module(f'unit_tests.test_{args.case}')]
     else:
         modules = []
-        from test.unit_tests import *
+        import unit_tests
         for name, module in sys.modules.items():
-            if name.startswith('test.unit_tests.test_'):
+            if name.startswith('unit_tests.test_'):
                 modules.append(module)
 
     for module in modules:
 
+        print(f'Executing: {module}')
         suite = unittest.TestLoader().loadTestsFromModule(module)
         runner = unittest.TextTestRunner(failfast=args.mode == 'develop')
 
-        print(f'Executing: {module}')
         result = runner.run(suite)
         print('=' * 70)
         if not result.wasSuccessful():

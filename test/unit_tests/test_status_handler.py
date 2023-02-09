@@ -3,18 +3,12 @@ test.unit_tests.test_launch
 '''
 import os
 import subprocess
-import pytest
+from test.unit_tests.gillespy2_models import create_michaelis_menten
 from tornado.testing import AsyncHTTPTestCase
-from stochss_compute.client.compute_server import ComputeServer
-from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import SimStatus, SimulationRunRequest, StatusResponse
-from stochss_compute.core.remote_results import RemoteResults
 from stochss_compute.server.api import _make_app
 from stochss_compute.server.cache import Cache
-from distributed.utils_test import gen_cluster, inc
-from distributed import Client, Future, Scheduler, Worker
 
-from test.unit_tests.gillespy2_models import create_michaelis_menten
 
 class StatusTest(AsyncHTTPTestCase):
     '''
