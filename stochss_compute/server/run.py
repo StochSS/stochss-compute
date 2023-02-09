@@ -58,12 +58,13 @@ class RunHandler(RequestHandler):
         if not cache.exists():
             cache.create()
         empty = cache.is_empty()
-        if not empty:
+        force_new = sim_request.kwargs.pop('force_new', 1)
+        if not empty and not force_new:
             # Check the number of trajectories in the request, default 1
             n_traj = sim_request.kwargs.get('number_of_trajectories', 1)
             # Compare that to the number of cached trajectories
             trajectories_needed =  cache.n_traj_needed(n_traj)
-            if trajectories_needed > 0:
+            if trajectories_needed > 0 or force_new:
                 sim_request.kwargs['number_of_trajectories'] = trajectories_needed
                 print(log_string +
                     f'Partial cache. Running {trajectories_needed} new trajectories.')
@@ -80,7 +81,7 @@ class RunHandler(RequestHandler):
                 sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = new_results_json)
                 self.write(sim_response.encode())
                 self.finish()
-        if empty:
+        if empty or force_new:
             print(log_string + 'Results not cached. Running simulation.')
             client = Client(self.scheduler_address)
             future = self._submit(sim_request, sim_hash, client)
