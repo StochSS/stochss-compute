@@ -43,6 +43,6 @@ jobs:
         cd test
         # python -m coverage run -a --source=../stochss_compute run_system_tests.py
 
-    - name: Coverage score
-      run: |
-        python -m coverage report
+    # - name: Coverage score
+    #   run: |
+    #     python -m coverage report
