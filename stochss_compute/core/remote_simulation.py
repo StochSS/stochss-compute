@@ -1,13 +1,31 @@
+'''
+RemoteSimulation
+'''
+# StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
+# Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.messages import SimulationRunRequest, SimulationRunResponse, SimStatus
 from stochss_compute.core.errors import RemoteSimulationError
-
 from stochss_compute.core.remote_results import RemoteResults
 
 class RemoteSimulation:
     '''
     An object representing a remote gillespy2 simulation. Requires a model and a host address.
-    A solver type may be provided, but does not accept instantiated solvers. 
+    A solver type may be provided, but does not accept instantiated solvers.
 
     :param model: The model to simulate.
     :type model: gillespy2.Model
@@ -18,13 +36,12 @@ class RemoteSimulation:
     :param host: The address of a running instance of StochSS-Compute. Optional if server is provided.
     :type host: str
 
-    :param port: The port to use when connecting to the host. Only needed if default server port is changed. Defaults to 29681.
+    :param port: The port to use when connecting to the host.
+                 Only needed if default server port is changed. Defaults to 29681.
     :type port: int
 
     :param solver: The type of solver to use. Does not accept instantiated solvers.
-    :type solver: Type[gillespy2.GillesPySolver]
-
-
+    :type solver: gillespy2.GillesPySolver
     '''
     def __init__(self,
                  model,
@@ -51,43 +68,75 @@ class RemoteSimulation:
 
         if solver is not None:
             if hasattr(solver, 'is_instantiated'):
-                raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
+                raise RemoteSimulationError(
+                    'RemoteSimulation does not accept an instantiated solver object. Pass a type.')
         self.solver = solver
-        
 
-    def run(self, **params):
-        """
-        Simulate the Model on the target ComputeServer, returning the results once complete.
-        See: https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run
+    def is_cached(self, **params):
+        '''
+        Checks to see if a dummy simulation exists in the cache.
 
-        :param **params: Arguments to pass directly to the Model#run call on the server.
-        
-        :returns: stochss_compute.RemoteResults
-        """
-    
+        :param params: Arguments for simulation.
+        :type params: dict[str, Any]
+
+        :returns: If the results are cached on the server.
+        :rtype: bool
+        '''
         if "solver" in params:
             if hasattr(params['solver'], 'is_instantiated'):
-                raise RemoteSimulationError('RemoteSimulation does not accept an instantiated solver object. Pass a type.')
+                raise RemoteSimulationError(
+                    'RemoteSimulation does not accept an instantiated solver object. Pass a type.')
             params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
 
-        sim_request = SimulationRunRequest(model=self.model, kwargs=params)
-        response_raw = self.server._post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
+        sim_request = SimulationRunRequest(model=self.model, **params)
+        results_dummy = RemoteResults()
+        results_dummy.id = sim_request.hash()
+        results_dummy.server = self.server
+        results_dummy.n_traj = params.get('number_of_trajectories', 1)
+        return results_dummy.is_ready
+
+    def run(self, **params):
+        """
+        Simulate the Model on the target ComputeServer, returning the results or a handle to a running simulation.
+
+        See `here <https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run>`_.
+
+        :param params: Arguments to pass directly to the Model#run call on the server.
+        :type params: dict[str, Any]
+
+        :returns: RemoteResults populated with Results if cached, otherwise and unpopulated RemoteResults
+        :rtype: RemoteResults
+
+        :raises RemoteSimulationError: In the case of SimStatus.ERROR
+        """
+
+        if "solver" in params:
+            if hasattr(params['solver'], 'is_instantiated'):
+                raise RemoteSimulationError(
+                    'RemoteSimulation does not accept an instantiated solver object. Pass a type.')
+            params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
+        if self.solver is not None:
+            params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
+
+        sim_request = SimulationRunRequest(model=self.model, **params)
+        response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
         if not response_raw.ok:
             raise Exception(response_raw.reason)
 
-        sim_response = SimulationRunResponse._parse(response_raw.text)
-        
+        sim_response = SimulationRunResponse.parse(response_raw.text)
+
         if sim_response.status == SimStatus.ERROR:
-            raise RemoteSimulationError(sim_response.message)
-            # If sim throws an error, would we still need to be able to interact with it in any way? like to clear it from memory or restart a worker?
+            raise RemoteSimulationError(sim_response.error_message)
         if sim_response.status == SimStatus.READY:
             remote_results =  RemoteResults(data=sim_response.results.data)
         else:
             remote_results =  RemoteResults()
-            
+
         remote_results.id = sim_response.results_id
         remote_results.server = self.server
+        remote_results.n_traj = params.get('number_of_trajectories', 1)
+        remote_results.task_id = sim_response.task_id
 
         return remote_results
