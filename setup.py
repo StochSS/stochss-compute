@@ -50,7 +50,7 @@ with open(path.join(SETUP_DIR, "stochss_compute/__version__.py"), encoding='utf-
     variables = [line for line in text if line.startswith("__") and "=" in line]
     for v in variables:
         setting = v.split("=")
-        version[setting[0].strip()] = setting[1].strip().replace("\"", "")
+        version[setting[0].strip()] = setting[1].strip().replace('"', '').replace("'", "")
 
 setup(name=             version["__title__"],
       version=          version["__version__"],
