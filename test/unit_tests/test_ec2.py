@@ -5,10 +5,19 @@ import unittest
 from moto import mock_ec2
 from stochss_compute.cloud import EC2Cluster, EC2LocalConfig, EC2RemoteConfig
 import os
+from gillespy2 import Jsonify
+from tornado.httputil import HTTPServerRequest
 
 class MockEC2(EC2Cluster):
     def _poll_launch_progress(self, container_names):
         return super()._poll_launch_progress(container_names, mock=True)
+    def _get_source_ip(self, cloud_key):
+        return 'localhost'
+    def _restrict_ingress(self, ip_address: str = ''):
+        try:
+            super()._restrict_ingress(ip_address)
+        except NotImplementedError as oh_well:
+            print(oh_well)
 
 @mock_ec2
 class EC2ClusterTest(unittest.TestCase):
@@ -26,6 +35,7 @@ class EC2ClusterTest(unittest.TestCase):
         return super().setUp()
     
     def tearDown(self) -> None:
+        self.cluster.clean_up()
         return super().tearDown()
     
     def test_init(self):
@@ -34,7 +44,7 @@ class EC2ClusterTest(unittest.TestCase):
         '''
         assert self.cluster is not None
 
-    def test_(self):
+    def test_launch(self):
         '''
         Tests init.
         '''

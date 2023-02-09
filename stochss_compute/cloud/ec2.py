@@ -492,9 +492,9 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
                 ssh.connect(self._server.public_ip_address, username='ec2-user',
                             key_filename=self._local_config.key_path, look_for_keys=False)
                 break
-            except Exception as err:
+            except Exception as err2:
                 if sshtries >= 5:
-                    raise err
+                    raise err2
                 self._server.reload()
                 sleep(5)
                 sshtries += 1
