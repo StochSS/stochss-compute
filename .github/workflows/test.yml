@@ -30,17 +30,17 @@ jobs:
     - name: Run integration tests
       run: |
         cd test
-        python -m coverage run -- source=../stochss_compute run_integration_tests.py
+        python -m coverage run --source=../stochss_compute run_integration_tests.py
 
     - name: Run unit tests
       run: |
         cd test
-        python -m coverage run -a -- source=../stochss_compute run_unit_tests.py
+        python -m coverage run -a --source=../stochss_compute run_unit_tests.py
 
     - name: Run system tests
       run: |
         cd test
-        python -m coverage run -a -- source=../stochss_compute run_system_tests.py
+        python -m coverage run -a --source=../stochss_compute run_system_tests.py
 
     - name: Coverage score
       run: |
