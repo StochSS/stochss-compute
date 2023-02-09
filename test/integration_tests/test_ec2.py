@@ -44,12 +44,12 @@
 #         cluster._set_status('launching')
 #         cluster._launch_network()
 #         cluster._create_root_key()
-#         users = {
-#             "ec2-user": ".sssc/sssc-server-ssh-key.pem",
-#         }
-#         with mockssh.Server(users):
-#             cluster._launch_head_node(instance_type=instance_type)
-#             cluster._set_status(cluster._server.state['Name'])
+        # users = {
+        #     "ec2-user": ".sssc/sssc-server-ssh-key.pem",
+        # }
+        # with mockssh.Server(users):
+        #     cluster._launch_head_node(instance_type=instance_type)
+        #     cluster._set_status(cluster._server.state['Name'])
 
 #     def test_run_resolve(self):
 #         '''
