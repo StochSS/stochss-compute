@@ -27,14 +27,15 @@ class LaunchTest(unittest.TestCase):
             with subprocess.Popen(['rm', '-r', self.cache_dir]) as r_m:
                 r_m.wait()
 
+    # note: coverage does not pick this up TODO
     def test_launch_server(self):
         '''
         Calls the function.
         '''
-        local = True
+        _LOCAL = False
         env = {}
         env['PATH'] = '../env/bin'
-        if local:
+        if _LOCAL:
             env['PYTHONPATH'] = '../env/lib/python3.11/site-packages'
         with subprocess.Popen(['python', '-m', 'stochss_compute.launch'], env=env) as server:
             time.sleep(5)
@@ -42,26 +43,18 @@ class LaunchTest(unittest.TestCase):
             server.kill()
             server.wait()
 
+    # note: coverage does not pick this up TODO
     def test_launch_with_cluster(self):
         '''
         Calls the function.
         '''
-        local = True
+        _LOCAL = False
         env = {}
         env['PATH'] = '../env/bin'
-        if local:
+        if _LOCAL:
             env['PYTHONPATH'] = '../env/lib/python3.11/site-packages'
         with subprocess.Popen(['python', '-m', 'stochss_compute.launch', 'cluster'], env=env) as server:
             time.sleep(5)
             server.terminate()
             server.kill()
             server.wait()
-
-
-    # def test_launch_with_cluster(self):
-    #     '''
-    #     Calls the function.
-    #     '''
-    #     launch_with_cluster()
-    #     print('ok')
-    

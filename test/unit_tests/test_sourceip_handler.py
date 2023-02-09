@@ -49,15 +49,3 @@ class SourceIpHandlerTest(AsyncHTTPTestCase):
         assert response_raw.code == 200
         response = SourceIpResponse.parse(response_raw.body)
         assert response.source_ip == '127.0.0.1'
-    #     model = create_michaelis_menten()
-    #     results = model.run()
-    #     sim = SimulationRunRequest(model=model)
-    #     sim_hash = sim.hash()
-    #     cache = Cache(self.cache_dir, sim_hash)
-    #     cache.create()
-    #     cache.save(results)
-    #     uri = f'/api/v2/simulation/gillespy2/{sim_hash}/1/results'
-    #     response_raw = self.fetch(uri)
-    #     uri = f'/api/v2/simulation/gillespy2/{sim_hash}/2/results'
-    #     response_raw = self.fetch(uri)
-    #     assert response_raw.code == 404

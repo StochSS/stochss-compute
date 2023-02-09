@@ -1,12 +1,10 @@
 '''
 test.unit_tests.test_launch
 '''
+import os
 import unittest
 from moto import mock_ec2
-from stochss_compute.cloud import EC2Cluster, EC2LocalConfig, EC2RemoteConfig
-import os
-from gillespy2 import Jsonify
-from tornado.httputil import HTTPServerRequest
+from stochss_compute.cloud import EC2Cluster, EC2LocalConfig #, EC2RemoteConfig
 
 class MockEC2(EC2Cluster):
     def _poll_launch_progress(self, container_names):
@@ -22,7 +20,7 @@ class MockEC2(EC2Cluster):
 @mock_ec2
 class EC2ClusterTest(unittest.TestCase):
     '''
-    Test ComputeServer class.
+    Test EC2Cluster class.
     '''
     cluster = None
     def setUp(self) -> None:
