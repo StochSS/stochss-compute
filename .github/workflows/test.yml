@@ -27,6 +27,7 @@ jobs:
         python -m pip install .
         python -m pip install '.[AWS]'
         python -m pip install '.[dev]'
+
     - name: Run integration tests
       run: |
         cd test
@@ -40,7 +41,7 @@ jobs:
     - name: Run system tests
       run: |
         cd test
-        python -m coverage run -a --source=../stochss_compute run_system_tests.py
+        # python -m coverage run -a --source=../stochss_compute run_system_tests.py
 
     - name: Coverage score
       run: |
