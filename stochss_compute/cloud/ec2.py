@@ -250,10 +250,9 @@ class EC2Cluster(Server):
         waiter = self._client.get_waiter('key_pair_exists')
         waiter.wait(KeyNames=[self._remote_config.key_name])
         os.makedirs(self._local_config.key_dir, exist_ok=True)
-        key = open(self._local_config.key_path, 'x', encoding='utf-8')
-        key.write(response['KeyMaterial'])
-        key.close()
-        os.chmod(self._local_config.key_path, 0o400)
+        with open(self._local_config.key_path, 'x', encoding='utf-8') as key:
+            key.write(response['KeyMaterial'])
+            os.chmod(self._local_config.key_path, 0o400)
 
     def _delete_root_key(self) -> None:
         """
@@ -474,14 +473,18 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
         self._init = True
         self.log.info('StochSS-Compute ready to go!')
 
-    def _poll_launch_progress(self, container_names):
+    def _poll_launch_progress(self, container_names, mock=False):
         """
         Polls the instance to see if the Docker container is running.
 
         :param container_names: A list of Docker container names to check against.
         :type container_names: List[str]
         """
-        ssh = SSHClient()
+        if mock is True:
+            from test.unit_tests.mock_ssh import MockSSH
+            ssh = MockSSH()
+        else:
+            ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy())
         sshtries = 0
         while True:
