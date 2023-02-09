@@ -1,6 +1,22 @@
 '''
 stochss_compute.cloud.ec2
 '''
+# StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
+# Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import logging
 from time import sleep
@@ -39,12 +55,13 @@ class EC2Cluster(Server):
     """
     Attempts to load a StochSS-Compute cluster. Otherwise just initializes a new cluster.
 
-    :param remote_config: Optional. Allows configuration of remote cluster resource identifiers.
-    :type EC2RemoteConfig:
-
     :param local_config: Optional. Allows configuration of local cluster resources.
-    :type EC2LocalConfig:
+    :type local_config: EC2LocalConfig
 
+    :param remote_config: Optional. Allows configuration of remote cluster resource identifiers.
+    :type remote_config: EC2RemoteConfig
+
+    :raises EC2Exception: possible boto3 ClientError from AWS calls. See `here <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions>`_.
     """
     log = _ec2_logger()
 
@@ -102,9 +119,14 @@ class EC2Cluster(Server):
             self.clean_up()
 
     @property
-    def address(self):
+    def address(self) -> str:
         """
         The server's IP address and port.
+
+        :returns: "http://{ip}:{port}"
+        :rtype: str
+
+        :raises EC2Exception: Do not call before launching a cluster.
         """
         if self._server is None:
             raise EC2Exception('No server found. First launch a cluster.')
@@ -116,9 +138,12 @@ class EC2Cluster(Server):
         return f'http://{self._server.public_ip_address}:{self._remote_config.api_port}'
 
     @property
-    def status(self):
+    def status(self) -> str:
         '''
         Return the EC2 instance status.
+
+        :returns: A status set locally, or, if connected, a status fetched from the instance.
+        :rtype: str
         '''
         if self._server is None:
             return self._status
@@ -128,8 +153,6 @@ class EC2Cluster(Server):
     def _set_status(self, status):
         self._status = status
         if self._local_config.status_file is not None:
-            # handle path?
-            # os.makedirs(self._local_config.status_file, exist_ok=True)
             with open(self._local_config.status_file, 'w', encoding='utf-8') as file:
                 file.write(status)
 
@@ -137,8 +160,10 @@ class EC2Cluster(Server):
         """
         Launches a single node StochSS-Compute instance. Make sure to check instance_type pricing before launching.
 
-        :param instance_type: Example: 't3.nano' See full list here: https://aws.amazon.com/ec2/instance-types/
+        :param instance_type: Example: 't3.nano' See full list `here <https://aws.amazon.com/ec2/instance-types/>`_.
         :type instance_type: str
+        
+        :raises EC2Exception: possible boto3 ClientError from AWS calls. See `here <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions>`_.
          """
         if self._init is True:
             raise EC2Exception('You cannot launch more than one \
@@ -157,7 +182,9 @@ class EC2Cluster(Server):
 
     def clean_up(self):
         """
-        Deletes all cluster resources.
+        Terminates and removes all cluster resources.
+
+        :raises EC2Exception: possible boto3 ClientError from AWS calls. See `here <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html#aws-service-exceptions>`_.
         """
         self._set_status('terminating')
         self._init = False
@@ -218,7 +245,6 @@ class EC2Cluster(Server):
                     'Key "%s" deleted.', self._remote_config.key_name)
                 key_pair.delete()
             except:
-                # be more specific here
                 pass
         except ClientError as c_e:
             self._set_status(c_e.response['Error']['Code'])

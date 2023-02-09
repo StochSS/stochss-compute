@@ -1,6 +1,22 @@
 '''
 RemoteSimulation
 '''
+# StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
+# Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.messages import SimulationRunRequest, SimulationRunResponse, SimStatus
 from stochss_compute.core.errors import RemoteSimulationError
@@ -59,6 +75,12 @@ class RemoteSimulation:
     def is_cached(self, **params):
         '''
         Checks to see if a dummy simulation exists in the cache.
+
+        :param params: Arguments for simulation.
+        :type params: dict[str, Any]
+
+        :returns: If the results are cached on the server.
+        :rtype: bool
         '''
         if "solver" in params:
             if hasattr(params['solver'], 'is_instantiated'):
@@ -77,13 +99,17 @@ class RemoteSimulation:
 
     def run(self, **params):
         """
-        Simulate the Model on the target ComputeServer, returning the results once complete.
+        Simulate the Model on the target ComputeServer, returning the results or a handle to a running simulation.
 
-        <https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run>
+        See `here <https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run>`_.
 
         :param params: Arguments to pass directly to the Model#run call on the server.
+        :type params: dict[str, Any]
 
-        :returns: stochss_compute.RemoteResults
+        :returns: RemoteResults populated with Results if cached, otherwise and unpopulated RemoteResults
+        :rtype: RemoteResults
+
+        :raises RemoteSimulationError: In the case of SimStatus.ERROR
         """
 
         if "solver" in params:

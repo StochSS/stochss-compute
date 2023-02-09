@@ -1,6 +1,22 @@
 '''
 stochss_compute.server.status
 '''
+# StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
+# Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from datetime import datetime
 from distributed import Client
 from tornado.web import RequestHandler
@@ -16,7 +32,13 @@ class StatusHandler(RequestHandler):
 
     def initialize(self, scheduler_address, cache_dir):
         '''
-        Set the scheduler address and cache directory.
+        Sets the address to the Dask scheduler and the cache directory.
+        
+        :param scheduler_address: Scheduler address.
+        :type scheduler_address: str
+
+        :param cache_dir: Path to the cache.
+        :type cache_dir: str
         '''
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
@@ -26,8 +48,13 @@ class StatusHandler(RequestHandler):
         Process GET request.
 
         :param results_id: Hash of the simulation. Required.
+        :type results_id: str
+
         :param n_traj: Number of trajectories in the request. Default 1.
+        :type n_traj: str
+        
         :param task_id: ID of the running simulation. Required.
+        :type task_id: str
         '''
         if '' in (results_id, n_traj):
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
@@ -45,8 +72,9 @@ class StatusHandler(RequestHandler):
         if exists:
             empty = cache.is_empty()
             if empty:
-                if self.task_id != '':
+                if self.task_id not in ('', None):
                     state, err = await self.check_with_scheduler()
+
                     print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                     if state == 'erred':
                         self._respond_error(err)
@@ -61,7 +89,7 @@ class StatusHandler(RequestHandler):
                     print(msg+SimStatus.READY.name)
                     self._respond_ready()
                 else:
-                    if self.task_id != '':
+                    if self.task_id not in ('', None):
                         state, err = await self.check_with_scheduler()
                         print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                         if state == 'erred':
@@ -96,7 +124,7 @@ class StatusHandler(RequestHandler):
         self.write(status_response.encode())
         self.finish()
 
-    async def check_with_scheduler(self):
+    async def _check_with_scheduler(self):
         '''
         Ask the scheduler for information about a task.
         '''

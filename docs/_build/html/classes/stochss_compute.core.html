@@ -1,0 +1,775 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>stochss_compute.core package &#8212; &#34;stochss-compute&#34; 0.9.9 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/gillespy2_alabaster_customizations.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="stochss_compute.server package" href="stochss_compute.server.html" />
+    <link rel="prev" title="stochss_compute.cloud package" href="stochss_compute.cloud.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+    <link rel="apple-touch-icon" href="../_static/img/stochss-compute-logo.png" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/img/stochss-compute-logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=StochSS&repo=StochSS-Compute&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/containers/docker.html">Docker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/basic_usage/basic_usage.html">Basic Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/docker/docker.html">Tutorial Docker Container</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/aws/aws.html">StochSS-Compute on AWS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="stochss_compute.html">stochss_compute package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="stochss_compute.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.client.html">stochss_compute.client package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.cloud.html">stochss_compute.cloud package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">stochss_compute.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochss_compute.server.html">stochss_compute.server package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.html#module-stochss_compute.launch">stochss_compute.launch module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stochss_compute.html#module-stochss_compute">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="stochss_compute.html">stochss_compute package</a><ul>
+      <li>Previous: <a href="stochss_compute.cloud.html" title="previous chapter">stochss_compute.cloud package</a></li>
+      <li>Next: <a href="stochss_compute.server.html" title="next chapter">stochss_compute.server package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="stochss-compute-core-package">
+<h1>stochss_compute.core package<a class="headerlink" href="#stochss-compute-core-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-stochss_compute.core.errors">
+<span id="stochss-compute-core-errors-module"></span><h2>stochss_compute.core.errors module<a class="headerlink" href="#module-stochss_compute.core.errors" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.core.errors</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="stochss_compute.core.errors.CacheError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.errors.</span></span><span class="sig-name descname"><span class="pre">CacheError</span></span><a class="reference internal" href="../_modules/stochss_compute/core/errors.html#CacheError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.errors.CacheError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>General cache error.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="stochss_compute.core.errors.RemoteSimulationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.errors.</span></span><span class="sig-name descname"><span class="pre">RemoteSimulationError</span></span><a class="reference internal" href="../_modules/stochss_compute/core/errors.html#RemoteSimulationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.errors.RemoteSimulationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>General simulation error.</p>
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.core.messages">
+<span id="stochss-compute-core-messages-module"></span><h2>stochss_compute.core.messages module<a class="headerlink" href="#module-stochss_compute.core.messages" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.core.messages</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.Request">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">Request</span></span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#Request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.Request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.Request.encode">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#Request.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.Request.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encode self for http.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.Request.parse">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#Request.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.Request.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse http for python.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.Response">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">Response</span></span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#Response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.Response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.Response.encode">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#Response.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.Response.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encode self for http.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.Response.parse">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#Response.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.Response.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse http for python.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.ResultsRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">ResultsRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#ResultsRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.ResultsRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#stochss_compute.core.messages.Request" title="stochss_compute.core.messages.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a></p>
+<p>Request results from the server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>results_id</strong> (<em>str</em>) – Hash of the SimulationRunRequest</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.ResultsRequest.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#ResultsRequest.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.ResultsRequest.encode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>self.__dict__</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.ResultsRequest.parse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#ResultsRequest.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.ResultsRequest.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse HTTP request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_request</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – The request.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.messages.ResultsRequest" title="stochss_compute.core.messages.ResultsRequest">ResultsRequest</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.ResultsResponse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">ResultsResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#ResultsResponse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.ResultsResponse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#stochss_compute.core.messages.Response" title="stochss_compute.core.messages.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></p>
+<p>A response from the server about the Results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>results</strong> (<em>str</em>) – The requested Results from the cache. (JSON)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.ResultsResponse.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#ResultsResponse.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.ResultsResponse.encode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>self.__dict__</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.ResultsResponse.parse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#ResultsResponse.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.ResultsResponse.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse HTTP response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_response</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – The response.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.messages.ResultsResponse" title="stochss_compute.core.messages.ResultsResponse">ResultsResponse</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimStatus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">SimStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimStatus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimStatus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Status describing a remote simulation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimStatus.DOES_NOT_EXIST">
+<span class="sig-name descname"><span class="pre">DOES_NOT_EXIST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'There</span> <span class="pre">is</span> <span class="pre">no</span> <span class="pre">evidence</span> <span class="pre">of</span> <span class="pre">this</span> <span class="pre">simulation</span> <span class="pre">either</span> <span class="pre">running</span> <span class="pre">or</span> <span class="pre">on</span> <span class="pre">disk.'</span></em><a class="headerlink" href="#stochss_compute.core.messages.SimStatus.DOES_NOT_EXIST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimStatus.ERROR">
+<span class="sig-name descname"><span class="pre">ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'The</span> <span class="pre">Simulation</span> <span class="pre">has</span> <span class="pre">encountered</span> <span class="pre">an</span> <span class="pre">error.'</span></em><a class="headerlink" href="#stochss_compute.core.messages.SimStatus.ERROR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimStatus.PENDING">
+<span class="sig-name descname"><span class="pre">PENDING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'The</span> <span class="pre">simulation</span> <span class="pre">is</span> <span class="pre">pending.'</span></em><a class="headerlink" href="#stochss_compute.core.messages.SimStatus.PENDING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimStatus.READY">
+<span class="sig-name descname"><span class="pre">READY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Simulation</span> <span class="pre">is</span> <span class="pre">done</span> <span class="pre">and</span> <span class="pre">results</span> <span class="pre">exist</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">cache.'</span></em><a class="headerlink" href="#stochss_compute.core.messages.SimStatus.READY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimStatus.RUNNING">
+<span class="sig-name descname"><span class="pre">RUNNING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'The</span> <span class="pre">simulation</span> <span class="pre">is</span> <span class="pre">still</span> <span class="pre">running.'</span></em><a class="headerlink" href="#stochss_compute.core.messages.SimStatus.RUNNING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimStatus.from_str">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimStatus.from_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimStatus.from_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert str to Enum.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimulationRunRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">SimulationRunRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimulationRunRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimulationRunRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#stochss_compute.core.messages.Request" title="stochss_compute.core.messages.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a></p>
+<p>A simulation request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>gillespy2.Model</em>) – A model to run.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – kwargs for the model.run() call.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimulationRunRequest.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimulationRunRequest.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimulationRunRequest.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>JSON-encode model and then encode self to dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimulationRunRequest.hash">
+<span class="sig-name descname"><span class="pre">hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimulationRunRequest.hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimulationRunRequest.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a unique hash of this simulation request.
+Does not include number_of_trajectories in this calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>md5 hex digest.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimulationRunRequest.parse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimulationRunRequest.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimulationRunRequest.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse HTTP request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_request</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – The request.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.messages.SimulationRunRequest" title="stochss_compute.core.messages.SimulationRunRequest">SimulationRunRequest</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimulationRunResponse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">SimulationRunResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimulationRunResponse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimulationRunResponse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#stochss_compute.core.messages.Response" title="stochss_compute.core.messages.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></p>
+<p>A response from the server regarding a SimulationRunRequest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status</strong> (<a class="reference internal" href="#stochss_compute.core.messages.SimStatus" title="stochss_compute.core.messages.SimStatus"><em>SimStatus</em></a>) – The status of the simulation.</p></li>
+<li><p><strong>error_message</strong> (<em>str</em><em> | </em><em>None</em>) – Possible error message.</p></li>
+<li><p><strong>results_id</strong> (<em>str</em><em> | </em><em>None</em>) – Hash of the simulation request. Identifies the results.</p></li>
+<li><p><strong>results</strong> (<em>str</em><em> | </em><em>None</em>) – JSON-Encoded gillespy2.Results</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimulationRunResponse.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimulationRunResponse.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimulationRunResponse.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encode self to dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SimulationRunResponse.parse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SimulationRunResponse.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SimulationRunResponse.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse HTTP response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_response</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – The response.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.messages.SimulationRunResponse" title="stochss_compute.core.messages.SimulationRunResponse">SimulationRunResponse</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SourceIpRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">SourceIpRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cloud_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SourceIpRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SourceIpRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#stochss_compute.core.messages.Request" title="stochss_compute.core.messages.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a></p>
+<p>Restrict server access.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cloud_key</strong> (<em>str</em>) – Random key generated locally during launch.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SourceIpRequest.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SourceIpRequest.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SourceIpRequest.encode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>self.__dict__</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SourceIpRequest.parse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SourceIpRequest.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SourceIpRequest.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse HTTP request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_request</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – The request.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.messages.SourceIpRequest" title="stochss_compute.core.messages.SourceIpRequest">SourceIpRequest</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SourceIpResponse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">SourceIpResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SourceIpResponse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SourceIpResponse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#stochss_compute.core.messages.Response" title="stochss_compute.core.messages.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></p>
+<p>Response from server containing IP address of the source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>source_ip</strong> (<em>str</em>) – IP address of the client.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SourceIpResponse.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SourceIpResponse.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SourceIpResponse.encode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>self.__dict__</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.SourceIpResponse.parse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#SourceIpResponse.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.SourceIpResponse.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a http response and returns a python object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_response</strong> (<em>str</em>) – A raw http SourceIpResponse from the server.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.messages.SourceIpResponse" title="stochss_compute.core.messages.SourceIpResponse">SourceIpResponse</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.StatusRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">StatusRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#StatusRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.StatusRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#stochss_compute.core.messages.Request" title="stochss_compute.core.messages.Request"><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code></a></p>
+<p>A request for simulation status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>results_id</strong> (<em>str</em>) – Hash of the SimulationRunRequest</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.StatusRequest.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#StatusRequest.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.StatusRequest.encode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>self.__dict__</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.StatusRequest.parse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#StatusRequest.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.StatusRequest.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse HTTP request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_request</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – The request.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.messages.StatusRequest" title="stochss_compute.core.messages.StatusRequest">StatusRequest</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.StatusResponse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.messages.</span></span><span class="sig-name descname"><span class="pre">StatusResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#StatusResponse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.StatusResponse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#stochss_compute.core.messages.Response" title="stochss_compute.core.messages.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></p>
+<p>A response from the server about simulation status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status</strong> (<a class="reference internal" href="#stochss_compute.core.messages.SimStatus" title="stochss_compute.core.messages.SimStatus"><em>SimStatus</em></a>) – Status of the simulation</p></li>
+<li><p><strong>message</strong> (<em>str</em>) – Possible error message or otherwise</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.StatusResponse.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#StatusResponse.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.StatusResponse.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encodes self.
+:returns: self as dict
+:rtype: dict[str, str]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.messages.StatusResponse.parse">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/messages.html#StatusResponse.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.messages.StatusResponse.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse HTTP response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_response</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – The response.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.messages.StatusResponse" title="stochss_compute.core.messages.StatusResponse">StatusResponse</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.core.remote_results">
+<span id="stochss-compute-core-remote-results-module"></span><h2>stochss_compute.core.remote_results module<a class="headerlink" href="#module-stochss_compute.core.remote_results" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.core.remote_results</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.remote_results.</span></span><span class="sig-name descname"><span class="pre">RemoteResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/remote_results.html#RemoteResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Results</span></code></p>
+<p>Wrapper for a gillespy2.Results object that exists on a remote server and which is then downloaded locally.
+A Results object is: A List of Trajectory objects created by a gillespy2 solver, extends the UserList object.</p>
+<p>These three fields must be initialized manually: id, server, n_traj, task_id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>UserList</em>) – A list of trajectory objects.</p></li>
+<li><p><strong>id</strong> (<em>str</em>) – ID of the cached Results object.</p></li>
+<li><p><strong>server</strong> (<em>stochss_compute.ComputeServer</em>) – The remote instance of StochSS-Compute where the Results are cached.</p></li>
+<li><p><strong>task_id</strong> (<em>str</em>) – Handle for the running simulation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults.data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>The trajectory data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>self._data</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>UserList</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults.get_gillespy2_results">
+<span class="sig-name descname"><span class="pre">get_gillespy2_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/remote_results.html#RemoteResults.get_gillespy2_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults.get_gillespy2_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the GillesPy2 results object from the remote results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The generated GillesPy2 results object.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>gillespy.Results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults.is_ready">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_ready</span></span><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults.is_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if results exist in cache on the server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>status == SimStatus.READY</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults.n_traj">
+<span class="sig-name descname"><span class="pre">n_traj</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults.n_traj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults.server">
+<span class="sig-name descname"><span class="pre">server</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults.server" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults.sim_status">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sim_status</span></span><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults.sim_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch the simulation status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Simulation status enum as a string.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_results.RemoteResults.task_id">
+<span class="sig-name descname"><span class="pre">task_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#stochss_compute.core.remote_results.RemoteResults.task_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.core.remote_simulation">
+<span id="stochss-compute-core-remote-simulation-module"></span><h2>stochss_compute.core.remote_simulation module<a class="headerlink" href="#module-stochss_compute.core.remote_simulation" title="Permalink to this heading">¶</a></h2>
+<p>RemoteSimulation</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_simulation.RemoteSimulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stochss_compute.core.remote_simulation.</span></span><span class="sig-name descname"><span class="pre">RemoteSimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">29681</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/remote_simulation.html#RemoteSimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.remote_simulation.RemoteSimulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An object representing a remote gillespy2 simulation. Requires a model and a host address.
+A solver type may be provided, but does not accept instantiated solvers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>gillespy2.Model</em>) – The model to simulate.</p></li>
+<li><p><strong>server</strong> (<em>stochss_compute.Server</em>) – A server to run the simulation. Optional if host is provided.</p></li>
+<li><p><strong>host</strong> (<em>str</em>) – The address of a running instance of StochSS-Compute. Optional if server is provided.</p></li>
+<li><p><strong>port</strong> (<em>int</em>) – The port to use when connecting to the host.
+Only needed if default server port is changed. Defaults to 29681.</p></li>
+<li><p><strong>solver</strong> (<em>gillespy2.GillesPySolver</em>) – The type of solver to use. Does not accept instantiated solvers.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_simulation.RemoteSimulation.is_cached">
+<span class="sig-name descname"><span class="pre">is_cached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/remote_simulation.html#RemoteSimulation.is_cached"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.remote_simulation.RemoteSimulation.is_cached" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks to see if a dummy simulation exists in the cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Arguments for simulation.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the results are cached on the server.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stochss_compute.core.remote_simulation.RemoteSimulation.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stochss_compute/core/remote_simulation.html#RemoteSimulation.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stochss_compute.core.remote_simulation.RemoteSimulation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate the Model on the target ComputeServer, returning the results or a handle to a running simulation.</p>
+<p>See <a class="reference external" href="https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run">here</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Arguments to pass directly to the Model#run call on the server.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RemoteResults populated with Results if cached, otherwise and unpopulated RemoteResults</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#stochss_compute.core.remote_results.RemoteResults" title="stochss_compute.core.remote_results.RemoteResults">RemoteResults</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#stochss_compute.core.errors.RemoteSimulationError" title="stochss_compute.core.errors.RemoteSimulationError"><strong>RemoteSimulationError</strong></a> – In the case of SimStatus.ERROR</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-stochss_compute.core">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-stochss_compute.core" title="Permalink to this heading">¶</a></h2>
+<p>stochss_compute.core</p>
+</section>
+</section>
+
+
+          </div>
+              <div class="related bottom">
+                &nbsp;
+  <nav id="rellinks">
+    <ul>
+        <li>
+          &larr;
+          <a href="stochss_compute.cloud.html" title="Previous document">stochss_compute.cloud package</a>
+        </li>
+        <li>
+          <a href="stochss_compute.server.html" title="Next document">stochss_compute.server package</a>
+          &rarr;
+        </li>
+    </ul>
+  </nav>
+              </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;"Copyright (C) 2017-2023".
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/classes/stochss_compute.core.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/StochSS/StochSS-Compute" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

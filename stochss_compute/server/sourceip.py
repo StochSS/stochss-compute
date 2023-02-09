@@ -1,6 +1,22 @@
 '''
 stochss_compute.server.sourceip
 '''
+# StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
+# Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 from tornado.web import RequestHandler
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
@@ -16,6 +32,7 @@ class SourceIpHandler(RequestHandler):
         Process POST request.
         
         :returns: request.remote_ip
+        :rtype: str
         '''
         source_ip = self.request.remote_ip
         print(f'[SourceIp Request] | Source: <{source_ip}>')

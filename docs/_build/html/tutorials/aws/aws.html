@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>StochSS-Compute on AWS &#8212; &#34;stochss-compute&#34; 0.9.9 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/gillespy2_alabaster_customizations.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="stochss_compute package" href="../../classes/stochss_compute.html" />
+    <link rel="prev" title="Tutorial Docker Container" href="../docker/docker.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+    <link rel="apple-touch-icon" href="../../_static/img/stochss-compute-logo.png" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/img/stochss-compute-logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=StochSS&repo=StochSS-Compute&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/installation/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/containers/docker.html">Docker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/basic_usage/basic_usage.html">Basic Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker.html">Tutorial Docker Container</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">StochSS-Compute on AWS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#aws-configuration">AWS Configuration</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../classes/stochss_compute.html">stochss_compute package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../docker/docker.html" title="previous chapter">Tutorial Docker Container</a></li>
+      <li>Next: <a href="../../classes/stochss_compute.html" title="next chapter">stochss_compute package</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="stochss-compute-on-aws">
+<h1>StochSS-Compute on AWS<a class="headerlink" href="#stochss-compute-on-aws" title="Permalink to this heading">¶</a></h1>
+<ol class="arabic simple">
+<li><p>Install extra dependecies.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;stochss_compute[AWS]&#39;</span>
+<span class="c1"># installs boto3, paramiko, and python-dotenv</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Import necessary classes.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gillespy2</span>
+<span class="kn">from</span> <span class="nn">stochss_compute.cloud</span> <span class="kn">import</span> <span class="n">EC2Cluster</span>
+<span class="kn">from</span> <span class="nn">stochss_compute</span> <span class="kn">import</span> <span class="n">RemoteSimulation</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Launch an EC2 Instance. Make sure to check <cite>instance_type</cite> pricing before launching.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cluster</span> <span class="o">=</span> <span class="n">EC2Cluster</span><span class="p">()</span>
+
+<span class="n">cluster</span><span class="o">.</span><span class="n">launch_single_node_instace</span><span class="p">(</span><span class="s1">&#39;t2.micro&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Run a simulation.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">simulation</span> <span class="o">=</span> <span class="n">RemoteSimulation</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">server</span><span class="o">=</span><span class="n">cluster</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="n">gillespy2</span><span class="o">.</span><span class="n">TauHybridSolver</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">results</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>Clean up.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cluster</span><span class="o">.</span><span class="n">clean_up</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="aws-configuration">
+<h2>AWS Configuration<a class="headerlink" href="#aws-configuration" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic">
+<li><p>Create an AWS account <a class="reference external" href="https://aws.amazon.com/">here</a> if you have not already done so.</p></li>
+<li><p>In order to make the AWS API calls to your account, you need an AWS access key and access key ID.</p>
+<p>From the IAM dashboard, click ‘Manage access keys’.</p>
+<p>Then, under the Access keys tab, click ‘Create New Access Key’.</p>
+<p>This file can only be downloaded once, but if something happens you can just make a new one.</p>
+<p>This file contains the Access Key ID and a Secret Access Key.</p>
+</li>
+<li><p>The simplest way to configure API calls is to download and install <a class="reference external" href="https://aws.amazon.com/cli/">AWS Command Line Interface</a>.</p>
+<p>Then, run:</p>
+</li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>aws<span class="w"> </span>configure
+</pre></div>
+</div>
+<ol class="arabic" start="4">
+<li><p>You will be asked for your AWS Access Key ID, your AWS Secret Access Key, and default <a class="reference external" href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html#Concepts.RegionsAndAvailabilityZones.Regions">region name</a>, such as ‘us-east-2’.</p>
+<p>If you prefer not to install this, you can set the environment variables ‘AWS_ACCESS_KEY_ID’, ‘AWS_SECRET_ACCESS_KEY’, and ‘AWS_DEFAULT_REGION’.</p>
+<p>For a full list of environment variables you can set, see <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-environment-variables">here</a>.</p>
+<p>The stochss_compute AWS sub-package includes <cite>python-dotev</cite> which is handy for loading .env files into a python process.</p>
+</li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
+<span class="n">load_dotenv</span><span class="p">()</span> <span class="c1"># Loads from a file named .env by default</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+              <div class="related bottom">
+                &nbsp;
+  <nav id="rellinks">
+    <ul>
+        <li>
+          &larr;
+          <a href="../docker/docker.html" title="Previous document">Tutorial Docker Container</a>
+        </li>
+        <li>
+          <a href="../../classes/stochss_compute.html" title="Next document">stochss_compute package</a>
+          &rarr;
+        </li>
+    </ul>
+  </nav>
+              </div>
+          
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;"Copyright (C) 2017-2023".
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/tutorials/aws/aws.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/StochSS/StochSS-Compute" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

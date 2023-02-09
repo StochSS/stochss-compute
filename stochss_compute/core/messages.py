@@ -1,6 +1,22 @@
 '''
 stochss_compute.core.messages
 '''
+# StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
+# Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from hashlib import md5
@@ -36,7 +52,7 @@ class SimStatus(Enum):
 
 class Request(ABC):
     '''
-    Talk about class.
+    Base class.
     '''
     @abstractmethod
     def encode(self):
@@ -52,7 +68,7 @@ class Request(ABC):
 
 class Response(ABC):
     '''
-    Response abstracted down to the essentials.
+    Base class.
     '''
     @abstractmethod
     def encode(self):
@@ -69,18 +85,36 @@ class Response(ABC):
 
 class SimulationRunRequest(Request):
     '''
+    A simulation request.
+
+    :param model: A model to run.
     :type model: gillespy2.Model
+
+    :param kwargs: kwargs for the model.run() call.
+    :type kwargs: dict[str, Any]
     '''
     def __init__(self, model, **kwargs):
         self.model = model
         self.kwargs = kwargs
 
     def encode(self):
+        '''
+        JSON-encode model and then encode self to dict.
+        '''
         return {'model': self.model.to_json(),
                 'kwargs': self.kwargs}
 
     @staticmethod
     def parse(raw_request):
+        '''
+        Parse HTTP request.
+
+        :param raw_request: The request.
+        :type raw_request: dict[str, str]
+
+        :returns: The decoded object.
+        :rtype: SimulationRunRequest
+        '''
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs = request_dict['kwargs']
@@ -88,8 +122,11 @@ class SimulationRunRequest(Request):
 
     def hash(self):
         '''
-        Return a unique hash of this simulation request.
-        Do not include number_of_trajectories in this calculation.
+        Generate a unique hash of this simulation request.
+        Does not include number_of_trajectories in this calculation.
+
+        :returns: md5 hex digest.
+        :rtype: str
         '''
         anon_model_string = self.model.to_anon().to_json(encode_private=False)
         popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
@@ -100,9 +137,18 @@ class SimulationRunRequest(Request):
 
 class SimulationRunResponse(Response):
     '''
+    A response from the server regarding a SimulationRunRequest.
+    
+    :param status: The status of the simulation.
     :type status: SimStatus
+
+    :param error_message: Possible error message.
     :type error_message: str | None
+
+    :param results_id: Hash of the simulation request. Identifies the results.
     :type results_id: str | None
+
+    :param results: JSON-Encoded gillespy2.Results
     :type results: str | None
     '''
     def __init__(self, status, error_message = None, results_id = None, results = None, task_id = None):
@@ -113,6 +159,9 @@ class SimulationRunResponse(Response):
         self.task_id = task_id
 
     def encode(self):
+        '''
+       Encode self to dict.
+        '''
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
                 'results_id': self.results_id or '',
@@ -121,6 +170,15 @@ class SimulationRunResponse(Response):
 
     @staticmethod
     def parse(raw_response):
+        '''
+        Parse HTTP response.
+
+        :param raw_response: The response.
+        :type raw_response: dict[str, str]
+
+        :returns: The decoded object.
+        :rtype: SimulationRunResponse
+        '''
         response_dict = json_decode(raw_response)
         status = SimStatus.from_str(response_dict['status'])
         results_id = response_dict['results_id']
@@ -134,32 +192,68 @@ class SimulationRunResponse(Response):
 
 class StatusRequest(Request):
     '''
+    A request for simulation status.
+
+    :param results_id: Hash of the SimulationRunRequest
     :type results_id: str
     '''
     def __init__(self, results_id):
         self.results_id = results_id
     def encode(self):
+        '''
+        :returns: self.__dict__
+        :rtype: dict
+        '''
         return self.__dict__
+
     @staticmethod
     def parse(raw_request):
+        '''
+        Parse HTTP request.
+
+        :param raw_request: The request.
+        :type raw_request: dict[str, str]
+
+        :returns: The decoded object.
+        :rtype: StatusRequest
+        '''
         request_dict = json_decode(raw_request)
         return StatusRequest(request_dict['results_id'])
 
 class StatusResponse(Response):
     '''
+    A response from the server about simulation status.
+
+    :param status: Status of the simulation
     :type status: SimStatus
-    :type error_message: str
+    
+    :param message: Possible error message or otherwise
+    :type message: str
     '''
     def __init__(self, status, message = None):
         self.status = status
         self.message = message
 
     def encode(self):
+        '''
+        Encodes self.
+        :returns: self as dict
+        :rtype: dict[str, str]
+        '''
         return {'status': self.status.name,
                 'message': self.message or ''}
 
     @staticmethod
     def parse(raw_response):
+        '''
+        Parse HTTP response.
+
+        :param raw_response: The response.
+        :type raw_response: dict[str, str]
+
+        :returns: The decoded object.
+        :rtype: StatusResponse
+        '''
         response_dict = json_decode(raw_response)
         status = SimStatus.from_str(response_dict['status'])
         message = response_dict['message']
@@ -170,29 +264,62 @@ class StatusResponse(Response):
 
 class ResultsRequest(Request):
     '''
+    Request results from the server.
+
+    :param results_id: Hash of the SimulationRunRequest
     :type results_id: str
     '''
     def __init__(self, results_id):
         self.results_id = results_id
     def encode(self):
+        '''
+        :returns: self.__dict__
+        :rtype: dict
+        '''
         return self.__dict__
     @staticmethod
     def parse(raw_request):
+        '''
+        Parse HTTP request.
+
+        :param raw_request: The request.
+        :type raw_request: dict[str, str]
+
+        :returns: The decoded object.
+        :rtype: ResultsRequest
+        '''
         request_dict = json_decode(raw_request)
         return ResultsRequest(request_dict['results_id'])
 
 class ResultsResponse(Response):
     '''
-    :type results: str | None
+    A response from the server about the Results.
+
+    :param results: The requested Results from the cache. (JSON)
+    :type results: str
+    
     '''
     def __init__(self, results = None):
         self.results = results
 
     def encode(self):
+        '''
+        :returns: self.__dict__
+        :rtype: dict
+        '''
         return {'results': self.results or ''}
 
     @staticmethod
     def parse(raw_response):
+        '''
+        Parse HTTP response.
+
+        :param raw_response: The response.
+        :type raw_response: dict[str, str]
+
+        :returns: The decoded object.
+        :rtype: ResultsResponse
+        '''
         response_dict = json_decode(raw_response)
         if response_dict['results'] != '':
             results = Results.from_json(response_dict['results'])
@@ -202,25 +329,48 @@ class ResultsResponse(Response):
 
 class SourceIpRequest(Request):
     '''
+    Restrict server access.
+
+    :param cloud_key: Random key generated locally during launch.
     :type cloud_key: str
     '''
     def __init__(self, cloud_key):
         self.cloud_key = cloud_key
     def encode(self):
+        '''
+        :returns: self.__dict__
+        :rtype: dict
+        '''
         return self.__dict__
     @staticmethod
     def parse(raw_request):
+        '''
+        Parse HTTP request.
+
+        :param raw_request: The request.
+        :type raw_request: dict[str, str]
+
+        :returns: The decoded object.
+        :rtype: SourceIpRequest
+        '''
         request_dict = json_decode(raw_request)
         return SourceIpRequest(request_dict['cloud_key'])
 
 class SourceIpResponse(Response):
     '''
     Response from server containing IP address of the source.
+
+    :param source_ip: IP address of the client.
+    :type source_ip: str
     '''
     def __init__(self, source_ip):
         self.source_ip = source_ip
 
     def encode(self):
+        '''
+        :returns: self.__dict__
+        :rtype: dict
+        '''
         return self.__dict__
 
     @staticmethod
@@ -229,6 +379,10 @@ class SourceIpResponse(Response):
         Parses a http response and returns a python object.
 
         :param raw_response: A raw http SourceIpResponse from the server.
+        :type raw_response: str
+
+        :returns: The decoded object.
+        :rtype: SourceIpResponse
         '''
         response_dict = json_decode(raw_response)
         return SourceIpResponse(response_dict['source_ip'])
