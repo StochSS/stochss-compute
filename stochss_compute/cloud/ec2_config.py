@@ -49,6 +49,9 @@ class EC2RemoteConfig:
 
     :param ami: Custom AMI to use, like 'ami-09d3b3274b6c5d4aa'. See `here <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ComponentsAMIs.html>`_.
     :type ami: str
+
+    :param s3_config: If this configuration is supplied, s3 caching will be enabled.
+    :type s3_config: S3Config
     '''
     _AMIS = {
         'us-east-1': 'ami-09d3b3274b6c5d4aa',
@@ -67,6 +70,7 @@ class EC2RemoteConfig:
                  api_port=29681,
                  region=None,
                  ami=None,
+                 s3_config=None,
                  ):
         if suffix is not None:
             suffix = f'-{suffix}'
@@ -81,6 +85,7 @@ class EC2RemoteConfig:
         self.api_port = api_port
         self.region = region
         self.ami = ami
+        self.s3_config = s3_config
 
 
 class EC2LocalConfig:
