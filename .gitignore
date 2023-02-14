@@ -142,13 +142,14 @@ Thumbs.db #thumbnail cache on Windows
 # profiling data
 .prof
 
-
 ### vscode ###
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 *.code-workspace
 
+# StochSS-Compute
 **/dask-worker-space
+**/cache/
+
+# Development team
+**/.mdip/
+bs*
