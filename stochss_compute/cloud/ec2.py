@@ -474,6 +474,11 @@ docker run --network host --rm -t -e CLOUD_LOCK={cloud_key} --name sssc stochss/
             ],
             'UserData': launch_commands,
         }
+        # if self._remote_config.s3config is not None:
+        #     kwargs['IamInstanceProfile'] = {
+        #         'Arn': self._remote_config.s3_config.instance_role_arn,
+        #         'Name': 'string'
+        #     }
 
         self.log.info(
             'Launching StochSS-Compute server instance. This might take a minute.......')
