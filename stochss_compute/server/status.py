@@ -73,7 +73,7 @@ class StatusHandler(RequestHandler):
             empty = cache.is_empty()
             if empty:
                 if self.task_id not in ('', None):
-                    state, err = await self.check_with_scheduler()
+                    state, err = await self._check_with_scheduler()
 
                     print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                     if state == 'erred':
@@ -90,7 +90,7 @@ class StatusHandler(RequestHandler):
                     self._respond_ready()
                 else:
                     if self.task_id not in ('', None):
-                        state, err = await self.check_with_scheduler()
+                        state, err = await self._check_with_scheduler()
                         print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                         if state == 'erred':
                             self._respond_error(err)
