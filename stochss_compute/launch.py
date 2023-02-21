@@ -23,6 +23,27 @@ from argparse import ArgumentParser, Namespace
 from distributed import LocalCluster
 from stochss_compute.server.api import start_api
 
+def local_default_cluster():
+    print('Launching Dask Cluster...')
+    cluster = LocalCluster()
+    tokens = cluster.scheduler_address.split(':')
+    dask_host = tokens[1][2:]
+    dask_port = int(tokens[2])
+    print(f'Scheduler Address: <{cluster.scheduler_address}>')
+    for i, worker in cluster.workers.items():
+        print(f'Worker {i}: {worker}')
+
+    print(f'Dashboard Link: <{cluster.dashboard_link}>\n')
+
+    try:
+        asyncio.run(start_api(dask_host=dask_host, dask_scheduler_port=dask_port))
+    except asyncio.exceptions.CancelledError:
+        pass
+    finally:
+        print('Shutting down cluster...', end='')
+        asyncio.run(cluster.close())
+        print('OK')
+
 def launch_server():
     '''
     Start the REST API. Alias to script "stochss-compute".
@@ -141,10 +162,6 @@ def launch_with_cluster():
         print('OK')
 
 if __name__ == '__main__':
-    # import os
-    # if 'COVERAGE_PROCESS_START' in os.environ:
-    #     import coverage
-    #     coverage.process_startup()
     if len(sys.argv) > 1:
         if sys.argv[1] == 'cluster':
             del sys.argv[1]

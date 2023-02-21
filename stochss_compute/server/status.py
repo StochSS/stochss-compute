@@ -22,26 +22,28 @@ from distributed import Client
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import SimStatus, StatusResponse
-
 from stochss_compute.server.cache import Cache
 
 class StatusHandler(RequestHandler):
     '''
     Endpoint for requesting the status of a simulation.
     '''
-
+    _scheduler_address = None
+    _cache_dir = None
+    _results_id = None
+    _task_id = None
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
-        
+
         :param scheduler_address: Scheduler address.
         :type scheduler_address: str
 
         :param cache_dir: Path to the cache.
         :type cache_dir: str
         '''
-        self.scheduler_address = scheduler_address
-        self.cache_dir = cache_dir
+        self._scheduler_address = scheduler_address
+        self._cache_dir = cache_dir
 
     async def get(self, results_id, n_traj, task_id):
         '''
@@ -60,10 +62,10 @@ class StatusHandler(RequestHandler):
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
             self.finish()
             raise RemoteSimulationError(f'Malformed request: {self.request.uri}')
-        self.results_id = results_id
-        self.task_id = task_id
+        self._results_id = results_id
+        self._task_id = task_id
         n_traj = int(n_traj)
-        cache = Cache(self.cache_dir, results_id)
+        cache = Cache(self._cache_dir, results_id)
         print(f'{datetime.now()} | <{self.request.remote_ip}> | \
               Status Request | <{results_id}> | Trajectories: {n_traj} | \
               Task ID: {task_id}' )
@@ -72,9 +74,8 @@ class StatusHandler(RequestHandler):
         if exists:
             empty = cache.is_empty()
             if empty:
-                if self.task_id not in ('', None):
-                    state, err = await self.check_with_scheduler()
-
+                if self._task_id not in ('', None):
+                    state, err = await self._check_with_scheduler()
                     print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                     if state == 'erred':
                         self._respond_error(err)
@@ -89,8 +90,8 @@ class StatusHandler(RequestHandler):
                     print(msg+SimStatus.READY.name)
                     self._respond_ready()
                 else:
-                    if self.task_id not in ('', None):
-                        state, err = await self.check_with_scheduler()
+                    if self._task_id not in ('', None):
+                        state, err = await self._check_with_scheduler()
                         print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                         if state == 'erred':
                             self._respond_error(err)
@@ -102,7 +103,6 @@ class StatusHandler(RequestHandler):
         else:
             print(msg+SimStatus.DOES_NOT_EXIST.name)
             self._respond_dne()
-
 
     def _respond_ready(self):
         status_response = StatusResponse(SimStatus.READY)
@@ -128,19 +128,17 @@ class StatusHandler(RequestHandler):
         '''
         Ask the scheduler for information about a task.
         '''
-        client = Client(self.scheduler_address)
-
+        client = Client(self._scheduler_address)
         # define function here so that it is pickle-able
         def scheduler_task_state(task_id, dask_scheduler=None):
             task = dask_scheduler.tasks.get(task_id)
-
             if task is None:
                 return (None, None)
             if task.exception_text == "":
                 return (task.state, None)
             return (task.state, task.exception_text)
         # Do not await. Reasons. It returns sync.
-        ret = client.run_on_scheduler(scheduler_task_state, self.task_id)
+        ret = client.run_on_scheduler(scheduler_task_state, self._task_id)
         client.close()
         return ret
     

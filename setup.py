@@ -66,7 +66,12 @@ setup(name=             version["__title__"],
                 'stochss-compute-cluster=stochss_compute.launch:launch_with_cluster',
             ]
         },
-      install_requires= reqs,
+      install_requires= [
+        'distributed == 2022.12.1',
+        'gillespy2 == 1.8.1',
+        'requests == 2.28.1',
+        'filelock == 3.9.0'
+        ],
       extras_require = {
           "AWS": [
               'boto3 == 1.24.71',
