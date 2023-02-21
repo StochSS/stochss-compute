@@ -29,11 +29,16 @@ class StatusHandler(RequestHandler):
     '''
     Endpoint for requesting the status of a simulation.
     '''
-
+    scheduler_address = None
+    cache_dir = None
+    task_id = None
+    results_id = None
+    def data_received(self, chunk: bytes):
+        raise NotImplementedError()
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
-        
+
         :param scheduler_address: Scheduler address.
         :type scheduler_address: str
 
@@ -52,7 +57,7 @@ class StatusHandler(RequestHandler):
 
         :param n_traj: Number of trajectories in the request. Default 1.
         :type n_traj: str
-        
+
         :param task_id: ID of the running simulation. Required.
         :type task_id: str
         '''
@@ -143,4 +148,3 @@ class StatusHandler(RequestHandler):
         ret = client.run_on_scheduler(scheduler_task_state, self.task_id)
         client.close()
         return ret
-    
