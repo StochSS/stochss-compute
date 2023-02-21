@@ -29,5 +29,12 @@ jobs:
         with:
           push: true
           file: .api.dockerfile
-          tags: stochss/stochss-compute:latest, stochss/stochss-compute:cloud
+          tags: stochss/stochss-compute:latest
+      -
+        name: Build and push to stochss org on DockerHub
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          file: .cloud.dockerfile
+          tags: stochss/stochss-compute:cloud
       - run: echo "🍏 This job's status is ${{ job.status }}."
