@@ -22,18 +22,26 @@ from distributed import Client
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import SimStatus, StatusResponse
-
 from stochss_compute.server.cache import Cache
 
 class StatusHandler(RequestHandler):
     '''
     Endpoint for requesting the status of a simulation.
     '''
+    def __init__(self, application, request, **kwargs):
+        self.scheduler_address = None
+        self.cache_dir = None
+        self.task_id = None
+        self.results_id = None
+        super().__init__(application, request, **kwargs)
 
+    def data_received(self, chunk: bytes):
+        raise NotImplementedError()
+    
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
-        
+
         :param scheduler_address: Scheduler address.
         :type scheduler_address: str
 
@@ -52,7 +60,7 @@ class StatusHandler(RequestHandler):
 
         :param n_traj: Number of trajectories in the request. Default 1.
         :type n_traj: str
-        
+
         :param task_id: ID of the running simulation. Required.
         :type task_id: str
         '''
@@ -60,22 +68,26 @@ class StatusHandler(RequestHandler):
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
             self.finish()
             raise RemoteSimulationError(f'Malformed request: {self.request.uri}')
+        
         self.results_id = results_id
         self.task_id = task_id
         n_traj = int(n_traj)
+
         cache = Cache(self.cache_dir, results_id)
+
         print(f'{datetime.now()} | <{self.request.remote_ip}> | \
-              Status Request | <{results_id}> | Trajectories: {n_traj} | \
-              Task ID: {task_id}' )
-        msg = f'{datetime.now()} | <{results_id}> | <{task_id}> |Status: '
+            Status Request | <{results_id}> | Trajectories: {n_traj} | \
+            Task ID: {task_id}' )
+        
+        msg = f'{datetime.now()} | <{results_id}> | <{task_id}> | Status: '
+
         exists = cache.exists()
         if exists:
             empty = cache.is_empty()
             if empty:
                 if self.task_id not in ('', None):
-                    state, err = await self.check_with_scheduler()
-
-                    print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
+                    state, err = await self._check_with_scheduler()
+                    print(msg + SimStatus.RUNNING.name + f' | Task: {state} | Error: {err}')
                     if state == 'erred':
                         self._respond_error(err)
                     else:
@@ -90,7 +102,7 @@ class StatusHandler(RequestHandler):
                     self._respond_ready()
                 else:
                     if self.task_id not in ('', None):
-                        state, err = await self.check_with_scheduler()
+                        state, err = await self._check_with_scheduler()
                         print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                         if state == 'erred':
                             self._respond_error(err)
@@ -102,7 +114,6 @@ class StatusHandler(RequestHandler):
         else:
             print(msg+SimStatus.DOES_NOT_EXIST.name)
             self._respond_dne()
-
 
     def _respond_ready(self):
         status_response = StatusResponse(SimStatus.READY)
@@ -133,14 +144,13 @@ class StatusHandler(RequestHandler):
         # define function here so that it is pickle-able
         def scheduler_task_state(task_id, dask_scheduler=None):
             task = dask_scheduler.tasks.get(task_id)
-
             if task is None:
                 return (None, None)
             if task.exception_text == "":
                 return (task.state, None)
             return (task.state, task.exception_text)
+        
         # Do not await. Reasons. It returns sync.
         ret = client.run_on_scheduler(scheduler_task_state, self.task_id)
         client.close()
         return ret
-    
