@@ -48,11 +48,11 @@ AWS Configuration
 
 2. In order to make the AWS API calls to your account, you need an AWS access key and access key ID.  
    
-   From the IAM dashboard, click 'Manage access keys'.  
+   From the IAM dashboard, click 'My security credentials'.  
    
-   Then, under the Access keys tab, click 'Create New Access Key'.  
+   Then, under the Access keys tab, click 'Create Access Key'.  
    
-   This file can only be downloaded once, but if something happens you can just make a new one.  
+   Make sure to record the Access and Secrety keys. We recommend you download the CSV file now, as it can only be downloaded once. if you lose these keys you can just make a new ones.  
    
    This file contains the Access Key ID and a Secret Access Key.
 
