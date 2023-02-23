@@ -20,6 +20,7 @@ stochss_compute.server.sourceip
 import os
 from tornado.web import RequestHandler
 from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
+from stochss_compute.core.logs import log
 
 class SourceIpHandler(RequestHandler):
     '''
@@ -30,7 +31,7 @@ class SourceIpHandler(RequestHandler):
     def post(self):
         '''
         Process POST request.
-        
+
         :returns: request.remote_ip
         :rtype: str
         '''

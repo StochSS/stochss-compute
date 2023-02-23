@@ -20,13 +20,14 @@ stochss_compute.server.api
 import os
 import asyncio
 import subprocess
+import logging
 from tornado.web import Application
 from stochss_compute.server.is_cached import IsCachedHandler
 from stochss_compute.server.run import RunHandler
 from stochss_compute.server.sourceip import SourceIpHandler
 from stochss_compute.server.status import StatusHandler
 from stochss_compute.server.results import ResultsHandler
-
+from stochss_compute.core.logs import log, _set_log_level
 def _make_app(dask_host, dask_scheduler_port, cache):
     scheduler_address = f'{dask_host}:{dask_scheduler_port}'
     return Application([
@@ -46,7 +47,10 @@ async def start_api(
         cache = 'cache/',
         dask_host = 'localhost',
         dask_scheduler_port = 8786,
+        # pylint: disable=invalid-name
         rm = False,
+        # pylint: enable=invalid-name
+        log_level = logging.INFO,
         ):
     """
     Start the REST API with the following arguments.
@@ -65,22 +69,27 @@ async def start_api(
 
     :param rm: Delete the cache when exiting this program.
     :type rm: bool
+
+    :param log_level: Logging threshold enum.
+    :type log_level: int
     """
-    # clean up lock files here
+    _set_log_level(log_level)
+    # clean up lock files here TODO
     cache_path = os.path.abspath(cache)
     app = _make_app(dask_host, dask_scheduler_port, cache)
     app.listen(port)
-    print(f'StochSS-Compute listening on: :{port}')
-    print(f'Cache directory: {cache_path}')
-    print(f'Connecting to Dask scheduler at: {dask_host}:{dask_scheduler_port}\n')
+    log.info('test')
+    log.info('StochSS-Compute listening on: :%s', port)
+    log.info('Cache directory: %s', cache_path)
+    log.info('Connecting to Dask scheduler at: %s:%s\n', dask_host, dask_scheduler_port)
 
     try:
         await asyncio.Event().wait()
     except asyncio.exceptions.CancelledError as error:
-        print(error)
+        log.info(str(error))
     finally:
         if rm and os.path.exists(cache_path):
-            print('Removing cache...', end='')
-            subprocess.Popen(['rm', '-r', cache_path])
-            print('OK')
+            log.info('Removing cache...', end='')
+            subprocess.Popen(['rm', '-r', cache_path]).wait()
+            log.info('OK')
             

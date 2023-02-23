@@ -23,6 +23,7 @@ from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages import SimStatus, StatusResponse
 from stochss_compute.server.cache import Cache
+from stochss_compute.core.logs import log
 
 class StatusHandler(RequestHandler):
     '''
@@ -68,18 +69,19 @@ class StatusHandler(RequestHandler):
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
             self.finish()
             raise RemoteSimulationError(f'Malformed request: {self.request.uri}')
-        
+
         self.results_id = results_id
         self.task_id = task_id
         n_traj = int(n_traj)
 
         cache = Cache(self.cache_dir, results_id)
 
-        print(f'{datetime.now()} | <{self.request.remote_ip}> | \
+        _msg = f'{datetime.now()} | <{self.request.remote_ip}> | \
             Status Request | <{results_id}> | Trajectories: {n_traj} | \
-            Task ID: {task_id}' )
-        
-        msg = f'{datetime.now()} | <{results_id}> | <{task_id}> | Status: '
+            Task ID: {task_id}'
+        log.info(_msg)
+
+        _msg = f'{datetime.now()} | <{results_id}> | <{task_id}> | Status: '
 
         exists = cache.exists()
         if exists:
@@ -87,32 +89,38 @@ class StatusHandler(RequestHandler):
             if empty:
                 if self.task_id not in ('', None):
                     state, err = await self._check_with_scheduler()
-                    print(msg + SimStatus.RUNNING.name + f' | Task: {state} | Error: {err}')
+                    _msg = _msg + SimStatus.RUNNING.name + f' | Task: {state} | Error: {err}'
+                    log.info(_msg)
                     if state == 'erred':
                         self._respond_error(err)
                     else:
                         self._respond_running(f'Scheduler task state: {state}')
                 else:
-                    print(msg+SimStatus.DOES_NOT_EXIST.name)
+                    _msg = _msg + SimStatus.DOES_NOT_EXIST.name
+                    log.info(_msg)
                     self._respond_dne()
             else:
                 ready = cache.is_ready(n_traj)
                 if ready:
-                    print(msg+SimStatus.READY.name)
+                    _msg = _msg + SimStatus.READY.name
+                    log.info(_msg)
                     self._respond_ready()
                 else:
                     if self.task_id not in ('', None):
                         state, err = await self._check_with_scheduler()
-                        print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
+                        _msg = _msg + SimStatus.RUNNING.name + f' | Task: {state} | error: {err}'
+                        log.info(_msg)
                         if state == 'erred':
                             self._respond_error(err)
                         else:
                             self._respond_running(f'Scheduler task state: {state}')
                     else:
-                        print(msg+SimStatus.DOES_NOT_EXIST.name)
+                        _msg = _msg + SimStatus.DOES_NOT_EXIST.name
+                        log.info(_msg)
                         self._respond_dne()
         else:
-            print(msg+SimStatus.DOES_NOT_EXIST.name)
+            _msg = _msg + SimStatus.DOES_NOT_EXIST.name
+            log.info(_msg)
             self._respond_dne()
 
     def _respond_ready(self):
@@ -149,7 +157,7 @@ class StatusHandler(RequestHandler):
             if task.exception_text == "":
                 return (task.state, None)
             return (task.state, task.exception_text)
-        
+
         # Do not await. Reasons. It returns sync.
         ret = client.run_on_scheduler(scheduler_task_state, self.task_id)
         client.close()

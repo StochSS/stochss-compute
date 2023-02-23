@@ -33,6 +33,7 @@ try:
     from botocore.exceptions import ClientError
     from paramiko import SSHClient, AutoAddPolicy
 except ImportError as err:
+    if ''
     raise EC2ImportException from err
 
 
@@ -91,7 +92,7 @@ class EC2Cluster(Server):
         if self._remote_config.region is not None:
             config = Config(region_name=self._remote_config.region)
             region = self._remote_config.region
-            # Overrides any underlying configurationz
+            # Overrides any underlying configurations
             self._client = boto3.client('ec2', config=config)
             self._resources = boto3.resource('ec2', config=config)
         else:
