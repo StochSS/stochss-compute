@@ -27,17 +27,25 @@ from distributed import Client, Future
 from gillespy2.core import Results
 from stochss_compute.core.messages import SimStatus, SimulationRunRequest, SimulationRunResponse
 from stochss_compute.server.cache import Cache
-
+from stochss_compute.core.logs import log
 
 class RunHandler(RequestHandler):
     '''
     Endpoint for running Gillespy2 simulations.
     '''
 
+    def __init__(self, application, request, **kwargs):
+        self.scheduler_address = None
+        self.cache_dir = None
+        super().__init__(application, request, **kwargs)
+
+    def data_received(self, chunk: bytes):
+        raise NotImplementedError()
+
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
-        
+
         :param scheduler_address: Scheduler address.
         :type scheduler_address: str
 
@@ -53,7 +61,7 @@ class RunHandler(RequestHandler):
         '''
         sim_request = SimulationRunRequest.parse(self.request.body)
         sim_hash = sim_request.hash()
-        log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Request | <{sim_hash}> | '
+        _msg = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Request | <{sim_hash}> | '
         cache = Cache(self.cache_dir, sim_hash)
         if not cache.exists():
             cache.create()
