@@ -28,6 +28,9 @@ class SourceIpHandler(RequestHandler):
     Used only by cloud api.
     '''
 
+    def data_received(self, chunk: bytes):
+        raise NotImplementedError()
+
     def post(self):
         '''
         Process POST request.
@@ -36,12 +39,15 @@ class SourceIpHandler(RequestHandler):
         :rtype: str
         '''
         source_ip = self.request.remote_ip
-        print(f'[SourceIp Request] | Source: <{source_ip}>')
+        _msg = f'[SourceIp Request] | Source: <{source_ip}>'
+        log.info(_msg)
         source_ip_request = SourceIpRequest.parse(self.request.body)
         # could possibly also check just to see if request is valid?
         if source_ip_request.cloud_key == os.environ.get('CLOUD_LOCK'):
             source_ip_response = SourceIpResponse(source_ip=source_ip)
             self.write(source_ip_response.encode())
         else:
+            _msg = f'<{source_ip}> Access denied.'
+            log.warning(_msg)
             self.set_status(403, 'Access denied.')
         self.finish()
