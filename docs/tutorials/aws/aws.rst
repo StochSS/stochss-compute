@@ -44,6 +44,8 @@ StochSS-Compute on AWS
 AWS Configuration
 -----------------
 
+/examples/aws_trust_policy.json
+
 1. Create an AWS account `here <https://aws.amazon.com/>`_ if you have not already done so.
 
 2. In order to make the AWS API calls to your account, you need an AWS access key and access key ID.  
