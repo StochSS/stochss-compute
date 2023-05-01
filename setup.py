@@ -75,7 +75,7 @@ setup(name=             version["__title__"],
           ],
           'dev': [
             'coverage',
-            'moto',
+            'moto == 4.1.0',
           ]
       },
       long_description= readme,
