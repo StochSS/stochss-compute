@@ -1,3 +1,11 @@
+'''
+stochss_compute.core.messages.simulation_run
+'''
+from hashlib import md5
+from tornado.escape import json_decode, json_encode
+from gillespy2 import Model
+from stochss_compute.core.messages.base import Request, Response, SimStatus
+
 class SimulationRunRequest(Request):
     '''
     A simulation request.
@@ -5,15 +13,11 @@ class SimulationRunRequest(Request):
     :param model: A model to run.
     :type model: gillespy2.Model
 
-    :param unique: When True, ignore cache completely and return always new results.
-    :type unique: bool
-
     :param kwargs: kwargs for the model.run() call.
     :type kwargs: dict[str, Any]
     '''
-    def __init__(self, model, unique, **kwargs):
+    def __init__(self, model,**kwargs):
         self.model = model
-        self.unique = unique
         self.kwargs = kwargs
 
     def encode(self):
@@ -21,7 +25,6 @@ class SimulationRunRequest(Request):
         JSON-encode model and then encode self to dict.
         '''
         return {'model': self.model.to_json(),
-                'unique': self.unique,
                 'kwargs': self.kwargs,
                 }
 
@@ -39,8 +42,7 @@ class SimulationRunRequest(Request):
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs = request_dict['kwargs']
-        unique = request_dict['unique']
-        return SimulationRunRequest(model, unique, **kwargs)
+        return SimulationRunRequest(model, **kwargs)
 
     def hash(self):
         '''

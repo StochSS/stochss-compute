@@ -1,3 +1,11 @@
+'''
+stochss_compute.core.messages.results
+'''
+from tornado.escape import json_decode
+from gillespy2 import Results
+
+from stochss_compute.core.messages.base import Request, Response
+
 class ResultsRequest(Request):
     '''
     Request results from the server.
