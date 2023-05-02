@@ -90,11 +90,15 @@ class SimulationRunRequest(Request):
     :param model: A model to run.
     :type model: gillespy2.Model
 
+    :param unique: When True, ignore cache completely and return always new results.
+    :type unique: bool
+
     :param kwargs: kwargs for the model.run() call.
     :type kwargs: dict[str, Any]
     '''
-    def __init__(self, model, **kwargs):
+    def __init__(self, model, unique, **kwargs):
         self.model = model
+        self.unique = unique
         self.kwargs = kwargs
 
     def encode(self):
@@ -102,7 +106,9 @@ class SimulationRunRequest(Request):
         JSON-encode model and then encode self to dict.
         '''
         return {'model': self.model.to_json(),
-                'kwargs': self.kwargs}
+                'unique': self.unique,
+                'kwargs': self.kwargs,
+                }
 
     @staticmethod
     def parse(raw_request):
@@ -118,7 +124,8 @@ class SimulationRunRequest(Request):
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs = request_dict['kwargs']
-        return SimulationRunRequest(model, **kwargs)
+        unique = request_dict['unique']
+        return SimulationRunRequest(model, unique, **kwargs)
 
     def hash(self):
         '''
@@ -138,7 +145,7 @@ class SimulationRunRequest(Request):
 class SimulationRunResponse(Response):
     '''
     A response from the server regarding a SimulationRunRequest.
-    
+
     :param status: The status of the simulation.
     :type status: SimStatus
 
@@ -160,7 +167,7 @@ class SimulationRunResponse(Response):
 
     def encode(self):
         '''
-       Encode self to dict.
+        Encode self to dict.
         '''
         return {'status': self.status.name,
                 'error_message': self.error_message or '',

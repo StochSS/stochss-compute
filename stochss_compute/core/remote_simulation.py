@@ -97,11 +97,14 @@ class RemoteSimulation:
         results_dummy.n_traj = params.get('number_of_trajectories', 1)
         return results_dummy.is_ready
 
-    def run(self, **params):
+    def run(self, unique=False, **params):
         """
         Simulate the Model on the target ComputeServer, returning the results or a handle to a running simulation.
 
         See `here <https://stochss.github.io/GillesPy2/docs/build/html/classes/gillespy2.core.html#gillespy2.core.model.Model.run>`_.
+
+        :param unique: When True, ignore cache completely and return always new results.
+        :type unique: bool
 
         :param params: Arguments to pass directly to the Model#run call on the server.
         :type params: dict[str, Any]
@@ -120,7 +123,7 @@ class RemoteSimulation:
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
 
-        sim_request = SimulationRunRequest(model=self.model, **params)
+        sim_request = SimulationRunRequest(self.model, unique, **params)
         response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
         if not response_raw.ok:
             raise Exception(response_raw.reason)
