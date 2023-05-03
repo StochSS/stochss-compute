@@ -5,7 +5,7 @@ import unittest
 from stochss_compute import ComputeServer
 from stochss_compute.client.server import Server
 from stochss_compute.client.endpoint import Endpoint
-from stochss_compute.core.messages import SimulationRunRequest
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest
 from .gillespy2_models import create_decay
 
 class ComputeServerTest(unittest.TestCase):

@@ -6,7 +6,7 @@ import json
 import os
 import subprocess
 from tornado.testing import AsyncHTTPTestCase
-from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
+from stochss_compute.core.messages.source_ip import SourceIpRequest, SourceIpResponse
 from stochss_compute.server.api import _make_app
 
 class SourceIpHandlerTest(AsyncHTTPTestCase):

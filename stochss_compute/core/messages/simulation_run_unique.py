@@ -11,9 +11,8 @@ class SimulationRunRequest(Request):
     :param kwargs: kwargs for the model.run() call.
     :type kwargs: dict[str, Any]
     '''
-    def __init__(self, model, unique, **kwargs):
+    def __init__(self, model, **kwargs):
         self.model = model
-        self.unique = unique
         self.kwargs = kwargs
 
     def encode(self):
@@ -21,7 +20,6 @@ class SimulationRunRequest(Request):
         JSON-encode model and then encode self to dict.
         '''
         return {'model': self.model.to_json(),
-                'unique': self.unique,
                 'kwargs': self.kwargs,
                 }
 
@@ -39,8 +37,7 @@ class SimulationRunRequest(Request):
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs = request_dict['kwargs']
-        unique = request_dict['unique']
-        return SimulationRunRequest(model, unique, **kwargs)
+        return SimulationRunRequest(model, **kwargs)
 
     def hash(self):
         '''

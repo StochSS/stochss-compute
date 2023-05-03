@@ -21,7 +21,7 @@ from datetime import datetime
 from distributed import Client
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
-from stochss_compute.core.messages import SimStatus, StatusResponse
+from stochss_compute.core.messages.status import SimStatus, StatusResponse
 from stochss_compute.server.cache import Cache
 
 class StatusHandler(RequestHandler):

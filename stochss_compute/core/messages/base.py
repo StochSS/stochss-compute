@@ -18,33 +18,6 @@ stochss_compute.core.messages
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from abc import ABC, abstractmethod
-from enum import Enum
-
-class SimStatus(Enum):
-    '''
-    Status describing a remote simulation.
-    '''
-    PENDING = 'The simulation is pending.'
-    RUNNING = 'The simulation is still running.'
-    READY = 'Simulation is done and results exist in the cache.'
-    ERROR = 'The Simulation has encountered an error.'
-    DOES_NOT_EXIST = 'There is no evidence of this simulation either running or on disk.'
-
-    @staticmethod
-    def from_str(name):
-        '''
-        Convert str to Enum.
-        '''
-        if name == 'PENDING':
-            return SimStatus.PENDING
-        if name == 'RUNNING':
-            return SimStatus.RUNNING
-        if name == 'READY':
-            return SimStatus.READY
-        if name == 'ERROR':
-            return SimStatus.ERROR
-        if name == 'DOES_NOT_EXIST':
-            return SimStatus.DOES_NOT_EXIST
 
 class Request(ABC):
     '''

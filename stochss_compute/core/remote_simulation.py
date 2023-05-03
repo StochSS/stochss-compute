@@ -1,5 +1,5 @@
 '''
-RemoteSimulation
+stochss_compute.core.remote_simulation
 '''
 # StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
 # Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
@@ -18,7 +18,8 @@ RemoteSimulation
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from stochss_compute.client.endpoint import Endpoint
-from stochss_compute.core.messages import SimulationRunRequest, SimulationRunResponse, SimStatus
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest, SimulationRunResponse
+from stochss_compute.core.messages.status import SimStatus
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.remote_results import RemoteResults
 
@@ -122,8 +123,18 @@ class RemoteSimulation:
             params["solver"] = f"{params['solver'].__module__}.{params['solver'].__qualname__}"
         if self.solver is not None:
             params["solver"] = f"{self.solver.__module__}.{self.solver.__qualname__}"
+        if unique is True:
+            sim_request = SimulationRunUniqueRequest(self.model, **params)
+            self._run_unique(sim_request)
+        if unique is False:
+            sim_request = SimulationRunRequest(self.model, **params)
+            self._run(sim_request)
 
-        sim_request = SimulationRunRequest(self.model, **params)
+    def _run(self, request):
+        '''
+        :param request: Request to send to the server. Contains Model and related arguments.
+        :type request: SimulationRunRequest
+        '''
         response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
         if not response_raw.ok:
             raise Exception(response_raw.reason)
@@ -143,3 +154,12 @@ class RemoteSimulation:
         remote_results.task_id = sim_response.task_id
 
         return remote_results
+    
+    def _run_unique(self, request):
+        '''
+        :param request: Request to send to the server. Contains Model and related arguments.
+        :type request: SimulationRunUniqueRequest
+        '''
+        remote_results =  RemoteResults()
+        return remote_results
+

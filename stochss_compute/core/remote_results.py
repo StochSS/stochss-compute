@@ -21,7 +21,8 @@ from time import sleep
 from gillespy2 import Results
 from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.errors import RemoteSimulationError
-from stochss_compute.core.messages import ResultsResponse, SimStatus, StatusResponse
+from stochss_compute.core.messages.results import ResultsResponse
+from stochss_compute.core.messages.status import StatusResponse, SimStatus
 
 class RemoteResults(Results):
     '''

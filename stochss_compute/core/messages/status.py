@@ -1,3 +1,39 @@
+'''
+stochss_compute.core.messages.status
+'''
+from enum import Enum
+from tornado.escape import json_decode
+from stochss_compute.core.messages.base import Request, Response
+
+class SimStatus(Enum):
+    '''
+    Status describing a remote simulation.
+    '''
+    PENDING = 'The simulation is pending.'
+    RUNNING = 'The simulation is still running.'
+    READY = 'Simulation is done and results exist in the cache.'
+    ERROR = 'The Simulation has encountered an error.'
+    DOES_NOT_EXIST = 'There is no evidence of this simulation either running or on disk.'
+
+    @staticmethod
+    def from_str(name):
+        '''
+        Convert str to Enum.
+        '''
+        if name == 'PENDING':
+            return SimStatus.PENDING
+        if name == 'RUNNING':
+            return SimStatus.RUNNING
+        if name == 'READY':
+            return SimStatus.READY
+        if name == 'ERROR':
+            return SimStatus.ERROR
+        if name == 'DOES_NOT_EXIST':
+            return SimStatus.DOES_NOT_EXIST
+        # pylint: disable=no-member
+        raise ValueError(f'Not a valid status.\n{SimStatus._member_names_}')
+        # pylint: enable=no-member
+
 class StatusRequest(Request):
     '''
     A request for simulation status.

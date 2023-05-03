@@ -23,7 +23,7 @@ from time import sleep
 from secrets import token_hex
 from stochss_compute.client.server import Server
 from stochss_compute.cloud.ec2_config import EC2LocalConfig, EC2RemoteConfig
-from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
+from stochss_compute.core.messages.source_ip import SourceIpRequest, SourceIpResponse
 from stochss_compute.cloud.exceptions import EC2ImportException, ResourceException, EC2Exception
 from stochss_compute.client.endpoint import Endpoint
 try:

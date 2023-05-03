@@ -1,3 +1,9 @@
+'''
+stochss_compute.core.messages.source_ip
+'''
+from tornado.escape import json_decode
+from stochss_compute.core.messages.base import Request, Response
+
 class SourceIpRequest(Request):
     '''
     Restrict server access.
@@ -5,14 +11,17 @@ class SourceIpRequest(Request):
     :param cloud_key: Random key generated locally during launch.
     :type cloud_key: str
     '''
+
     def __init__(self, cloud_key):
         self.cloud_key = cloud_key
+
     def encode(self):
         '''
         :returns: self.__dict__
         :rtype: dict
         '''
         return self.__dict__
+
     @staticmethod
     def parse(raw_request):
         '''

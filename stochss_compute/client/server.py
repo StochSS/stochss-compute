@@ -21,7 +21,7 @@ from time import sleep
 from abc import ABC, abstractmethod
 import requests
 from stochss_compute.client.endpoint import Endpoint
-from stochss_compute.core.messages import Request, Response
+from stochss_compute.core.messages.base import Request
 
 class Server(ABC):
     '''

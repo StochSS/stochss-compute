@@ -1,6 +1,6 @@
 import os
 import subprocess
-from stochss_compute.core.messages import SimulationRunRequest
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest
 from stochss_compute.server.api import _make_app
 from stochss_compute.server.cache import Cache
 from stochss_compute.server.run import RunHandler

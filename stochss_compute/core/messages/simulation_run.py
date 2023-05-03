@@ -3,8 +3,9 @@ stochss_compute.core.messages.simulation_run
 '''
 from hashlib import md5
 from tornado.escape import json_decode, json_encode
-from gillespy2 import Model
-from stochss_compute.core.messages.base import Request, Response, SimStatus
+from gillespy2 import Model, Results
+from stochss_compute.core.messages.base import Request, Response
+from stochss_compute.core.messages.status import SimStatus
 
 class SimulationRunRequest(Request):
     '''
@@ -54,6 +55,9 @@ class SimulationRunRequest(Request):
         '''
         anon_model_string = self.model.to_anon().to_json(encode_private=False)
         popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
+        # Explanation of line above:
+        # Take 'self.kwargs' (a dict), and add all entries to a new dictionary,
+        # EXCEPT the 'number_of_trajectories' key/value pair.
         kwargs_string = json_encode(popped_kwargs)
         request_string =  f'{anon_model_string}{kwargs_string}'
         _hash = md5(str.encode(request_string)).hexdigest()

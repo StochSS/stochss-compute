@@ -19,7 +19,7 @@ stochss_compute.server.sourceip
 
 import os
 from tornado.web import RequestHandler
-from stochss_compute.core.messages import SourceIpRequest, SourceIpResponse
+from stochss_compute.core.messages.source_ip import SourceIpRequest, SourceIpResponse
 
 class SourceIpHandler(RequestHandler):
     '''

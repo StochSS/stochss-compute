@@ -4,7 +4,7 @@ test.unit_tests.test_results
 import os
 import subprocess
 from tornado.testing import AsyncHTTPTestCase
-from stochss_compute.core.messages import SimulationRunRequest
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest
 from stochss_compute.server.api import _make_app
 from stochss_compute.server.cache import Cache
 from .gillespy2_models import create_michaelis_menten

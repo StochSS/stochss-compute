@@ -20,7 +20,7 @@ stochss_compute.server.results
 from datetime import datetime
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
-from stochss_compute.core.messages import ResultsResponse
+from stochss_compute.core.messages.results import ResultsResponse
 from stochss_compute.server.cache import Cache
 
 class ResultsHandler(RequestHandler):
