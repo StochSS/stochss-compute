@@ -1,4 +1,12 @@
-class SimulationRunRequest(Request):
+'''
+stochss_compute.core.messages.simulation_run_unique
+'''
+from secrets import token_hex
+from tornado.escape import json_decode, json_encode
+from gillespy2 import Model
+from stochss_compute.core.messages.base import Request, Response
+
+class SimulationRunUniqueRequest(Request):
     '''
     A simulation request.
 
@@ -11,9 +19,10 @@ class SimulationRunRequest(Request):
     :param kwargs: kwargs for the model.run() call.
     :type kwargs: dict[str, Any]
     '''
-    def __init__(self, model, **kwargs):
+    def __init__(self, model, **kwargs, ):
         self.model = model
         self.kwargs = kwargs
+        self.unique_key = token_hex(7)
 
     def encode(self):
         '''
@@ -21,6 +30,7 @@ class SimulationRunRequest(Request):
         '''
         return {'model': self.model.to_json(),
                 'kwargs': self.kwargs,
+                'unique_key': self.unique_key,
                 }
 
     @staticmethod
@@ -37,22 +47,9 @@ class SimulationRunRequest(Request):
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs = request_dict['kwargs']
-        return SimulationRunRequest(model, **kwargs)
-
-    def hash(self):
-        '''
-        Generate a unique hash of this simulation request.
-        Does not include number_of_trajectories in this calculation.
-
-        :returns: md5 hex digest.
-        :rtype: str
-        '''
-        anon_model_string = self.model.to_anon().to_json(encode_private=False)
-        popped_kwargs = {kw:self.kwargs[kw] for kw in self.kwargs if kw!='number_of_trajectories'}
-        kwargs_string = json_encode(popped_kwargs)
-        request_string =  f'{anon_model_string}{kwargs_string}'
-        _hash = md5(str.encode(request_string)).hexdigest()
-        return _hash
+        _ = SimulationRunUniqueRequest(model, **kwargs)
+        _.unique_key = request_dict['unique_key']
+        return _
 
 class SimulationRunResponse(Response):
     '''
@@ -74,7 +71,6 @@ class SimulationRunResponse(Response):
         self.status = status
         self.error_message = error_message
         self.results_id = results_id
-        self.results = results
         self.task_id = task_id
 
     def encode(self):

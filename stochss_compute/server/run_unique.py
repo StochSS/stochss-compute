@@ -26,19 +26,29 @@ from tornado.ioloop import IOLoop
 from distributed import Client, Future
 from gillespy2.core import Results
 from stochss_compute.core.messages.status import SimStatus
-from stochss_compute.core.messages.simulation_run import SimulationRunRequest, SimulationRunResponse
+from stochss_compute.core.exceptions import PRNGCollision
+from stochss_compute.core.messages.simulation_run_unique import SimulationRunUniqueRequest, SimulationRunUniqueResponse
 from stochss_compute.server.cache import Cache
 
 
-class RunUniqueHandler(RequestHandler):
+class SimulationRunUniqueHandler(RequestHandler):
     '''
     Endpoint for running Gillespy2 simulations.
     '''
 
+    def __init__(self, application, request, **kwargs):
+        self.scheduler_address = None
+        self.cache_dir = None
+        self.unique_key = None
+        super().__init__(application, request, **kwargs)
+
+    def data_received(self, chunk: bytes):
+        raise NotImplementedError()
+    
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
-        
+
         :param scheduler_address: Scheduler address.
         :type scheduler_address: str
 
@@ -46,47 +56,25 @@ class RunUniqueHandler(RequestHandler):
         :type cache_dir: str
         '''
         self.scheduler_address = scheduler_address
-        self.cache_dir = cache_dir
+        while cache_dir.endswith('/'):
+            cache_dir = cache_dir[:-1]
+        self.cache_dir = cache_dir + '/unique/'
 
     async def post(self):
         '''
-        Process simulation run request.
+        Process simulation run unique request.
         '''
-        sim_request = SimulationRunRequest.parse(self.request.body)
-        sim_hash = sim_request.hash()
-        log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Request | <{sim_hash}> | '
-        cache = Cache(self.cache_dir, sim_hash)
-        if not cache.exists():
-            cache.create()
-        empty = cache.is_empty()
-        if not empty:
-            # Check the number of trajectories in the request, default 1
-            n_traj = sim_request.kwargs.get('number_of_trajectories', 1)
-            # Compare that to the number of cached trajectories
-            trajectories_needed =  cache.n_traj_needed(n_traj)
-            if trajectories_needed > 0:
-                sim_request.kwargs['number_of_trajectories'] = trajectories_needed
-                print(log_string +
-                    f'Partial cache. Running {trajectories_needed} new trajectories.')
-                client = Client(self.scheduler_address)
-                future = self._submit(sim_request, sim_hash, client)
-                self._return_running(sim_hash, future.key)
-                IOLoop.current().run_in_executor(None, self._cache, sim_hash, future, client)
-            else:
-                print(log_string + 'Returning cached results.')
-                results = cache.get()
-                ret_traj = random.sample(results, n_traj)
-                new_results = Results(ret_traj)
-                new_results_json = new_results.to_json()
-                sim_response = SimulationRunResponse(SimStatus.READY, results_id = sim_hash, results = new_results_json)
-                self.write(sim_response.encode())
-                self.finish()
-        if empty:
-            print(log_string + 'Results not cached. Running simulation.')
-            client = Client(self.scheduler_address)
-            future = self._submit(sim_request, sim_hash, client)
-            self._return_running(sim_hash, future.key)
-            IOLoop.current().run_in_executor(None, self._cache, sim_hash, future, client)
+        sim_request = SimulationRunUniqueRequest.parse(self.request.body)
+        unique_key = sim_request.unique_key
+        log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Unique Request | <{unique_key}> | '
+        cache = Cache(self.cache_dir, unique_key)
+        if cache.exists():
+            raise PRNGCollision('Try again with a different key, because that one is taken.')
+        cache.create()
+        client = Client(self.scheduler_address)
+        future = self._submit(sim_request, client)
+        self._return_running(unique_key)
+        IOLoop.current().run_in_executor(None, self._cache, sim_hash, future, client)
 
     def _cache(self, sim_hash, future: Future, client: Client):
         results = future.result()
@@ -94,17 +82,16 @@ class RunUniqueHandler(RequestHandler):
         cache = Cache(self.cache_dir, sim_hash)
         cache.save(results)
 
-    def _submit(self, sim_request, sim_hash, client: Client):
+    def _submit(self, sim_request, client: Client):
         model = sim_request.model
         kwargs = sim_request.kwargs
-        n_traj = kwargs.get('number_of_trajectories', 1)
+        unique_key = sim_request.unique_key
         if "solver" in kwargs:
             from pydoc import locate
             kwargs["solver"] = locate(kwargs["solver"])
 
         # keep client open for now! close?
-        key = f'{sim_hash}:{n_traj}:{token_hex(8)}'
-        future = client.submit(model.run, **kwargs, key=key)
+        future = client.submit(model.run, **kwargs, key=unique_key)
         return future
 
     def _return_running(self, results_id, task_id):

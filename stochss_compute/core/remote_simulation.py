@@ -19,6 +19,7 @@ stochss_compute.core.remote_simulation
 
 from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.messages.simulation_run import SimulationRunRequest, SimulationRunResponse
+from stochss_compute.core.messages.simulation_run_unique import SimulationRunUniqueRequest
 from stochss_compute.core.messages.status import SimStatus
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.remote_results import RemoteResults
@@ -135,7 +136,7 @@ class RemoteSimulation:
         :param request: Request to send to the server. Contains Model and related arguments.
         :type request: SimulationRunRequest
         '''
-        response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=sim_request)
+        response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=request)
         if not response_raw.ok:
             raise Exception(response_raw.reason)
 
@@ -150,7 +151,7 @@ class RemoteSimulation:
 
         remote_results.id = sim_response.results_id
         remote_results.server = self.server
-        remote_results.n_traj = params.get('number_of_trajectories', 1)
+        remote_results.n_traj = request.kwargs.get('number_of_trajectories', 1)
         remote_results.task_id = sim_response.task_id
 
         return remote_results
@@ -161,5 +162,23 @@ class RemoteSimulation:
         :type request: SimulationRunUniqueRequest
         '''
         remote_results =  RemoteResults()
+        response_raw = self.server.post(Endpoint.SIMULATION_GILLESPY2, sub="/run", request=request)
+        if not response_raw.ok:
+            raise Exception(response_raw.reason)
+
+        sim_response = SimulationRunResponse.parse(response_raw.text)
+
+        if sim_response.status == SimStatus.ERROR:
+            raise RemoteSimulationError(sim_response.error_message)
+        if sim_response.status == SimStatus.READY:
+            remote_results =  RemoteResults(data=sim_response.results.data)
+        else:
+            remote_results =  RemoteResults()
+
+        remote_results.id = sim_response.results_id
+        remote_results.server = self.server
+        remote_results.n_traj = request.kwargs.get('number_of_trajectories', 1)
+        remote_results.task_id = sim_response.task_id
+
         return remote_results
 

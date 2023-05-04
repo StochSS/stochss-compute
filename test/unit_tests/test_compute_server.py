@@ -13,14 +13,14 @@ class ComputeServerTest(unittest.TestCase):
     Test ComputeServer class.
     '''
     def setUp(self) -> None:
-        self.server = ComputeServer('cRaZyHoSt.lol', 60095)
+        self.server = ComputeServer('cRaZyHoSt.lol', 7)
         self.sim_endpoint = Endpoint.SIMULATION_GILLESPY2
 
     def test_init_and_properties(self):
         '''
         Calls init and tests address.
         '''
-        assert self.server.address == 'http://cRaZyHoSt.lol:60095'
+        assert self.server.address == 'http://cRaZyHoSt.lol:7'
 
     def test_get(self):
         '''
@@ -32,7 +32,7 @@ class ComputeServerTest(unittest.TestCase):
         '''
         calls post to timeout
         '''
-        server = ComputeServer('cRaZyHoSt.lol', 60095)
+        server = ComputeServer('cRaZyHoSt.lol', 7)
         sim_endpoint = Endpoint.SIMULATION_GILLESPY2
         server.post(sim_endpoint,'', SimulationRunRequest(create_decay()))
 
