@@ -9,18 +9,15 @@ from stochss_compute.core.messages.status import SimStatus
 
 class SimulationRunUniqueRequest(Request):
     '''
-    A simulation request.
+    A one-off simulation request identifiable by a unique key.
 
     :param model: A model to run.
     :type model: gillespy2.Model
 
-    :param unique: When True, ignore cache completely and return always new results.
-    :type unique: bool
-
     :param kwargs: kwargs for the model.run() call.
     :type kwargs: dict[str, Any]
     '''
-    def __init__(self, model, **kwargs, ):
+    def __init__(self, model, **kwargs):
         self.model = model
         self.kwargs = kwargs
         self.unique_key = token_hex(7)
@@ -37,19 +34,19 @@ class SimulationRunUniqueRequest(Request):
     @staticmethod
     def parse(raw_request):
         '''
-        Parse HTTP request.
+        Parse raw HTTP request. Done server-side.
 
         :param raw_request: The request.
         :type raw_request: dict[str, str]
 
         :returns: The decoded object.
-        :rtype: SimulationRunRequest
+        :rtype: SimulationRunUniqueRequest
         '''
         request_dict = json_decode(raw_request)
         model = Model.from_json(request_dict['model'])
         kwargs = request_dict['kwargs']
         _ = SimulationRunUniqueRequest(model, **kwargs)
-        _.unique_key = request_dict['unique_key']
+        _.unique_key = request_dict['unique_key'] # apply correct token (from raw request) after object construction.
         return _
 
 class SimulationRunUniqueResponse(Response):
