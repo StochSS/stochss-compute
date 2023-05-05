@@ -2,9 +2,10 @@
 stochss_compute.core.messages.simulation_run_unique
 '''
 from secrets import token_hex
-from tornado.escape import json_decode, json_encode
+from tornado.escape import json_decode
 from gillespy2 import Model
 from stochss_compute.core.messages.base import Request, Response
+from stochss_compute.core.messages.status import SimStatus
 
 class SimulationRunUniqueRequest(Request):
     '''
@@ -51,9 +52,9 @@ class SimulationRunUniqueRequest(Request):
         _.unique_key = request_dict['unique_key']
         return _
 
-class SimulationRunResponse(Response):
+class SimulationRunUniqueResponse(Response):
     '''
-    A response from the server regarding a SimulationRunRequest.
+    A response from the server regarding a SimulationRunUniqueRequest.
 
     :param status: The status of the simulation.
     :type status: SimStatus
@@ -61,17 +62,10 @@ class SimulationRunResponse(Response):
     :param error_message: Possible error message.
     :type error_message: str | None
 
-    :param results_id: Hash of the simulation request. Identifies the results.
-    :type results_id: str | None
-
-    :param results: JSON-Encoded gillespy2.Results
-    :type results: str | None
     '''
-    def __init__(self, status, error_message = None, results_id = None, results = None, task_id = None):
+    def __init__(self, status, error_message = None):
         self.status = status
         self.error_message = error_message
-        self.results_id = results_id
-        self.task_id = task_id
 
     def encode(self):
         '''
@@ -79,9 +73,7 @@ class SimulationRunResponse(Response):
         '''
         return {'status': self.status.name,
                 'error_message': self.error_message or '',
-                'results_id': self.results_id or '',
-                'results': self.results or '',
-                'task_id': self.task_id or '',}
+                }
 
     @staticmethod
     def parse(raw_response):
@@ -96,11 +88,5 @@ class SimulationRunResponse(Response):
         '''
         response_dict = json_decode(raw_response)
         status = SimStatus.from_str(response_dict['status'])
-        results_id = response_dict['results_id']
         error_message = response_dict['error_message']
-        task_id = response_dict['task_id']
-        if response_dict['results'] != '':
-            results = Results.from_json(response_dict['results'])
-        else:
-            results = None
-        return SimulationRunResponse(status, error_message, results_id, results, task_id)
+        return SimulationRunUniqueResponse(status, error_message)

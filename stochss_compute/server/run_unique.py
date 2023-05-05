@@ -1,5 +1,5 @@
 '''
-stochss_compute.server.run
+stochss_compute.server.run_unique
 '''
 # StochSS-Compute is a tool for running and caching GillesPy2 simulations remotely.
 # Copyright (C) 2019-2023 GillesPy2 and StochSS developers.
@@ -17,14 +17,11 @@ stochss_compute.server.run
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
 from datetime import datetime
-from secrets import token_hex
 
 from tornado.web import RequestHandler
 from tornado.ioloop import IOLoop
 from distributed import Client, Future
-from gillespy2.core import Results
 from stochss_compute.core.messages.status import SimStatus
 from stochss_compute.core.exceptions import PRNGCollision
 from stochss_compute.core.messages.simulation_run_unique import SimulationRunUniqueRequest, SimulationRunUniqueResponse
@@ -48,6 +45,7 @@ class SimulationRunUniqueHandler(RequestHandler):
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
+        Creates a new directory for one-off results files identifiable by token.
 
         :param scheduler_address: Scheduler address.
         :type scheduler_address: str
@@ -62,39 +60,65 @@ class SimulationRunUniqueHandler(RequestHandler):
 
     async def post(self):
         '''
-        Process simulation run unique request.
+        Process simulation run unique POST request.
         '''
         sim_request = SimulationRunUniqueRequest.parse(self.request.body)
-        unique_key = sim_request.unique_key
-        log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Unique Request | <{unique_key}> | '
-        cache = Cache(self.cache_dir, unique_key)
+        self.unique_key = sim_request.unique_key
+        cache = Cache(self.cache_dir, self.unique_key)
         if cache.exists():
+            self.set_status(404, reason='Try again with a different key, because that one is taken.')
+            self.finish()
             raise PRNGCollision('Try again with a different key, because that one is taken.')
         cache.create()
-        client = Client(self.scheduler_address)
-        future = self._submit(sim_request, client)
-        self._return_running(unique_key)
-        IOLoop.current().run_in_executor(None, self._cache, sim_hash, future, client)
+        future = self._submit(sim_request)
+        log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Unique Request | <{self.unique_key}> | '
+        print(log_string + 'Running simulation.')
+        self._return_running()
+        IOLoop.current().run_in_executor(None, self._cache, future, client)
 
-    def _cache(self, sim_hash, future: Future, client: Client):
+    def _cache(self, future, client):
+        '''
+        Await results, close client, save to disk.
+
+        :param future: Handle to the running simulation, to be awaited upon.
+        :type future: distributed.Future
+
+        :param client: Client to the Dask scheduler. Closing here for good measure, not sure if strictly necessary.
+        :type client: distributed.Client
+        '''
         results = future.result()
         client.close()
-        cache = Cache(self.cache_dir, sim_hash)
+        cache = Cache(self.cache_dir, self.unique_key)
         cache.save(results)
 
-    def _submit(self, sim_request, client: Client):
+    def _submit(self, sim_request, client):
+        '''
+        Submit request to dask scheduler.
+
+        :param sim_request: The user's request for a unique simulation.
+        :type sim_request: SimulationRunUniqueRequest
+
+        :returns: Handle to the running simulation and the results on the worker.
+        :rtype: distributed.Future
+        '''
         model = sim_request.model
         kwargs = sim_request.kwargs
         unique_key = sim_request.unique_key
         if "solver" in kwargs:
+            # pylint:disable=import-outside-toplevel
             from pydoc import locate
+            # pylint:enable=import-outside-toplevel
             kwargs["solver"] = locate(kwargs["solver"])
 
         # keep client open for now! close?
+        client = Client(self.scheduler_address)
         future = client.submit(model.run, **kwargs, key=unique_key)
         return future
 
-    def _return_running(self, results_id, task_id):
-        sim_response = SimulationRunResponse(SimStatus.RUNNING, results_id=results_id, task_id=task_id)
+    def _return_running(self):
+        '''
+        Let the user know we submitted the simulation to the scheduler.
+        '''
+        sim_response = SimulationRunUniqueResponse(SimStatus.RUNNING)
         self.write(sim_response.encode())
         self.finish()
