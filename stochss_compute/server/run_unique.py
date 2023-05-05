@@ -70,7 +70,8 @@ class SimulationRunUniqueHandler(RequestHandler):
             self.finish()
             raise PRNGCollision('Try again with a different key, because that one is taken.')
         cache.create()
-        future = self._submit(sim_request)
+        client = Client(self.scheduler_address)
+        future = self._submit(sim_request, client)
         log_string = f'{datetime.now()} | <{self.request.remote_ip}> | Simulation Run Unique Request | <{self.unique_key}> | '
         print(log_string + 'Running simulation.')
         self._return_running()
@@ -94,9 +95,13 @@ class SimulationRunUniqueHandler(RequestHandler):
     def _submit(self, sim_request, client):
         '''
         Submit request to dask scheduler.
+        Uses pydoc.locate to convert str to solver class name object.
 
         :param sim_request: The user's request for a unique simulation.
         :type sim_request: SimulationRunUniqueRequest
+
+        :param client: Client to the Dask scheduler.
+        :type client: distributed.Client
 
         :returns: Handle to the running simulation and the results on the worker.
         :rtype: distributed.Future
@@ -110,8 +115,6 @@ class SimulationRunUniqueHandler(RequestHandler):
             # pylint:enable=import-outside-toplevel
             kwargs["solver"] = locate(kwargs["solver"])
 
-        # keep client open for now! close?
-        client = Client(self.scheduler_address)
         future = client.submit(model.run, **kwargs, key=unique_key)
         return future
 
