@@ -24,7 +24,7 @@ from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages.results import ResultsResponse
 from stochss_compute.core.messages.status import StatusResponse, SimStatus
 
-class RemoteResults(Results):
+class UniqueResults(Results):
     '''
     Wrapper for a gillespy2.Results object that exists on a remote server and which is then downloaded locally.
     A Results object is: A List of Trajectory objects created by a gillespy2 solver, extends the UserList object.
@@ -46,8 +46,6 @@ class RemoteResults(Results):
     # These three fields are initialized by the server
     id = None
     server = None
-    n_traj = None
-    task_id = None
 
     # pylint:disable=super-init-not-called
     def __init__(self, data = None):
@@ -62,7 +60,7 @@ class RemoteResults(Results):
         :returns: self._data
         :rtype: UserList
         """
-        if None in (self.id, self.server, self.n_traj):
+        if None in (self.id, self.server):
             raise Exception('RemoteResults must have a self.id, self.server and self.n_traj.')
 
         if self._data is None:
@@ -102,7 +100,7 @@ class RemoteResults(Results):
     def _status(self):
         # Request the status of a submitted simulation.
         response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2,
-                                       f"/{self.id}/{self.n_traj}/{self.task_id or ''}/status")
+                                       f"/{self.id}/status")
         if not response_raw.ok:
             raise RemoteSimulationError(response_raw.reason)
 
