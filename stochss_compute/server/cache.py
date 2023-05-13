@@ -37,7 +37,7 @@ class Cache:
         if unique is True:
             while cache_dir.endswith('/'):
                 cache_dir = cache_dir[:-1]
-            self.cache_dir = cache_dir + '/unique/'
+            cache_dir = cache_dir + '/unique/'
         self.results_path = os.path.join(cache_dir, f'{results_id}.results')
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
@@ -75,7 +75,7 @@ class Cache:
                 return filesize == 0
             return True
 
-    def is_ready(self, n_traj_wanted) -> bool:
+    def is_ready(self, n_traj_wanted=0) -> bool:
         '''
         Check if the results are ready to be retrieved from the cache.
 
