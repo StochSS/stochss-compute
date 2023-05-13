@@ -20,11 +20,12 @@ stochss_compute.server.api
 import os
 import asyncio
 import subprocess
-from logging import DEBUG, INFO
+from logging import INFO
 from tornado.web import Application
 from stochss_compute.server.is_cached import IsCachedHandler
 from stochss_compute.server.run import RunHandler
 from stochss_compute.server.run_unique import SimulationRunUniqueHandler
+from stochss_compute.server.results_unique import ResultsUniqueHandler
 from stochss_compute.server.sourceip import SourceIpHandler
 from stochss_compute.server.status import StatusHandler
 from stochss_compute.server.results import ResultsHandler
@@ -42,6 +43,8 @@ def _make_app(dask_host, dask_scheduler_port, cache):
             StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': cache}),
         (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/(?P<n_traj>[1-9]\d*?)/results",
             ResultsHandler, {'cache_dir': cache}),
+        (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/results",
+            ResultsUniqueHandler, {'cache_dir': cache}),
         (r"/api/v2/cache/gillespy2/(?P<results_id>.*?)/(?P<n_traj>[1-9]\d*?)/is_cached",
             IsCachedHandler, {'cache_dir': cache}),
         (r"/api/v2/cloud/sourceip", SourceIpHandler),
@@ -53,7 +56,7 @@ async def start_api(
         dask_host = 'localhost',
         dask_scheduler_port = 8786,
         rm = False,
-        debug = False,
+        logging_level = INFO,
         ):
     """
     Start the REST API with the following arguments.
@@ -73,26 +76,23 @@ async def start_api(
     :param rm: Delete the cache when exiting this program.
     :type rm: bool
 
-    :param debug: Turn on Debug Logs.
-    :type debug: bool
+    :param logging_level: Set log level for stochss_compute.
+    :type debug: logging._Level
     """
 
-    if debug:
-        set_global_log_level(DEBUG)
-    else:
-        set_global_log_level(INFO)
+    set_global_log_level(logging_level)
     # TODO clean up lock files here
 
     cache_path = os.path.abspath(cache)
     app = _make_app(dask_host, dask_scheduler_port, cache)
     app.listen(port)
-    msg="""
+    msg='''
 =========================================================================
   StochSS-Compute listening on port: %(port)d                                 
   Cache directory: %(cache_path)s                                        
   Connecting to Dask scheduler at: %(dask_host)s:%(dask_scheduler_port)d 
 =========================================================================
-"""
+'''
     log.info(msg, locals())
 
     try:

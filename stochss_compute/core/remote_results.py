@@ -136,4 +136,3 @@ class RemoteResults(Results):
 
             response = ResultsResponse.parse(response_raw.text)
             self._data = response.results.data
-
