@@ -27,6 +27,12 @@ class ResultsHandler(RequestHandler):
     '''
     Endpoint for Results objects.
     '''
+    def __init__(self, application, request, **kwargs):
+        self.cache_dir = None
+        super().__init__(application, request, **kwargs)
+
+    def data_received(self, chunk: bytes):
+        raise NotImplementedError()
 
     def initialize(self, cache_dir):
         '''
