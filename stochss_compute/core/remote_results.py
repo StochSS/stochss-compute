@@ -125,10 +125,12 @@ class RemoteResults(Results):
         if status in (SimStatus.DOES_NOT_EXIST, SimStatus.ERROR):
             raise RemoteSimulationError(status_response.message)
 
-
         if status == SimStatus.READY:
             print('Results ready. Fetching.......')
-            response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/results")
+            if self.id == self.task_id:
+                response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
+            else:
+                response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/results")
             if not response_raw.ok:
                 raise RemoteSimulationError(response_raw.reason)
 
