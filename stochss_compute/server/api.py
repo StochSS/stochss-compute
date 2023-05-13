@@ -20,17 +20,23 @@ stochss_compute.server.api
 import os
 import asyncio
 import subprocess
+from logging import DEBUG, INFO
 from tornado.web import Application
 from stochss_compute.server.is_cached import IsCachedHandler
 from stochss_compute.server.run import RunHandler
+from stochss_compute.server.run_unique import SimulationRunUniqueHandler
 from stochss_compute.server.sourceip import SourceIpHandler
 from stochss_compute.server.status import StatusHandler
 from stochss_compute.server.results import ResultsHandler
+from stochss_compute.core.log_config import init_logging, set_global_log_level
+log = init_logging(__name__)
 
 def _make_app(dask_host, dask_scheduler_port, cache):
     scheduler_address = f'{dask_host}:{dask_scheduler_port}'
     return Application([
         (r"/api/v2/simulation/gillespy2/run", RunHandler,
+            {'scheduler_address': scheduler_address, 'cache_dir': cache}),
+        (r"/api/v2/simulation/gillespy2/run/unique", SimulationRunUniqueHandler,
             {'scheduler_address': scheduler_address, 'cache_dir': cache}),
         (r"/api/v2/simulation/gillespy2/(?P<results_id>.*?)/(?P<n_traj>[1-9]\d*?)/(?P<task_id>.*?)/status",
             StatusHandler, {'scheduler_address': scheduler_address, 'cache_dir': cache}),
@@ -47,6 +53,7 @@ async def start_api(
         dask_host = 'localhost',
         dask_scheduler_port = 8786,
         rm = False,
+        debug = False,
         ):
     """
     Start the REST API with the following arguments.
@@ -65,22 +72,36 @@ async def start_api(
 
     :param rm: Delete the cache when exiting this program.
     :type rm: bool
+
+    :param debug: Turn on Debug Logs.
+    :type debug: bool
     """
-    # clean up lock files here
+
+    if debug:
+        set_global_log_level(DEBUG)
+    else:
+        set_global_log_level(INFO)
+    # TODO clean up lock files here
+
     cache_path = os.path.abspath(cache)
     app = _make_app(dask_host, dask_scheduler_port, cache)
     app.listen(port)
-    print(f'StochSS-Compute listening on: :{port}')
-    print(f'Cache directory: {cache_path}')
-    print(f'Connecting to Dask scheduler at: {dask_host}:{dask_scheduler_port}\n')
+    msg="""
+=========================================================================
+  StochSS-Compute listening on port: %(port)d                                 
+  Cache directory: %(cache_path)s                                        
+  Connecting to Dask scheduler at: %(dask_host)s:%(dask_scheduler_port)d 
+=========================================================================
+"""
+    log.info(msg, locals())
 
     try:
         await asyncio.Event().wait()
     except asyncio.exceptions.CancelledError as error:
-        print(error)
+        log.error(error)
     finally:
         if rm and os.path.exists(cache_path):
-            print('Removing cache...', end='')
+            log.info('Removing cache...')
             subprocess.Popen(['rm', '-r', cache_path])
-            print('OK')
+            log.info('Cache Removed OK')
             
