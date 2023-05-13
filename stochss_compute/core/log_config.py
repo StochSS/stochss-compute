@@ -32,5 +32,5 @@ def set_global_log_level(level):
     :param level: NOTSET:0, DEBUG:10, INFO:20, WARNING:30, ERROR:40, CRITICAL:50, etc.
     :type level: int | logging._Level
     '''
-    getLogger().setLevel(level)
+    getLogger(__name__.split('.', maxsplit=1)[0]).setLevel(level)
     
