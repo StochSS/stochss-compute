@@ -40,7 +40,7 @@ class StatusHandler(RequestHandler):
 
     def data_received(self, chunk: bytes):
         raise NotImplementedError()
-    
+
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
@@ -71,48 +71,50 @@ class StatusHandler(RequestHandler):
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
             self.finish()
             raise RemoteSimulationError(f'Malformed request: {self.request.uri}')
-        log.debug('ITS A DEBUG MESSAGE')
         self.results_id = results_id
         self.task_id = task_id
         n_traj = int(n_traj)
-        cache = Cache(self.cache_dir, task_id, results_id == task_id)
+        unique = results_id == task_id
+        log.debug('unique: %(unique)s', locals())
+        cache = Cache(self.cache_dir, task_id, unique=unique)
         log_string = f'<{self.request.remote_ip}> | Results ID: <{results_id}> | Trajectories: {n_traj} | Task ID: {task_id}'
         log.info(log_string)
-        
+
         msg = f'<{results_id}> | <{task_id}> | Status: '
 
         exists = cache.exists()
+        log.debug('exists: %(exists)s', locals())
         if exists:
             empty = cache.is_empty()
             if empty:
                 if self.task_id not in ('', None):
                     state, err = await self._check_with_scheduler()
-                    logger.info(msg + SimStatus.RUNNING.name + f' | Task: {state} | Error: {err}')
+                    log.info(msg + SimStatus.RUNNING.name + f' | Task: {state} | Error: {err}')
                     if state == 'erred':
                         self._respond_error(err)
                     else:
                         self._respond_running(f'Scheduler task state: {state}')
                 else:
-                    logger.info(msg+SimStatus.DOES_NOT_EXIST.name)
+                    log.info(msg+SimStatus.DOES_NOT_EXIST.name)
                     self._respond_dne()
             else:
                 ready = cache.is_ready(n_traj)
                 if ready:
-                    logger.info(msg+SimStatus.READY.name)
+                    log.info(msg+SimStatus.READY.name)
                     self._respond_ready()
                 else:
                     if self.task_id not in ('', None):
                         state, err = await self._check_with_scheduler()
-                        logger.info(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
+                        log.info(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                         if state == 'erred':
                             self._respond_error(err)
                         else:
                             self._respond_running(f'Scheduler task state: {state}')
                     else:
-                        logger.info(msg+SimStatus.DOES_NOT_EXIST.name)
+                        log.info(msg+SimStatus.DOES_NOT_EXIST.name)
                         self._respond_dne()
         else:
-            logger.info(msg+SimStatus.DOES_NOT_EXIST.name)
+            log.info(msg+SimStatus.DOES_NOT_EXIST.name)
             self._respond_dne()
 
     def _respond_ready(self):
