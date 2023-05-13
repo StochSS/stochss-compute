@@ -14,11 +14,23 @@ def init_logging(name):
     Like so:
 
     from stochss_compute.core.log_config import init_logs
-    logger = init_logs(__name__)
+    log = init_logs(__name__)
 
-    :returns: A module specific logger with level set by global LOG_LEVEL.
+    :param name: Name for the logger. Use the dot-separated module path string.
+    :type name: str
+
+    :returns: A module specific logger.
     :rtype: logging.Logger
     '''
     logger = getLogger(name)
     return logger
+
+def set_global_log_level(level):
+    '''
+    Sets the root logger log level.
+
+    :param level: NOTSET:0, DEBUG:10, INFO:20, WARNING:30, ERROR:40, CRITICAL:50, etc.
+    :type level: int | logging._Level
+    '''
+    getLogger().setLevel(level)
     
