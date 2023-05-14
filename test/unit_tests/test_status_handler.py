@@ -24,7 +24,6 @@ class StatusHandlerTest(AsyncHTTPTestCase):
         if os.path.exists(self.cache_dir):
             r_m = subprocess.Popen(['rm', '-r', self.cache_dir])
             r_m.wait()
-            pass
         return super().tearDown()
 
     def get_app(self):
