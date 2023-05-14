@@ -1,5 +1,5 @@
 '''
-test.unit_tests.test_launch
+test.unit_tests.test_status_handler
 '''
 import os
 import subprocess
@@ -12,7 +12,7 @@ from stochss_compute.server.api import _make_app
 from stochss_compute.server.cache import Cache
 
 
-class StatusTest(AsyncHTTPTestCase):
+class StatusHandlerTest(AsyncHTTPTestCase):
     '''
     Test StatusHandler class.
     '''
@@ -24,6 +24,7 @@ class StatusTest(AsyncHTTPTestCase):
         if os.path.exists(self.cache_dir):
             r_m = subprocess.Popen(['rm', '-r', self.cache_dir])
             r_m.wait()
+            pass
         return super().tearDown()
 
     def get_app(self):
@@ -101,4 +102,22 @@ class StatusTest(AsyncHTTPTestCase):
         assert response_raw.code == 200
         status_response = StatusResponse.parse(response_raw.body)
         assert status_response.status == SimStatus.READY
+
+    def test_status_unique(self):
+        '''
+        This uri should return a copy of these results
+        '''
+        model = create_michaelis_menten()
+        results = model.run()
+        sim = SimulationRunRequest(model=model)
+        sim_hash = sim.hash()
+        cache = Cache(self.cache_dir, sim_hash)
+        cache.create()
+        cache.save(results)
+        uri = f'/api/v2/simulation/gillespy2/{sim_hash}/1//status'
+        response_raw = self.fetch(uri)
+        assert response_raw.code == 200
+        status_response = StatusResponse.parse(response_raw.body)
+        assert status_response.status == SimStatus.READY
+
 
