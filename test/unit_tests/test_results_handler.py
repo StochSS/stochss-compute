@@ -1,5 +1,5 @@
 '''
-test.unit_tests.test_results
+test.unit_tests.test_results_handler
 '''
 import os
 import subprocess

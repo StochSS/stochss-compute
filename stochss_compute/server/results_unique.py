@@ -53,7 +53,7 @@ class ResultsUniqueHandler(RequestHandler):
         :type results_id: str
         
         '''
-        if '' == results_id:
+        if '' == results_id or '/' in results_id:
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
             self.finish()
             raise RemoteSimulationError(f'Malformed request | <{self.request.remote_ip}>')
