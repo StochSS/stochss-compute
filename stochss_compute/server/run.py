@@ -25,7 +25,8 @@ from tornado.web import RequestHandler
 from tornado.ioloop import IOLoop
 from distributed import Client, Future
 from gillespy2.core import Results
-from stochss_compute.core.messages import SimStatus, SimulationRunRequest, SimulationRunResponse
+from stochss_compute.core.messages.status import SimStatus
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest, SimulationRunResponse
 from stochss_compute.server.cache import Cache
 
 
@@ -34,16 +35,19 @@ class RunHandler(RequestHandler):
     Endpoint for running Gillespy2 simulations.
     '''
 
+    scheduler_address = None
+    cache_dir = None
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
-        
+
         :param scheduler_address: Scheduler address.
         :type scheduler_address: str
 
         :param cache_dir: Path to the cache.
         :type cache_dir: str
         '''
+
         self.scheduler_address = scheduler_address
         self.cache_dir = cache_dir
 

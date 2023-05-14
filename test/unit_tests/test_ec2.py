@@ -14,8 +14,8 @@ class MockEC2(EC2Cluster):
     def _restrict_ingress(self, ip_address: str = ''):
         try:
             super()._restrict_ingress(ip_address)
-        except NotImplementedError as oh_well:
-            print(oh_well)
+        except NotImplementedError as _:
+            pass
 
 @mock_ec2
 class EC2ClusterTest(unittest.TestCase):

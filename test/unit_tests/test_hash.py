@@ -2,7 +2,7 @@
 HashTest(unittest.TestCase)
 '''
 import unittest
-from stochss_compute.core.messages import SimulationRunRequest
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest
 from . import gillespy2_models
 
 class HashTest(unittest.TestCase):

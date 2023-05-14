@@ -5,7 +5,7 @@ import os
 import subprocess
 import unittest
 from gillespy2 import Model
-from stochss_compute.core.messages import SimulationRunRequest
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest
 from stochss_compute.server.cache import Cache
 from . import gillespy2_models
 

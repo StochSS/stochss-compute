@@ -4,10 +4,9 @@ test.unit_tests.test_results
 import os
 import subprocess
 from tornado.testing import AsyncHTTPTestCase
-from stochss_compute.client.compute_server import ComputeServer
-from stochss_compute.core.errors import RemoteSimulationError
-from stochss_compute.core.messages import ResultsResponse, SimStatus, SimulationRunRequest, SimulationRunResponse, StatusResponse
-from stochss_compute.core.remote_results import RemoteResults
+from stochss_compute.core.messages.status import SimStatus
+from stochss_compute.core.messages.status import StatusResponse
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest
 from stochss_compute.server.api import _make_app
 from stochss_compute.server.cache import Cache
 from .gillespy2_models import create_michaelis_menten

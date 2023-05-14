@@ -17,12 +17,14 @@ stochss_compute.server.status
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
 from distributed import Client
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
-from stochss_compute.core.messages import SimStatus, StatusResponse
+from stochss_compute.core.messages.status import SimStatus, StatusResponse
 from stochss_compute.server.cache import Cache
+
+from stochss_compute.core.log_config import init_logging
+log = init_logging(__name__)
 
 class StatusHandler(RequestHandler):
     '''
@@ -37,7 +39,7 @@ class StatusHandler(RequestHandler):
 
     def data_received(self, chunk: bytes):
         raise NotImplementedError()
-    
+
     def initialize(self, scheduler_address, cache_dir):
         '''
         Sets the address to the Dask scheduler and the cache directory.
@@ -68,51 +70,50 @@ class StatusHandler(RequestHandler):
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
             self.finish()
             raise RemoteSimulationError(f'Malformed request: {self.request.uri}')
-        
         self.results_id = results_id
         self.task_id = task_id
         n_traj = int(n_traj)
+        unique = results_id == task_id
+        log.debug('unique: %(unique)s', locals())
+        cache = Cache(self.cache_dir, results_id, unique=unique)
+        log_string = f'<{self.request.remote_ip}> | Results ID: <{results_id}> | Trajectories: {n_traj} | Task ID: {task_id}'
+        log.info(log_string)
 
-        cache = Cache(self.cache_dir, results_id)
-
-        print(f'{datetime.now()} | <{self.request.remote_ip}> | \
-            Status Request | <{results_id}> | Trajectories: {n_traj} | \
-            Task ID: {task_id}' )
-        
-        msg = f'{datetime.now()} | <{results_id}> | <{task_id}> | Status: '
+        msg = f'<{results_id}> | <{task_id}> | Status: '
 
         exists = cache.exists()
+        log.debug('exists: %(exists)s', locals())
         if exists:
             empty = cache.is_empty()
             if empty:
                 if self.task_id not in ('', None):
                     state, err = await self._check_with_scheduler()
-                    print(msg + SimStatus.RUNNING.name + f' | Task: {state} | Error: {err}')
+                    log.info(msg + SimStatus.RUNNING.name + f' | Task: {state} | Error: {err}')
                     if state == 'erred':
                         self._respond_error(err)
                     else:
                         self._respond_running(f'Scheduler task state: {state}')
                 else:
-                    print(msg+SimStatus.DOES_NOT_EXIST.name)
+                    log.info(msg+SimStatus.DOES_NOT_EXIST.name)
                     self._respond_dne()
             else:
                 ready = cache.is_ready(n_traj)
                 if ready:
-                    print(msg+SimStatus.READY.name)
+                    log.info(msg+SimStatus.READY.name)
                     self._respond_ready()
                 else:
                     if self.task_id not in ('', None):
                         state, err = await self._check_with_scheduler()
-                        print(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
+                        log.info(msg+SimStatus.RUNNING.name+f' | Task: {state} | error: {err}')
                         if state == 'erred':
                             self._respond_error(err)
                         else:
                             self._respond_running(f'Scheduler task state: {state}')
                     else:
-                        print(msg+SimStatus.DOES_NOT_EXIST.name)
+                        log.info(msg+SimStatus.DOES_NOT_EXIST.name)
                         self._respond_dne()
         else:
-            print(msg+SimStatus.DOES_NOT_EXIST.name)
+            log.info(msg+SimStatus.DOES_NOT_EXIST.name)
             self._respond_dne()
 
     def _respond_ready(self):

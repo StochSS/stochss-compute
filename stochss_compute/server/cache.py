@@ -33,10 +33,14 @@ class Cache:
     :param results_id: Simulation hash.
     :type results_id: str
     '''
-    def __init__(self, cache_dir, results_id):
+    def __init__(self, cache_dir, results_id, unique=False):
+        if unique is True:
+            while cache_dir.endswith('/'):
+                cache_dir = cache_dir[:-1]
+            cache_dir = cache_dir + '/unique/'
         self.results_path = os.path.join(cache_dir, f'{results_id}.results')
         if not os.path.exists(cache_dir):
-            os.mkdir(cache_dir)
+            os.makedirs(cache_dir)
 
     def create(self) -> None:
         '''
@@ -71,7 +75,7 @@ class Cache:
                 return filesize == 0
             return True
 
-    def is_ready(self, n_traj_wanted) -> bool:
+    def is_ready(self, n_traj_wanted=0) -> bool:
         '''
         Check if the results are ready to be retrieved from the cache.
 

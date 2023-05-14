@@ -21,7 +21,8 @@ from time import sleep
 from gillespy2 import Results
 from stochss_compute.client.endpoint import Endpoint
 from stochss_compute.core.errors import RemoteSimulationError
-from stochss_compute.core.messages import ResultsResponse, SimStatus, StatusResponse
+from stochss_compute.core.messages.results import ResultsResponse
+from stochss_compute.core.messages.status import StatusResponse, SimStatus
 
 class RemoteResults(Results):
     '''
@@ -48,8 +49,10 @@ class RemoteResults(Results):
     n_traj = None
     task_id = None
 
+    # pylint:disable=super-init-not-called
     def __init__(self, data = None):
         self._data = data
+    # pylint:enable=super-init-not-called
 
     @property
     def data(self):
@@ -122,13 +125,14 @@ class RemoteResults(Results):
         if status in (SimStatus.DOES_NOT_EXIST, SimStatus.ERROR):
             raise RemoteSimulationError(status_response.message)
 
-
         if status == SimStatus.READY:
             print('Results ready. Fetching.......')
-            response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/results")
+            if self.id == self.task_id:
+                response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/results")
+            else:
+                response_raw = self.server.get(Endpoint.SIMULATION_GILLESPY2, f"/{self.id}/{self.n_traj}/results")
             if not response_raw.ok:
                 raise RemoteSimulationError(response_raw.reason)
 
             response = ResultsResponse.parse(response_raw.text)
             self._data = response.results.data
-

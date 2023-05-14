@@ -1,16 +1,18 @@
 '''
-test.unit_tests.test_launch
+test.unit_tests.test_status_handler
 '''
 import os
 import subprocess
 from test.unit_tests.gillespy2_models import create_michaelis_menten
 from tornado.testing import AsyncHTTPTestCase
-from stochss_compute.core.messages import SimStatus, SimulationRunRequest, StatusResponse
+from stochss_compute.core.messages.status import SimStatus
+from stochss_compute.core.messages.simulation_run import SimulationRunRequest
+from stochss_compute.core.messages.status import StatusResponse
 from stochss_compute.server.api import _make_app
 from stochss_compute.server.cache import Cache
 
 
-class StatusTest(AsyncHTTPTestCase):
+class StatusHandlerTest(AsyncHTTPTestCase):
     '''
     Test StatusHandler class.
     '''
@@ -99,4 +101,22 @@ class StatusTest(AsyncHTTPTestCase):
         assert response_raw.code == 200
         status_response = StatusResponse.parse(response_raw.body)
         assert status_response.status == SimStatus.READY
+
+    def test_status_unique(self):
+        '''
+        This uri should return a copy of these results
+        '''
+        model = create_michaelis_menten()
+        results = model.run()
+        sim = SimulationRunRequest(model=model)
+        sim_hash = sim.hash()
+        cache = Cache(self.cache_dir, sim_hash)
+        cache.create()
+        cache.save(results)
+        uri = f'/api/v2/simulation/gillespy2/{sim_hash}/1//status'
+        response_raw = self.fetch(uri)
+        assert response_raw.code == 200
+        status_response = StatusResponse.parse(response_raw.body)
+        assert status_response.status == SimStatus.READY
+
 

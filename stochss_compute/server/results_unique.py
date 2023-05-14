@@ -17,15 +17,17 @@ stochss_compute.server.results
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
 from tornado.web import RequestHandler
 from stochss_compute.core.errors import RemoteSimulationError
 from stochss_compute.core.messages.results import ResultsResponse
 from stochss_compute.server.cache import Cache
 
-class ResultsHandler(RequestHandler):
+from stochss_compute.core.log_config import init_logging
+log = init_logging(__name__)
+
+class ResultsUniqueHandler(RequestHandler):
     '''
-    Endpoint for Results objects.
+    Endpoint for simulation-run-unique Results objects.
     '''
     def __init__(self, application, request, **kwargs):
         self.cache_dir = None
@@ -43,24 +45,24 @@ class ResultsHandler(RequestHandler):
         '''
         self.cache_dir = cache_dir
 
-    async def get(self, results_id = None, n_traj = None):
+    async def get(self, results_id = None):
         '''
         Process GET request.
 
-        :param results_id: Hash of the simulation.
+        :param results_id: Unique id
         :type results_id: str
         
-        :param n_traj: Number of trajectories in the request.
-        :type n_traj: str
         '''
-        if '' in (results_id, n_traj) or '/' in results_id or '/' in n_traj:
+        if '' == results_id or '/' in results_id:
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
             self.finish()
             raise RemoteSimulationError(f'Malformed request | <{self.request.remote_ip}>')
-        n_traj = int(n_traj)
-        print(f'{datetime.now()} | <{self.request.remote_ip}> | Results Request | <{results_id}>')
-        cache = Cache(self.cache_dir, results_id)
-        if cache.is_ready(n_traj):
+        # pylint:disable=possibly-unused-variable
+        remote_ip = str(self.request.remote_ip)
+        # pylint:enable=possibly-unused-variable
+        log.info('<%(remote_ip)s> | Results Request | <%(results_id)s>', locals())
+        cache = Cache(self.cache_dir, results_id, unique=True)
+        if cache.is_ready():
             results = cache.read()
             results_response = ResultsResponse(results)
             self.write(results_response.encode())
