@@ -35,7 +35,6 @@ class StatusHandler(RequestHandler):
         self.cache_dir = None
         self.task_id = None
         self.results_id = None
-        self.unique = None
         super().__init__(application, request, **kwargs)
 
     def data_received(self, chunk: bytes):
@@ -76,7 +75,7 @@ class StatusHandler(RequestHandler):
         n_traj = int(n_traj)
         unique = results_id == task_id
         log.debug('unique: %(unique)s', locals())
-        cache = Cache(self.cache_dir, task_id, unique=unique)
+        cache = Cache(self.cache_dir, results_id, unique=unique)
         log_string = f'<{self.request.remote_ip}> | Results ID: <{results_id}> | Trajectories: {n_traj} | Task ID: {task_id}'
         log.info(log_string)
 
