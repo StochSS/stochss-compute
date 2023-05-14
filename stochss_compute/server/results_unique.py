@@ -27,7 +27,7 @@ log = init_logging(__name__)
 
 class ResultsUniqueHandler(RequestHandler):
     '''
-    Endpoint for Results objects.
+    Endpoint for simulation-run-unique Results objects.
     '''
     def __init__(self, application, request, **kwargs):
         self.cache_dir = None
@@ -52,15 +52,15 @@ class ResultsUniqueHandler(RequestHandler):
         :param results_id: Unique id
         :type results_id: str
         
-        :param n_traj: Number of trajectories in the request.
-        :type n_traj: str
         '''
-        remote_ip = str(self.request.remote_ip)
-        log.info('<%(remote_ip)s> | Results Request | <%(results_id)s>', locals())
         if '' == results_id:
             self.set_status(404, reason=f'Malformed request: {self.request.uri}')
             self.finish()
             raise RemoteSimulationError(f'Malformed request | <{self.request.remote_ip}>')
+        # pylint:disable=possibly-unused-variable
+        remote_ip = str(self.request.remote_ip)
+        # pylint:enable=possibly-unused-variable
+        log.info('<%(remote_ip)s> | Results Request | <%(results_id)s>', locals())
         cache = Cache(self.cache_dir, results_id, unique=True)
         if cache.is_ready():
             results = cache.read()
